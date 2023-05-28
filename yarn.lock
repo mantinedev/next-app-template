@@ -2075,10 +2075,10 @@
   resolved "https://registry.yarnpkg.com/@juggle/resize-observer/-/resize-observer-3.4.0.tgz#08d6c5e20cf7e4cc02fd181c4b0c225cd31dbb60"
   integrity sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==
 
-"@mantine/core@7.0.0-alpha.7":
-  version "7.0.0-alpha.7"
-  resolved "https://registry.yarnpkg.com/@mantine/core/-/core-7.0.0-alpha.7.tgz#f745bb5998b49304a9fce20d0b1a56c84d05954b"
-  integrity sha512-Xcx6uEUKvY0+Z/6Akw3gYGdzj4g0+kmQS5IZIf/bd7OK90koAh33KpDgenKYxDPBOe4bpdSGFPL0f3PFZS+qoA==
+"@mantine/core@7.0.0-alpha.8":
+  version "7.0.0-alpha.8"
+  resolved "https://registry.yarnpkg.com/@mantine/core/-/core-7.0.0-alpha.8.tgz#9f3cfb491091c3157263d0ad427dad3190672d02"
+  integrity sha512-6Rmy/gvsgQ+5+TXqAaUi7Gl6yDA+pvux7qUZ5N3kFuoY3NBex2BDt8/5lAh8BZN+D52OIEEhPAkNf8evoMjYvg==
   dependencies:
     "@floating-ui/react" "^0.19.1"
     clsx "1.1.1"
@@ -2086,10 +2086,10 @@
     react-textarea-autosize "8.3.4"
     type-fest "^3.6.1"
 
-"@mantine/hooks@7.0.0-alpha.7":
-  version "7.0.0-alpha.7"
-  resolved "https://registry.yarnpkg.com/@mantine/hooks/-/hooks-7.0.0-alpha.7.tgz#784d8b31fa03e46cf251548eef4cf2ae9d73b04f"
-  integrity sha512-CKptseQv+fGgudtF8YrhSKBA+AtSPxTMqCcTO7444SntSBqcSHz4RNI7qauAMY7flsvppymm0rI2Y6J8iPSn9A==
+"@mantine/hooks@7.0.0-alpha.8":
+  version "7.0.0-alpha.8"
+  resolved "https://registry.yarnpkg.com/@mantine/hooks/-/hooks-7.0.0-alpha.8.tgz#de5aa536a4f37a89a689903880120c17b483680f"
+  integrity sha512-T4ltN/1GzxNrZMNEQ+IpgBRWJBY88LdIB/tgiMyfhJft/6W9iCDO6w9ZY9FgxkIg4qifbBnUYyu5cZucatLj1Q==
 
 "@mdx-js/react@^2.1.5":
   version "2.3.0"
