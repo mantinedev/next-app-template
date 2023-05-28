@@ -2075,21 +2075,22 @@
   resolved "https://registry.yarnpkg.com/@juggle/resize-observer/-/resize-observer-3.4.0.tgz#08d6c5e20cf7e4cc02fd181c4b0c225cd31dbb60"
   integrity sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==
 
-"@mantine/core@7.0.0-alpha.8":
-  version "7.0.0-alpha.8"
-  resolved "https://registry.yarnpkg.com/@mantine/core/-/core-7.0.0-alpha.8.tgz#9f3cfb491091c3157263d0ad427dad3190672d02"
-  integrity sha512-6Rmy/gvsgQ+5+TXqAaUi7Gl6yDA+pvux7qUZ5N3kFuoY3NBex2BDt8/5lAh8BZN+D52OIEEhPAkNf8evoMjYvg==
+"@mantine/core@7.0.0-alpha.9":
+  version "7.0.0-alpha.9"
+  resolved "https://registry.yarnpkg.com/@mantine/core/-/core-7.0.0-alpha.9.tgz#75533340a3edaf6d1a2a52219812e8879175c81b"
+  integrity sha512-dHY5cS5VnuOOmC2FwxS1Xcn/UKM2UsEr522Pb3OAj5QgBKxiFIlR3w3RQvQ12HAk88YRnwEP+mjRSQJ5rvyLqg==
   dependencies:
     "@floating-ui/react" "^0.19.1"
     clsx "1.1.1"
     react-remove-scroll "^2.5.5"
     react-textarea-autosize "8.3.4"
+    tslib "^2.5.2"
     type-fest "^3.6.1"
 
-"@mantine/hooks@7.0.0-alpha.8":
-  version "7.0.0-alpha.8"
-  resolved "https://registry.yarnpkg.com/@mantine/hooks/-/hooks-7.0.0-alpha.8.tgz#de5aa536a4f37a89a689903880120c17b483680f"
-  integrity sha512-T4ltN/1GzxNrZMNEQ+IpgBRWJBY88LdIB/tgiMyfhJft/6W9iCDO6w9ZY9FgxkIg4qifbBnUYyu5cZucatLj1Q==
+"@mantine/hooks@7.0.0-alpha.9":
+  version "7.0.0-alpha.9"
+  resolved "https://registry.yarnpkg.com/@mantine/hooks/-/hooks-7.0.0-alpha.9.tgz#6d3eeb0a04442c4000d4112651eaf50e99df627f"
+  integrity sha512-IXTkPUkKpUkcrUk4ltHq/vpaJHv6esxUP7b7yWKG58Ovv86NNY7Y8J4FiIemIgh+XdT0UQnLdz/RgZNsykFpAQ==
 
 "@mdx-js/react@^2.1.5":
   version "2.3.0"
@@ -10763,7 +10764,7 @@ tslib@^2.0.0:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
   integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
 
-tslib@^2.0.1, tslib@^2.0.3:
+tslib@^2.0.1, tslib@^2.0.3, tslib@^2.5.2:
   version "2.5.2"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.5.2.tgz#1b6f07185c881557b0ffa84b111a0106989e8338"
   integrity sha512-5svOrSA2w3iGFDs1HibEVBGbDrAY82bFQ3HZ3ixB+88nsbsWQoKqDRb5UBYAUPEzbBn6dAp5gRNXglySbx1MlA==
