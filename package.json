@@ -20,15 +20,15 @@
   "dependencies": {
     "@mantine/core": "7.0.1",
     "@mantine/hooks": "7.0.1",
-    "@next/bundle-analyzer": "^13.4.4",
+    "@next/bundle-analyzer": "^13.5.3",
     "@tabler/icons-react": "^2.20.0",
-    "next": "13.4.4",
+    "next": "13.5.3",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.22.1",
-    "@next/eslint-plugin-next": "^13.4.4",
+    "@next/eslint-plugin-next": "^13.5.3",
     "@storybook/addon-essentials": "^7.0.18",
     "@storybook/addon-styling": "^1.0.8",
     "@storybook/blocks": "^7.0.18",
