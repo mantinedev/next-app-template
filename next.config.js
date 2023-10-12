@@ -12,7 +12,6 @@ module.exports = withBundleAnalyzer({
   },
 
   sassOptions: {
-    includePaths: ['./mixins'],
-    prependData: `@import "mixins";`,
+    prependData: `@import "./_mantine.scss";`,
   },
 });
