@@ -10,4 +10,9 @@ module.exports = withBundleAnalyzer({
   experimental: {
     optimizePackageImports: ['@mantine/core', '@mantine/hooks'],
   },
+
+  sassOptions: {
+    includePaths: ['./mixins'],
+    prependData: `@import "mixins";`,
+  },
 });

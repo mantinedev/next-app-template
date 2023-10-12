@@ -60,6 +60,7 @@
     "postcss-preset-mantine": "1.8.0",
     "postcss-simple-vars": "^7.0.1",
     "prettier": "^2.8.8",
+    "sass": "^1.69.3",
     "storybook": "^7.4.3",
     "storybook-dark-mode": "^3.0.0",
     "ts-jest": "^29.1.0",

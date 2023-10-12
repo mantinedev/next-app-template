@@ -1,0 +1,18 @@
+.title {
+  color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+  font-size: 100px;
+  font-weight: 900;
+  letter-spacing: -2px;
+
+  @include dark {
+    background-color: red;
+  }
+
+  @include light {
+    background-color: blue;
+  }
+
+  @media (max-width: $mantine-breakpoint-md) {
+    font-size: 50px;
+  }
+}
