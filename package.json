@@ -19,10 +19,10 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0-beta2",
-    "@mantine/core": "7.1.6",
-    "@mantine/hooks": "7.1.6",
     "@mantine/modals": "^7.1.5",
     "@mantine/notifications": "^7.1.5",
+    "@mantine/core": "7.1.7",
+    "@mantine/hooks": "7.1.7",
     "@next/bundle-analyzer": "^13.5.3",
     "@openbook-dex/openbook-v2": "^0.0.11",
     "@solana/spl-token": "^0.3.8",
