@@ -21,17 +21,17 @@
           "isSigner": false
         },
         {
-          "name": "token",
+          "name": "metaMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "usdcMint",
           "isMut": false,
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "id",
-          "type": "publicKey"
-        }
-      ]
+      "args": []
     },
     {
       "name": "initializeProposal",
@@ -68,6 +68,26 @@
         },
         {
           "name": "baseFailVault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "openbookPassMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "openbookFailMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "openbookTwapPassMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "openbookTwapFailMarket",
           "isMut": false,
           "isSigner": false
         },
@@ -111,6 +131,16 @@
         {
           "name": "proposal",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "openbookTwapPassMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "openbookTwapFailMarket",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -237,11 +267,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "id",
+            "name": "metaMint",
             "type": "publicKey"
           },
           {
-            "name": "token",
+            "name": "usdcMint",
             "type": "publicKey"
           },
           {
@@ -281,10 +311,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "dao",
-            "type": "publicKey"
-          },
-          {
             "name": "number",
             "type": "u32"
           },
@@ -311,6 +337,14 @@
             "type": {
               "defined": "ProposalInstruction"
             }
+          },
+          {
+            "name": "openbookTwapPassMarket",
+            "type": "publicKey"
+          },
+          {
+            "name": "openbookTwapFailMarket",
+            "type": "publicKey"
           },
           {
             "name": "passMarket",

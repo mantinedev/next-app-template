@@ -4,7 +4,7 @@ import { PublicKey } from '@solana/web3.js';
 export interface Token {
   name: string;
   symbol: string;
-  icon: string;
+  icon?: string;
   publicKey: PublicKey;
   decimals: number;
   tokenProgram: PublicKey;

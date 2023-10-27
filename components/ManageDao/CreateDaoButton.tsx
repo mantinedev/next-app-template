@@ -7,9 +7,8 @@ import { Wallet } from '@coral-xyz/anchor';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Layout } from '@/components/Layout/Layout';
 import { useProvider } from '@/hooks/useProvider';
-import CreateTestTokensCard from '../../components/ManageDao/CreateTestTokensCard';
 
-export default function DebugPage() {
+export default function CreateDaoButton() {
   const wallet = useWallet();
   const provider = useProvider();
 
@@ -17,21 +16,5 @@ export default function DebugPage() {
     if (!wallet.publicKey) return;
   }, []);
 
-  return (
-    <Layout>
-      <Container align>
-        <Button
-          onClick={() =>
-            notifications.show({
-              title: 'Test notif',
-              message: 'Message',
-            })
-          }
-        >
-          Notification
-        </Button>
-        <CreateTestTokensCard />
-      </Container>
-    </Layout>
-  );
+  return <Button onClick={() => handleCreateDao()}>Notification</Button>;
 }

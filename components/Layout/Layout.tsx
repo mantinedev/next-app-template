@@ -2,17 +2,25 @@
 
 import { useDisclosure } from '@mantine/hooks';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { AppShell, Burger, Button, Group, Skeleton, Stack, Text } from '@mantine/core';
+import { AppShell, Burger, Button, Group, Stack, Text } from '@mantine/core';
+import { IconMicroscope } from '@tabler/icons-react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect } from 'react';
+import '@mantine/notifications/styles.css';
+import Link from 'next/link';
+import React, { ReactNode, useEffect } from 'react';
 import { shortKey } from '../../lib/utils';
+
+interface MenuItem {
+  name: string;
+  href: string;
+  icon: ReactNode;
+}
+const menuItems: MenuItem[] = [{ name: 'Debug', href: '/debug', icon: <IconMicroscope /> }];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const wallet = useWallet();
   const modal = useWalletModal();
   const [opened, { toggle }] = useDisclosure();
-
-  console.log(wallet, modal);
 
   useEffect(() => {
     if (!wallet.connected && wallet.wallet) {
@@ -32,9 +40,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </AppShell.Header>
 
       <AppShell.Navbar p="md">
-        <Stack gap={3}>
-          <Text>Navbar</Text>
-          <Skeleton h={28} mt="sm" animate={false} />
+        <Stack gap={15}>
+          <Stack>
+            {menuItems.map((item) => (
+              <Link key={item.href} href={item.href}>
+                <Group>
+                  {item.icon}
+                  <Text>{item.name}</Text>
+                </Group>
+              </Link>
+            ))}
+          </Stack>
           {wallet?.publicKey ? (
             <Button variant="danger" onClick={() => wallet.disconnect()}>
               {shortKey(wallet.publicKey)}

@@ -1,19 +1,17 @@
-# Mantine Next.js template
+# Meta-dao frontend
 
-This is a template for [Next.js](https://nextjs.org/) app router + [Mantine](https://mantine.dev/).
-If you want to use pages router instead, see [next-pages-template](https://github.com/mantinedev/next-pages-template).
-
-## Features
-
-This template comes with the following features:
-
-- [PostCSS](https://postcss.org/) with [mantine-postcss-preset](https://mantine.dev/styles/postcss-preset)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Storybook](https://storybook.js.org/)
-- [Jest](https://jestjs.io/) setup with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro)
-- ESLint setup with [eslint-config-mantine](https://github.com/mantinedev/eslint-config-mantine)
+A [Meta-DAO](https://github.com/metaDAOproject/meta-dao) app built with [Next.js](https://nextjs.org/) and [Mantine](https://mantine.dev/).
 
 ## npm scripts
+
+### Localnet setup
+
+1. `git clone https://github.com/metaDAOproject/meta-dao`
+2. `cd meta-dao`
+3. `yarn`
+4. `anchor localnet`
+
+See Meta-DAO's repo for more details.
 
 ### Build and dev scripts
 
