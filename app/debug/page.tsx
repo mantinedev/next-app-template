@@ -19,7 +19,7 @@ export default function DebugPage() {
 
   return (
     <Layout>
-      <Container align>
+      <Container>
         <Button
           onClick={() =>
             notifications.show({

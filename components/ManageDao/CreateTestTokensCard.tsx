@@ -4,7 +4,7 @@ import { Button, Card, Text } from '@mantine/core';
 import { useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import * as token from '@solana/spl-token';
-import { Keypair, LAMPORTS_PER_SOL, Transaction } from '@solana/web3.js';
+import { Keypair, LAMPORTS_PER_SOL, SystemProgram, Transaction } from '@solana/web3.js';
 import { useProvider } from '@/hooks/useProvider';
 import { useTokens } from '../../hooks/useTokens';
 
@@ -15,43 +15,36 @@ export default function CreateTestTokensCard() {
   const { tokens, setTokens } = useTokens();
 
   const handleCreateDao = useCallback(async () => {
-    if (!wallet.publicKey || !wallet.signTransaction) return;
+    if (!wallet.publicKey || !wallet.signTransaction || !wallet.signAllTransactions) return;
 
-    const tx = new Transaction();
+    const txMeta = new Transaction();
     const metaKeypair = Keypair.generate();
     const quoteKeypair = Keypair.generate();
-    tx.add(
-      token.createInitializeMint2Instruction(metaKeypair.publicKey, 9, wallet.publicKey, null),
+    txMeta.add(
+      SystemProgram.createAccount({
+        programId: token.TOKEN_PROGRAM_ID,
+        fromPubkey: wallet.publicKey,
+        newAccountPubkey: metaKeypair.publicKey,
+        lamports: await connection.getMinimumBalanceForRentExemption(token.MINT_SIZE),
+        space: token.MINT_SIZE,
+      }),
     );
-    tx.add(
-      token.createInitializeMint2Instruction(quoteKeypair.publicKey, 9, wallet.publicKey, null),
-    );
-    tx.add(
-      token.createInitializeMint2Instruction(quoteKeypair.publicKey, 9, wallet.publicKey, null),
+    txMeta.add(
+      token.createInitializeMintInstruction(metaKeypair.publicKey, 9, wallet.publicKey, null),
     );
     const metaAccount = token.getAssociatedTokenAddressSync(
       metaKeypair.publicKey,
       wallet.publicKey,
     );
-    const quoteAccount = token.getAssociatedTokenAddressSync(
-      quoteKeypair.publicKey,
-      wallet.publicKey,
-    );
-    tx.add(
-      token.createInitializeAccount3Instruction(
+    txMeta.add(
+      token.createAssociatedTokenAccountIdempotentInstruction(
+        wallet.publicKey,
         metaAccount,
+        wallet.publicKey,
         metaKeypair.publicKey,
-        wallet.publicKey,
       ),
     );
-    tx.add(
-      token.createInitializeAccount3Instruction(
-        quoteAccount,
-        quoteKeypair.publicKey,
-        wallet.publicKey,
-      ),
-    );
-    tx.add(
+    txMeta.add(
       token.createMintToInstruction(
         metaKeypair.publicKey,
         metaAccount,
@@ -59,7 +52,33 @@ export default function CreateTestTokensCard() {
         100000n * BigInt(LAMPORTS_PER_SOL),
       ),
     );
-    tx.add(
+
+    const txUsdc = new Transaction();
+    txUsdc.add(
+      SystemProgram.createAccount({
+        programId: token.TOKEN_PROGRAM_ID,
+        fromPubkey: wallet.publicKey,
+        newAccountPubkey: quoteKeypair.publicKey,
+        lamports: await connection.getMinimumBalanceForRentExemption(token.MINT_SIZE),
+        space: token.MINT_SIZE,
+      }),
+    );
+    txUsdc.add(
+      token.createInitializeMintInstruction(quoteKeypair.publicKey, 9, wallet.publicKey, null),
+    );
+    const quoteAccount = token.getAssociatedTokenAddressSync(
+      quoteKeypair.publicKey,
+      wallet.publicKey,
+    );
+    txUsdc.add(
+      token.createAssociatedTokenAccountIdempotentInstruction(
+        wallet.publicKey,
+        quoteAccount,
+        wallet.publicKey,
+        quoteKeypair.publicKey,
+      ),
+    );
+    txUsdc.add(
       token.createMintToInstruction(
         quoteKeypair.publicKey,
         quoteAccount,
@@ -68,11 +87,20 @@ export default function CreateTestTokensCard() {
       ),
     );
 
-    const blockhash = await provider.connection.getLatestBlockhash();
-    tx.recentBlockhash = blockhash.blockhash;
-    tx.feePayer = wallet.publicKey;
-    const signedTx = await wallet.signTransaction(tx);
-    await connection.sendRawTransaction(signedTx.serialize());
+    await provider.connection.requestAirdrop(wallet.publicKey, 5 * LAMPORTS_PER_SOL);
+    const blockhash = await provider.connection.getLatestBlockhash('confirmed');
+    txMeta.recentBlockhash = blockhash.blockhash;
+    txMeta.lastValidBlockHeight = blockhash.lastValidBlockHeight;
+    txMeta.feePayer = wallet.publicKey;
+    txMeta.sign(metaKeypair);
+
+    txUsdc.recentBlockhash = blockhash.blockhash;
+    txUsdc.lastValidBlockHeight = blockhash.lastValidBlockHeight;
+    txUsdc.feePayer = wallet.publicKey;
+    txUsdc.sign(quoteKeypair);
+
+    const signedTxs = await wallet.signAllTransactions([txMeta, txUsdc]);
+    await Promise.all(signedTxs.map((tx) => connection.sendRawTransaction(tx.serialize())));
 
     setTokens({
       meta: {
@@ -96,12 +124,12 @@ export default function CreateTestTokensCard() {
     <Card shadow="sm" radius="md" withBorder padding="xl">
       <Card.Section>
         {tokens?.meta ? (
-          <Text>Meta mint: {tokens.meta.toString()}</Text>
+          <Text>Meta mint: {tokens.meta.publicKey.toString()}</Text>
         ) : (
           <Text>No meta token yet</Text>
         )}
         {tokens?.usdc ? (
-          <Text>Usdc mint: {tokens.usdc.toString()}</Text>
+          <Text>Usdc mint: {tokens.usdc.publicKey.toString()}</Text>
         ) : (
           <Text>No usdc token yet</Text>
         )}
