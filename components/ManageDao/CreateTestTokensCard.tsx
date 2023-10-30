@@ -1,8 +1,9 @@
 'use client';
 
-import { Button, Card, Text } from '@mantine/core';
+import { Button, Card, Group, Stack, Text } from '@mantine/core';
 import { useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { notifications } from '@mantine/notifications';
 import * as token from '@solana/spl-token';
 import { Keypair, LAMPORTS_PER_SOL, SystemProgram, Transaction } from '@solana/web3.js';
 import { useProvider } from '@/hooks/useProvider';
@@ -64,7 +65,7 @@ export default function CreateTestTokensCard() {
       }),
     );
     txUsdc.add(
-      token.createInitializeMintInstruction(quoteKeypair.publicKey, 9, wallet.publicKey, null),
+      token.createInitializeMintInstruction(quoteKeypair.publicKey, 6, wallet.publicKey, null),
     );
     const quoteAccount = token.getAssociatedTokenAddressSync(
       quoteKeypair.publicKey,
@@ -87,7 +88,6 @@ export default function CreateTestTokensCard() {
       ),
     );
 
-    await provider.connection.requestAirdrop(wallet.publicKey, 5 * LAMPORTS_PER_SOL);
     const blockhash = await provider.connection.getLatestBlockhash('confirmed');
     txMeta.recentBlockhash = blockhash.blockhash;
     txMeta.lastValidBlockHeight = blockhash.lastValidBlockHeight;
@@ -102,6 +102,11 @@ export default function CreateTestTokensCard() {
     const signedTxs = await wallet.signAllTransactions([txMeta, txUsdc]);
     await Promise.all(signedTxs.map((tx) => connection.sendRawTransaction(tx.serialize())));
 
+    notifications.show({
+      message: 'Created Test $META and Test $USDC',
+      title: 'Successfully minted',
+      color: 'green',
+    });
     setTokens({
       meta: {
         publicKey: metaKeypair.publicKey,
@@ -114,30 +119,34 @@ export default function CreateTestTokensCard() {
         publicKey: quoteKeypair.publicKey,
         symbol: 'USDC',
         name: 'Circle USD',
-        decimals: 9,
+        decimals: 6,
         tokenProgram: token.TOKEN_PROGRAM_ID,
       },
     });
   }, [provider, wallet, connection]);
 
   return (
-    <Card shadow="sm" radius="md" withBorder padding="xl">
+    <Card shadow="sm" radius="md" withBorder>
       <Card.Section>
-        {tokens?.meta ? (
-          <Text>Meta mint: {tokens.meta.publicKey.toString()}</Text>
-        ) : (
-          <Text>No meta token yet</Text>
-        )}
-        {tokens?.usdc ? (
-          <Text>Usdc mint: {tokens.usdc.publicKey.toString()}</Text>
-        ) : (
-          <Text>No usdc token yet</Text>
-        )}
+        <Stack gap="15" p="xs">
+          {tokens?.meta ? (
+            <Text>Meta mint: {tokens.meta.publicKey.toString()}</Text>
+          ) : (
+            <Text>No meta token yet</Text>
+          )}
+          {tokens?.usdc ? (
+            <Text>Usdc mint: {tokens.usdc.publicKey.toString()}</Text>
+          ) : (
+            <Text>No usdc token yet</Text>
+          )}
+        </Stack>
       </Card.Section>
       <Card.Section>
-        <Button fullWidth onClick={() => handleCreateDao()}>
-          Create test tokens
-        </Button>
+        <Group p="sm">
+          <Button fullWidth onClick={() => handleCreateDao()}>
+            Create test tokens
+          </Button>
+        </Group>
       </Card.Section>
     </Card>
   );

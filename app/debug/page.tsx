@@ -1,36 +1,38 @@
 'use client';
 
-import { Button, Container } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { Button, Container, Stack } from '@mantine/core';
 import { useCallback } from 'react';
-import { Wallet } from '@coral-xyz/anchor';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { notifications } from '@mantine/notifications';
 import { Layout } from '@/components/Layout/Layout';
-import { useProvider } from '@/hooks/useProvider';
 import CreateTestTokensCard from '../../components/ManageDao/CreateTestTokensCard';
+import CreateDaoButton from '../../components/ManageDao/CreateDaoButton';
 
 export default function DebugPage() {
+  const { connection } = useConnection();
   const wallet = useWallet();
-  const provider = useProvider();
 
-  const handleCreateDao = useCallback(async () => {
+  const handleAirdrop = useCallback(async () => {
     if (!wallet.publicKey) return;
-  }, []);
+    await connection.confirmTransaction(
+      await connection.requestAirdrop(wallet.publicKey, 10 * LAMPORTS_PER_SOL),
+    );
+
+    notifications.show({
+      title: 'Airdrop successful',
+      message: 'Airdropped 10 SOL',
+    });
+  }, [wallet.publicKey, connection]);
 
   return (
     <Layout>
       <Container>
-        <Button
-          onClick={() =>
-            notifications.show({
-              title: 'Test notif',
-              message: 'Message',
-            })
-          }
-        >
-          Notification
-        </Button>
-        <CreateTestTokensCard />
+        <Stack gap="15">
+          <Button onClick={handleAirdrop}>Airdrop</Button>
+          <CreateTestTokensCard />
+          <CreateDaoButton />
+        </Stack>
       </Container>
     </Layout>
   );

@@ -1,20 +1,17 @@
 'use client';
 
-import { Button, Container } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { Button } from '@mantine/core';
 import { useCallback } from 'react';
-import { Wallet } from '@coral-xyz/anchor';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { Layout } from '@/components/Layout/Layout';
-import { useProvider } from '@/hooks/useProvider';
+import { useAutocrat } from '../../hooks/useAutocrat';
+import { useTokens } from '../../hooks/useTokens';
 
 export default function CreateDaoButton() {
-  const wallet = useWallet();
-  const provider = useProvider();
+  const { tokens } = useTokens();
+  const { program: autocratProgram, initializeDao } = useAutocrat();
 
   const handleCreateDao = useCallback(async () => {
-    if (!wallet.publicKey) return;
-  }, []);
+    await initializeDao();
+  }, [autocratProgram, tokens]);
 
-  return <Button onClick={() => handleCreateDao()}>Notification</Button>;
+  return <Button onClick={() => handleCreateDao()}>Initialize DAO</Button>;
 }
