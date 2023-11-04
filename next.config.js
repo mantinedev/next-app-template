@@ -3,7 +3,15 @@ const withBundleAnalyzer = require( '@next/bundle-analyzer' )( {
 } );
 
 module.exports = withBundleAnalyzer( {
-  reactStrictMode: false,
+  output: "export",
+  basePath: process.env.NODE_ENV === "production" ? "" : undefined,
+  experimental: {
+    appDir: true,
+  },
+  images: {
+    unoptimized: true,
+  },
+  reactStrictMode: true,
   experimental: {
     optimizePackageImports: [ '@mantine/core', '@mantine/hooks' ],
   },

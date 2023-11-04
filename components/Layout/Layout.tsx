@@ -2,7 +2,7 @@
 
 import { useDisclosure } from '@mantine/hooks';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { AppShell, Burger, Button, Flex, Group, Stack, Text } from '@mantine/core';
+import { AppShell, Burger, Button, Flex, Stack, Text } from '@mantine/core';
 import {
   IconBooks,
   IconDeviceDesktopAnalytics,
