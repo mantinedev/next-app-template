@@ -1,10 +1,14 @@
-const withBundleAnalyzer = require( '@next/bundle-analyzer' )( {
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withBundleAnalyzer = bundleAnalyzer( {
   enabled: process.env.ANALYZE === 'true',
 } );
 
-module.exports = withBundleAnalyzer( {
-  output: "export",
-  basePath: process.env.NODE_ENV === "production" ? "/meta-dao-frontend" : undefined,
+export default withBundleAnalyzer( {
+  reactStrictMode: false,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   experimental: {
     appDir: true,
   },
