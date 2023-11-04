@@ -2,13 +2,15 @@
 
 import { useDisclosure } from '@mantine/hooks';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { AppShell, Burger, Button, Group, Stack, Text } from '@mantine/core';
+import { AppShell, Burger, Button, Flex, Group, Stack, Text } from '@mantine/core';
 import { IconMicroscope } from '@tabler/icons-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import '@mantine/notifications/styles.css';
+import Image from 'next/image';
 import Link from 'next/link';
 import React, { ReactNode, useEffect } from 'react';
-import { shortKey } from '../../lib/utils';
+import icon from '@/public/meta.jpg';
+import { shortKey } from '@/lib/utils';
 
 interface MenuItem {
   name: string;
@@ -35,8 +37,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       padding="md"
     >
       <AppShell.Header>
-        <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-        <div>Logo</div>
+        <Flex justify="space-between" align="center" p="5">
+          <Flex justify="flex-start" align="center" gap="xs">
+            <Image src={icon} alt="App logo" width={48} height={48} />
+            <Text fw="bold">Futarchy</Text>
+          </Flex>
+          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+        </Flex>
       </AppShell.Header>
 
       <AppShell.Navbar p="md">

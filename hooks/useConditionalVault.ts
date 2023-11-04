@@ -1,29 +1,20 @@
 import { useCallback, useMemo } from 'react';
 import { Program, utils, BN } from '@coral-xyz/anchor';
-import { Keypair, PublicKey, Signer } from '@solana/web3.js';
-import { MethodsBuilder } from '@coral-xyz/anchor/dist/cjs/program/namespace/methods';
-import { AllInstructions } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { ConditionalVault, IDL as CONDITIONAL_VAULT_IDL } from '../lib/idl/conditional_vault';
 import { useProvider } from './useProvider';
 
 export function useConditionalVault() {
   const provider = useProvider();
-  const programId = new PublicKey('4nCk4qKJSJf8pzJadMnr9LubA6Y7Zw3EacsVqH1TwVXH');
+  const programId = new PublicKey('vaU1tVLj8RFk7mNj1BxqgAsMKKaL8UvEUHvU3tdbZPe');
   const program = useMemo(
     () => new Program<ConditionalVault>(CONDITIONAL_VAULT_IDL, programId, provider),
     [provider, programId],
   );
 
   const initializeVault = useCallback(
-    async (
-      settlementAuthority: PublicKey,
-      underlyingTokenMint: PublicKey,
-      nonce: BN,
-    ): Promise<{
-      builder: MethodsBuilder<ConditionalVault, AllInstructions<ConditionalVault>>;
-      signers: Signer[];
-    }> => {
+    async (settlementAuthority: PublicKey, underlyingTokenMint: PublicKey, nonce: BN) => {
       const [vault] = PublicKey.findProgramAddressSync(
         [
           utils.bytes.utf8.encode('conditional_vault'),
@@ -40,20 +31,21 @@ export function useConditionalVault() {
         true,
       );
 
-      const conditionalTokenMintKeypair = Keypair.generate();
-
+      const conditionalOnFinalizeTokenMint = Keypair.generate();
+      const conditionalOnRevertTokenMint = Keypair.generate();
       return {
-        builder: program.methods
+        tx: await program.methods
           .initializeConditionalVault(settlementAuthority, nonce)
           .accounts({
             vault,
             underlyingTokenMint,
             vaultUnderlyingTokenAccount,
-            conditionalTokenMint: conditionalTokenMintKeypair.publicKey,
+            conditionalOnFinalizeTokenMint: conditionalOnFinalizeTokenMint.publicKey,
+            conditionalOnRevertTokenMint: conditionalOnRevertTokenMint.publicKey,
             payer: provider.publicKey,
           })
-          .signers([conditionalTokenMintKeypair]),
-        signers: [conditionalTokenMintKeypair],
+          .transaction(),
+        signers: [conditionalOnFinalizeTokenMint, conditionalOnRevertTokenMint],
       };
     },
     [program],

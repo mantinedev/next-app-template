@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Program, utils, BN } from '@coral-xyz/anchor';
-import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Signer,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { IdlAccounts } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
 import { OracleConfigParams } from '@openbook-dex/openbook-v2';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
@@ -34,7 +41,7 @@ const createProgramAccount = async (
       space: size,
       programId: program.programId,
     }),
-  ).instructions;
+  );
   return { tx, signers: [address] };
 };
 
@@ -57,7 +64,7 @@ const createOpenbookMarket = async (
   oracleConfigParams: OracleConfigParams = { confFilter: 0.1, maxStalenessSlots: 100 },
   market: Keypair = Keypair.generate(),
   collectFeeAdmin?: PublicKey,
-) => {
+): Promise<{ signers: Signer[]; instructions: (Transaction | TransactionInstruction)[] }> => {
   const bids = await createProgramAccount(program, creator, BooksideSpace);
   const asks = await createProgramAccount(program, creator, BooksideSpace);
   const eventHeap = await createProgramAccount(program, creator, EventHeapSpace);
@@ -73,38 +80,43 @@ const createOpenbookMarket = async (
   );
 
   return {
-    builder: program.methods
-      .createMarket(
-        name,
-        oracleConfigParams,
-        quoteLotSize,
-        baseLotSize,
-        makerFee,
-        takerFee,
-        timeExpiry,
-      )
-      .accounts({
-        market: market.publicKey,
-        marketAuthority,
-        bids: bids.signers[0].publicKey,
-        asks: asks.signers[0].publicKey,
-        eventHeap: eventHeap.signers[0].publicKey,
-        payer: creator,
-        marketBaseVault: baseVault,
-        marketQuoteVault: quoteVault,
-        baseMint,
-        quoteMint,
-        oracleA,
-        oracleB,
-        collectFeeAdmin: collectFeeAdmin != null ? collectFeeAdmin : creator,
-        openOrdersAdmin,
-        consumeEventsAdmin,
-        closeMarketAdmin,
-        eventAuthority,
-        program: program.programId,
-      })
-      .preInstructions([...bids.tx, ...asks.tx, ...eventHeap.tx]),
-    signers: [],
+    signers: [...bids.signers, ...asks.signers, ...eventHeap.signers],
+    instructions: [
+      bids.tx,
+      asks.tx,
+      eventHeap.tx,
+      await program.methods
+        .createMarket(
+          name,
+          oracleConfigParams,
+          quoteLotSize,
+          baseLotSize,
+          makerFee,
+          takerFee,
+          timeExpiry,
+        )
+        .accounts({
+          market: market.publicKey,
+          marketAuthority,
+          bids: bids.signers[0].publicKey,
+          asks: asks.signers[0].publicKey,
+          eventHeap: eventHeap.signers[0].publicKey,
+          payer: creator,
+          marketBaseVault: baseVault,
+          marketQuoteVault: quoteVault,
+          baseMint,
+          quoteMint,
+          oracleA,
+          oracleB,
+          collectFeeAdmin: collectFeeAdmin != null ? collectFeeAdmin : creator,
+          openOrdersAdmin,
+          consumeEventsAdmin,
+          closeMarketAdmin,
+          eventAuthority,
+          program: program.programId,
+        })
+        .instruction(),
+    ],
   };
 };
 
@@ -112,7 +124,7 @@ export function useAutocrat() {
   const provider = useProvider();
   const wallet = useWallet();
   const { connection } = useConnection();
-  const programId = new PublicKey('GLmTsw5A8DLCThjNgtMBKVDAG8EZYDVMic1pcjhGLiM1');
+  const programId = new PublicKey('meta3cxKzFBmWYgCVozmvCQAS3y9b3fGxrG9HkHL7Wi');
   const { initializeVault } = useConditionalVault();
   const { tokens } = useTokens();
   const dao = useMemo(
@@ -166,8 +178,6 @@ export function useAutocrat() {
       return;
     }
 
-    console.log(baseNonce, baseNonce.or(new BN(1).shln(63)));
-
     const basePassVault = await initializeVault(daoTreasury, tokens.meta.publicKey, baseNonce);
 
     const quotePassVault = await initializeVault(
@@ -200,7 +210,7 @@ export function useAutocrat() {
       wallet.publicKey,
       tokens.meta.publicKey,
       tokens.usdc.publicKey,
-      'Pass market',
+      'Pass-Market',
       new BN(100),
       new BN(1e9),
       new BN(0),
@@ -262,12 +272,8 @@ export function useAutocrat() {
 
     const txs: Transaction[] = [];
 
-    const vaultTx = new Transaction().add(
-      await basePassVault.builder.instruction(),
-      await quotePassVault.builder.instruction(),
-      await baseFailVault.builder.instruction(),
-      await quoteFailVault.builder.instruction(),
-    );
+    const baseVaultTx = new Transaction().add(basePassVault.tx, baseFailVault.tx);
+    const quoteVaultTx = new Transaction().add(quotePassVault.tx, quoteFailVault.tx);
 
     const daoTx = new Transaction().add(
       await program.methods
@@ -280,13 +286,15 @@ export function useAutocrat() {
         .instruction(),
     );
 
-    const passMarketTx = new Transaction().add(await openbookPassMarket.builder.instruction());
-    const failMarketTx = new Transaction().add(await openbookFailMarket.builder.instruction());
+    const passMarketTx = new Transaction().add(...openbookPassMarket.instructions);
+    const failMarketTx = new Transaction().add(...openbookFailMarket.instructions);
     const twapsTx = new Transaction().add(createPassTwapMarketIx, createFailTwapMarketIx);
 
     const blockhask = await connection.getLatestBlockhash();
-    vaultTx.feePayer = wallet.publicKey!;
-    vaultTx.recentBlockhash = blockhask.blockhash;
+    baseVaultTx.feePayer = wallet.publicKey!;
+    baseVaultTx.recentBlockhash = blockhask.blockhash;
+    quoteVaultTx.feePayer = wallet.publicKey!;
+    quoteVaultTx.recentBlockhash = blockhask.blockhash;
     daoTx.feePayer = wallet.publicKey!;
     daoTx.recentBlockhash = blockhask.blockhash;
     twapsTx.feePayer = wallet.publicKey!;
@@ -296,20 +304,16 @@ export function useAutocrat() {
     failMarketTx.feePayer = wallet.publicKey!;
     failMarketTx.recentBlockhash = blockhask.blockhash;
 
-    vaultTx.sign(
-      ...basePassVault.signers,
-      ...baseFailVault.signers,
-      ...quotePassVault.signers,
-      ...quoteFailVault.signers,
-    );
-    passMarketTx.sign(openbookPassMarketKP);
-    failMarketTx.sign(openbookFailMarketKP);
+    baseVaultTx.sign(...basePassVault.signers, ...baseFailVault.signers);
+    quoteVaultTx.sign(...quotePassVault.signers, ...quoteFailVault.signers);
+    passMarketTx.sign(...openbookPassMarket.signers, openbookPassMarketKP);
+    failMarketTx.sign(...openbookFailMarket.signers, openbookFailMarketKP);
 
     txs.push(passMarketTx, failMarketTx);
+    txs.push(baseVaultTx, quoteVaultTx);
+    txs.push(daoTx);
 
-    console.log(...txs);
     const signedTxs = await wallet.signAllTransactions(txs);
-    console.log(...signedTxs);
     await Promise.all(
       signedTxs.map((tx) => connection.sendRawTransaction(tx.serialize(), { skipPreflight: true })),
     );

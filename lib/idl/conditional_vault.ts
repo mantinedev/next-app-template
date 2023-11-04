@@ -16,7 +16,12 @@ export type ConditionalVault = {
           isSigner: false;
         },
         {
-          name: 'conditionalTokenMint';
+          name: 'conditionalOnFinalizeTokenMint';
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: 'conditionalOnRevertTokenMint';
           isMut: true;
           isSigner: true;
         },
@@ -81,37 +86,6 @@ export type ConditionalVault = {
       ];
     },
     {
-      name: 'initializeDepositSlip';
-      accounts: [
-        {
-          name: 'depositSlip';
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: 'vault';
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: 'payer';
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: 'systemProgram';
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [
-        {
-          name: 'authority';
-          type: 'publicKey';
-        },
-      ];
-    },
-    {
       name: 'mintConditionalTokens';
       accounts: [
         {
@@ -120,7 +94,12 @@ export type ConditionalVault = {
           isSigner: false;
         },
         {
-          name: 'conditionalTokenMint';
+          name: 'conditionalOnFinalizeTokenMint';
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: 'conditionalOnRevertTokenMint';
           isMut: true;
           isSigner: false;
         },
@@ -135,17 +114,17 @@ export type ConditionalVault = {
           isSigner: true;
         },
         {
-          name: 'depositSlip';
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: 'userUnderlyingTokenAccount';
           isMut: true;
           isSigner: false;
         },
         {
-          name: 'userConditionalTokenAccount';
+          name: 'userConditionalOnFinalizeTokenAccount';
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: 'userConditionalOnRevertTokenAccount';
           isMut: true;
           isSigner: false;
         },
@@ -171,7 +150,12 @@ export type ConditionalVault = {
           isSigner: false;
         },
         {
-          name: 'conditionalTokenMint';
+          name: 'conditionalOnFinalizeTokenMint';
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: 'conditionalOnRevertTokenMint';
           isMut: true;
           isSigner: false;
         },
@@ -186,43 +170,12 @@ export type ConditionalVault = {
           isSigner: true;
         },
         {
-          name: 'userConditionalTokenAccount';
+          name: 'userConditionalOnFinalizeTokenAccount';
           isMut: true;
           isSigner: false;
         },
         {
-          name: 'userUnderlyingTokenAccount';
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: 'tokenProgram';
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
-      name: 'redeemDepositSlipForUnderlyingTokens';
-      accounts: [
-        {
-          name: 'vault';
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: 'vaultUnderlyingTokenAccount';
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: 'authority';
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: 'depositSlip';
+          name: 'userConditionalOnRevertTokenAccount';
           isMut: true;
           isSigner: false;
         },
@@ -280,32 +233,16 @@ export type ConditionalVault = {
             type: 'publicKey';
           },
           {
-            name: 'conditionalTokenMint';
+            name: 'conditionalOnFinalizeTokenMint';
+            type: 'publicKey';
+          },
+          {
+            name: 'conditionalOnRevertTokenMint';
             type: 'publicKey';
           },
           {
             name: 'pdaBump';
             type: 'u8';
-          },
-        ];
-      };
-    },
-    {
-      name: 'depositSlip';
-      type: {
-        kind: 'struct';
-        fields: [
-          {
-            name: 'vault';
-            type: 'publicKey';
-          },
-          {
-            name: 'authority';
-            type: 'publicKey';
-          },
-          {
-            name: 'depositedAmount';
-            type: 'u64';
           },
         ];
       };
@@ -344,7 +281,7 @@ export type ConditionalVault = {
     {
       code: 6002;
       name: 'InvalidConditionalTokenMint';
-      msg: "This `conditional_token_mint` is not this vault's `conditional_token_mint`";
+      msg: "This conditional token mint is not this vault's conditional token mint";
     },
     {
       code: 6003;
@@ -353,11 +290,6 @@ export type ConditionalVault = {
     },
     {
       code: 6004;
-      name: 'CantRedeemDepositSlip';
-      msg: 'Vault needs to be settled as reverted before users can redeem deposit slips for underlying tokens';
-    },
-    {
-      code: 6005;
       name: 'VaultAlreadySettled';
       msg: 'Once a vault has been settled, its status as either finalized or reverted cannot be changed';
     },
@@ -382,7 +314,12 @@ export const IDL: ConditionalVault = {
           isSigner: false,
         },
         {
-          name: 'conditionalTokenMint',
+          name: 'conditionalOnFinalizeTokenMint',
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: 'conditionalOnRevertTokenMint',
           isMut: true,
           isSigner: true,
         },
@@ -447,37 +384,6 @@ export const IDL: ConditionalVault = {
       ],
     },
     {
-      name: 'initializeDepositSlip',
-      accounts: [
-        {
-          name: 'depositSlip',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'vault',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'payer',
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: 'systemProgram',
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: 'authority',
-          type: 'publicKey',
-        },
-      ],
-    },
-    {
       name: 'mintConditionalTokens',
       accounts: [
         {
@@ -486,7 +392,12 @@ export const IDL: ConditionalVault = {
           isSigner: false,
         },
         {
-          name: 'conditionalTokenMint',
+          name: 'conditionalOnFinalizeTokenMint',
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: 'conditionalOnRevertTokenMint',
           isMut: true,
           isSigner: false,
         },
@@ -501,17 +412,17 @@ export const IDL: ConditionalVault = {
           isSigner: true,
         },
         {
-          name: 'depositSlip',
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: 'userUnderlyingTokenAccount',
           isMut: true,
           isSigner: false,
         },
         {
-          name: 'userConditionalTokenAccount',
+          name: 'userConditionalOnFinalizeTokenAccount',
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: 'userConditionalOnRevertTokenAccount',
           isMut: true,
           isSigner: false,
         },
@@ -537,7 +448,12 @@ export const IDL: ConditionalVault = {
           isSigner: false,
         },
         {
-          name: 'conditionalTokenMint',
+          name: 'conditionalOnFinalizeTokenMint',
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: 'conditionalOnRevertTokenMint',
           isMut: true,
           isSigner: false,
         },
@@ -552,43 +468,12 @@ export const IDL: ConditionalVault = {
           isSigner: true,
         },
         {
-          name: 'userConditionalTokenAccount',
+          name: 'userConditionalOnFinalizeTokenAccount',
           isMut: true,
           isSigner: false,
         },
         {
-          name: 'userUnderlyingTokenAccount',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'tokenProgram',
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: 'redeemDepositSlipForUnderlyingTokens',
-      accounts: [
-        {
-          name: 'vault',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'vaultUnderlyingTokenAccount',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'authority',
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: 'depositSlip',
+          name: 'userConditionalOnRevertTokenAccount',
           isMut: true,
           isSigner: false,
         },
@@ -646,32 +531,16 @@ export const IDL: ConditionalVault = {
             type: 'publicKey',
           },
           {
-            name: 'conditionalTokenMint',
+            name: 'conditionalOnFinalizeTokenMint',
+            type: 'publicKey',
+          },
+          {
+            name: 'conditionalOnRevertTokenMint',
             type: 'publicKey',
           },
           {
             name: 'pdaBump',
             type: 'u8',
-          },
-        ],
-      },
-    },
-    {
-      name: 'depositSlip',
-      type: {
-        kind: 'struct',
-        fields: [
-          {
-            name: 'vault',
-            type: 'publicKey',
-          },
-          {
-            name: 'authority',
-            type: 'publicKey',
-          },
-          {
-            name: 'depositedAmount',
-            type: 'u64',
           },
         ],
       },
@@ -710,7 +579,7 @@ export const IDL: ConditionalVault = {
     {
       code: 6002,
       name: 'InvalidConditionalTokenMint',
-      msg: "This `conditional_token_mint` is not this vault's `conditional_token_mint`",
+      msg: "This conditional token mint is not this vault's conditional token mint",
     },
     {
       code: 6003,
@@ -719,11 +588,6 @@ export const IDL: ConditionalVault = {
     },
     {
       code: 6004,
-      name: 'CantRedeemDepositSlip',
-      msg: 'Vault needs to be settled as reverted before users can redeem deposit slips for underlying tokens',
-    },
-    {
-      code: 6005,
       name: 'VaultAlreadySettled',
       msg: 'Once a vault has been settled, its status as either finalized or reverted cannot be changed',
     },

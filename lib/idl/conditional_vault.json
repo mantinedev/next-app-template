@@ -16,7 +16,12 @@
           "isSigner": false
         },
         {
-          "name": "conditionalTokenMint",
+          "name": "conditionalOnFinalizeTokenMint",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "conditionalOnRevertTokenMint",
           "isMut": true,
           "isSigner": true
         },
@@ -81,37 +86,6 @@
       ]
     },
     {
-      "name": "initializeDepositSlip",
-      "accounts": [
-        {
-          "name": "depositSlip",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vault",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "authority",
-          "type": "publicKey"
-        }
-      ]
-    },
-    {
       "name": "mintConditionalTokens",
       "accounts": [
         {
@@ -120,7 +94,12 @@
           "isSigner": false
         },
         {
-          "name": "conditionalTokenMint",
+          "name": "conditionalOnFinalizeTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "conditionalOnRevertTokenMint",
           "isMut": true,
           "isSigner": false
         },
@@ -135,17 +114,17 @@
           "isSigner": true
         },
         {
-          "name": "depositSlip",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "userUnderlyingTokenAccount",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "userConditionalTokenAccount",
+          "name": "userConditionalOnFinalizeTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userConditionalOnRevertTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -171,7 +150,12 @@
           "isSigner": false
         },
         {
-          "name": "conditionalTokenMint",
+          "name": "conditionalOnFinalizeTokenMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "conditionalOnRevertTokenMint",
           "isMut": true,
           "isSigner": false
         },
@@ -186,43 +170,12 @@
           "isSigner": true
         },
         {
-          "name": "userConditionalTokenAccount",
+          "name": "userConditionalOnFinalizeTokenAccount",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "userUnderlyingTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "redeemDepositSlipForUnderlyingTokens",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "vaultUnderlyingTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "depositSlip",
+          "name": "userConditionalOnRevertTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -284,32 +237,16 @@
             "type": "publicKey"
           },
           {
-            "name": "conditionalTokenMint",
+            "name": "conditionalOnFinalizeTokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "conditionalOnRevertTokenMint",
             "type": "publicKey"
           },
           {
             "name": "pdaBump",
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "DepositSlip",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "vault",
-            "type": "publicKey"
-          },
-          {
-            "name": "authority",
-            "type": "publicKey"
-          },
-          {
-            "name": "depositedAmount",
-            "type": "u64"
           }
         ]
       }
@@ -348,7 +285,7 @@
     {
       "code": 6002,
       "name": "InvalidConditionalTokenMint",
-      "msg": "This `conditional_token_mint` is not this vault's `conditional_token_mint`"
+      "msg": "This conditional token mint is not this vault's conditional token mint"
     },
     {
       "code": 6003,
@@ -357,16 +294,11 @@
     },
     {
       "code": 6004,
-      "name": "CantRedeemDepositSlip",
-      "msg": "Vault needs to be settled as reverted before users can redeem deposit slips for underlying tokens"
-    },
-    {
-      "code": 6005,
       "name": "VaultAlreadySettled",
       "msg": "Once a vault has been settled, its status as either finalized or reverted cannot be changed"
     }
   ],
   "metadata": {
-    "address": "4nCk4qKJSJf8pzJadMnr9LubA6Y7Zw3EacsVqH1TwVXH"
+    "address": "vaU1tVLj8RFk7mNj1BxqgAsMKKaL8UvEUHvU3tdbZPe"
   }
 }
