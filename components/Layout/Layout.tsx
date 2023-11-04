@@ -3,7 +3,12 @@
 import { useDisclosure } from '@mantine/hooks';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { AppShell, Burger, Button, Flex, Group, Stack, Text } from '@mantine/core';
-import { IconMicroscope } from '@tabler/icons-react';
+import {
+  IconBooks,
+  IconDeviceDesktopAnalytics,
+  IconMicroscope,
+  IconSpeakerphone,
+} from '@tabler/icons-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import '@mantine/notifications/styles.css';
 import Image from 'next/image';
@@ -17,7 +22,12 @@ interface MenuItem {
   href: string;
   icon: ReactNode;
 }
-const menuItems: MenuItem[] = [{ name: 'Debug', href: '/debug', icon: <IconMicroscope /> }];
+const menuItems: MenuItem[] = [
+  { name: 'Proposals', href: '/proposals', icon: <IconSpeakerphone /> },
+  { name: 'Analytics', href: '/analytics', icon: <IconDeviceDesktopAnalytics /> },
+  { name: 'Docs', href: 'https://themetadao.org/', icon: <IconBooks /> },
+  { name: 'Debug', href: '/debug', icon: <IconMicroscope /> },
+];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const wallet = useWallet();
@@ -51,10 +61,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <Stack>
             {menuItems.map((item) => (
               <Link key={item.href} href={item.href}>
-                <Group>
+                <Button variant="default" w="100%" justify="flex-start">
                   {item.icon}
                   <Text>{item.name}</Text>
-                </Group>
+                </Button>
               </Link>
             ))}
           </Stack>
