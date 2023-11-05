@@ -18,14 +18,17 @@ import { useProvider } from './useProvider';
 import { useTokens } from './useTokens';
 import { useConditionalVault } from './useConditionalVault';
 import { OpenbookTwap, IDL as OPENBOOK_TWAP_IDL } from '../lib/idl/openbook_twap';
+import {
+  AUTOCRAT_PROGRAM_ID,
+  OPENBOOK_PROGRAM_ID,
+  OPENBOOK_TWAP_PROGRAM_ID,
+} from '../lib/constants';
 
 const AUTOCRAT_IDL: AutocratV0 = require('@/lib/idl/autocrat_v0.json');
 
 export type DaoState = IdlAccounts<AutocratV0>['dao'];
 export type ProposalInstruction = IdlTypes<AutocratV0>['ProposalInstruction'];
 
-const OPENBOOK_PROGRAM_ID = new PublicKey('opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb');
-const OPENBOOK_TWAP_PROGRAM_ID = new PublicKey('TWAP7frdvD3ia7TWc8e9SxZMmrpd2Yf3ifSPAHS8VG3');
 const BooksideSpace = 90944 + 8;
 const EventHeapSpace = 91280 + 8;
 
@@ -127,7 +130,7 @@ export function useAutocrat() {
   const provider = useProvider();
   const wallet = useWallet();
   const { connection } = useConnection();
-  const programId = new PublicKey('meta3cxKzFBmWYgCVozmvCQAS3y9b3fGxrG9HkHL7Wi');
+  const programId = AUTOCRAT_PROGRAM_ID;
   const { initializeVault } = useConditionalVault();
   const { tokens } = useTokens();
   const dao = useMemo(

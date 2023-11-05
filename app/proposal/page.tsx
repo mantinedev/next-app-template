@@ -3,6 +3,7 @@
 import { Container, Stack } from '@mantine/core';
 import { useSearchParams } from 'next/navigation';
 import { Layout } from '@/components/Layout/Layout';
+import { ProposalDetailCard } from '@/components/Proposals/ProposalDetailCard';
 
 export default function ProposalsPage() {
   const params = useSearchParams();
@@ -10,7 +11,9 @@ export default function ProposalsPage() {
   return (
     <Layout>
       <Container>
-        <Stack gap="15">tre</Stack>
+        <Stack gap="15">
+          <ProposalDetailCard proposalNumber={proposalNumber} />
+        </Stack>
       </Container>
     </Layout>
   );
