@@ -25,28 +25,41 @@ export function useConditionalVault() {
         program.programId,
       );
 
-      const vaultUnderlyingTokenAccount = getAssociatedTokenAddressSync(
-        underlyingTokenMint,
-        vault,
-        true,
-      );
+      try {
+        const fetchedVault = await program.account.conditionalVault.fetch(vault);
+        return {
+          signers: [],
+          vault,
+          finalizeMint: fetchedVault.conditionalOnFinalizeTokenMint,
+          revertMint: fetchedVault.conditionalOnRevertTokenMint,
+        };
+      } catch (err) {
+        const vaultUnderlyingTokenAccount = getAssociatedTokenAddressSync(
+          underlyingTokenMint,
+          vault,
+          true,
+        );
+        const conditionalOnFinalizeTokenMint = Keypair.generate();
+        const conditionalOnRevertTokenMint = Keypair.generate();
 
-      const conditionalOnFinalizeTokenMint = Keypair.generate();
-      const conditionalOnRevertTokenMint = Keypair.generate();
-      return {
-        tx: await program.methods
-          .initializeConditionalVault(settlementAuthority, nonce)
-          .accounts({
-            vault,
-            underlyingTokenMint,
-            vaultUnderlyingTokenAccount,
-            conditionalOnFinalizeTokenMint: conditionalOnFinalizeTokenMint.publicKey,
-            conditionalOnRevertTokenMint: conditionalOnRevertTokenMint.publicKey,
-            payer: provider.publicKey,
-          })
-          .transaction(),
-        signers: [conditionalOnFinalizeTokenMint, conditionalOnRevertTokenMint],
-      };
+        return {
+          tx: await program.methods
+            .initializeConditionalVault(settlementAuthority, nonce)
+            .accounts({
+              vault,
+              underlyingTokenMint,
+              vaultUnderlyingTokenAccount,
+              conditionalOnFinalizeTokenMint: conditionalOnFinalizeTokenMint.publicKey,
+              conditionalOnRevertTokenMint: conditionalOnRevertTokenMint.publicKey,
+              payer: provider.publicKey,
+            })
+            .transaction(),
+          signers: [conditionalOnFinalizeTokenMint, conditionalOnRevertTokenMint],
+          vault,
+          finalizeMint: conditionalOnFinalizeTokenMint.publicKey,
+          revertMint: conditionalOnRevertTokenMint.publicKey,
+        };
+      }
     },
     [program],
   );

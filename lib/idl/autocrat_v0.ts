@@ -52,22 +52,12 @@ export type AutocratV0 = {
           isSigner: false;
         },
         {
-          name: 'quotePassVault';
+          name: 'quoteVault';
           isMut: false;
           isSigner: false;
         },
         {
-          name: 'quoteFailVault';
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: 'basePassVault';
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: 'baseFailVault';
+          name: 'baseVault';
           isMut: false;
           isSigner: false;
         },
@@ -88,16 +78,6 @@ export type AutocratV0 = {
         },
         {
           name: 'openbookTwapFailMarket';
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: 'passMarket';
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: 'failMarket';
           isMut: false;
           isSigner: false;
         },
@@ -144,37 +124,17 @@ export type AutocratV0 = {
           isSigner: false;
         },
         {
-          name: 'passMarket';
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: 'failMarket';
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: 'dao';
           isMut: false;
           isSigner: false;
         },
         {
-          name: 'quotePassVault';
+          name: 'baseVault';
           isMut: true;
           isSigner: false;
         },
         {
-          name: 'quoteFailVault';
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: 'basePassVault';
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: 'baseFailVault';
+          name: 'quoteVault';
           isMut: true;
           isSigner: false;
         },
@@ -187,11 +147,6 @@ export type AutocratV0 = {
           name: 'daoTreasury';
           isMut: true;
           isSigner: false;
-        },
-        {
-          name: 'proposer';
-          isMut: false;
-          isSigner: true;
         },
       ];
       args: [];
@@ -347,27 +302,19 @@ export type AutocratV0 = {
             type: 'publicKey';
           },
           {
-            name: 'passMarket';
+            name: 'openbookPassMarket';
             type: 'publicKey';
           },
           {
-            name: 'failMarket';
+            name: 'openbookFailMarket';
             type: 'publicKey';
           },
           {
-            name: 'basePassVault';
+            name: 'baseVault';
             type: 'publicKey';
           },
           {
-            name: 'quotePassVault';
-            type: 'publicKey';
-          },
-          {
-            name: 'baseFailVault';
-            type: 'publicKey';
-          },
-          {
-            name: 'quoteFailVault';
+            name: 'quoteVault';
             type: 'publicKey';
           },
         ];
@@ -445,31 +392,41 @@ export type AutocratV0 = {
     },
     {
       code: 6001;
+      name: 'TWAPMarketTooOld';
+      msg: "`TWAPMarket` must have an `initial_slot` within 50 slots of the proposal's `slot_enqueued`";
+    },
+    {
+      code: 6002;
+      name: 'TWAPMarketInvalidExpectedValue';
+      msg: '`TWAPMarket` must have an expected value of 1000, or 0.1 USDC per META';
+    },
+    {
+      code: 6003;
       name: 'InvalidSettlementAuthority';
       msg: 'One of the vaults has an invalid `settlement_authority`';
     },
     {
-      code: 6002;
+      code: 6004;
       name: 'ProposalTooYoung';
       msg: 'Proposal is too young to be executed or rejected';
     },
     {
-      code: 6003;
+      code: 6005;
       name: 'MarketsTooYoung';
       msg: 'Markets too young for proposal to be finalized';
     },
     {
-      code: 6004;
+      code: 6006;
       name: 'ProposalCannotPass';
       msg: 'The market dictates that this proposal cannot pass';
     },
     {
-      code: 6005;
+      code: 6007;
       name: 'ProposalAlreadyFinalized';
       msg: 'This proposal has already been finalized';
     },
     {
-      code: 6006;
+      code: 6008;
       name: 'InvalidVaultNonce';
       msg: 'A conditional vault has an invalid nonce. A nonce should encode pass = 0 / fail = 1 in its most significant bit, base = 0 / quote = 1 in its second most significant bit, and the proposal number in least significant 32 bits';
     },
@@ -530,22 +487,12 @@ export const IDL: AutocratV0 = {
           isSigner: false,
         },
         {
-          name: 'quotePassVault',
+          name: 'quoteVault',
           isMut: false,
           isSigner: false,
         },
         {
-          name: 'quoteFailVault',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'basePassVault',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'baseFailVault',
+          name: 'baseVault',
           isMut: false,
           isSigner: false,
         },
@@ -566,16 +513,6 @@ export const IDL: AutocratV0 = {
         },
         {
           name: 'openbookTwapFailMarket',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'passMarket',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'failMarket',
           isMut: false,
           isSigner: false,
         },
@@ -622,37 +559,17 @@ export const IDL: AutocratV0 = {
           isSigner: false,
         },
         {
-          name: 'passMarket',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'failMarket',
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: 'dao',
           isMut: false,
           isSigner: false,
         },
         {
-          name: 'quotePassVault',
+          name: 'baseVault',
           isMut: true,
           isSigner: false,
         },
         {
-          name: 'quoteFailVault',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'basePassVault',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'baseFailVault',
+          name: 'quoteVault',
           isMut: true,
           isSigner: false,
         },
@@ -665,11 +582,6 @@ export const IDL: AutocratV0 = {
           name: 'daoTreasury',
           isMut: true,
           isSigner: false,
-        },
-        {
-          name: 'proposer',
-          isMut: false,
-          isSigner: true,
         },
       ],
       args: [],
@@ -825,27 +737,19 @@ export const IDL: AutocratV0 = {
             type: 'publicKey',
           },
           {
-            name: 'passMarket',
+            name: 'openbookPassMarket',
             type: 'publicKey',
           },
           {
-            name: 'failMarket',
+            name: 'openbookFailMarket',
             type: 'publicKey',
           },
           {
-            name: 'basePassVault',
+            name: 'baseVault',
             type: 'publicKey',
           },
           {
-            name: 'quotePassVault',
-            type: 'publicKey',
-          },
-          {
-            name: 'baseFailVault',
-            type: 'publicKey',
-          },
-          {
-            name: 'quoteFailVault',
+            name: 'quoteVault',
             type: 'publicKey',
           },
         ],
@@ -923,31 +827,41 @@ export const IDL: AutocratV0 = {
     },
     {
       code: 6001,
+      name: 'TWAPMarketTooOld',
+      msg: "`TWAPMarket` must have an `initial_slot` within 50 slots of the proposal's `slot_enqueued`",
+    },
+    {
+      code: 6002,
+      name: 'TWAPMarketInvalidExpectedValue',
+      msg: '`TWAPMarket` must have an expected value of 1000, or 0.1 USDC per META',
+    },
+    {
+      code: 6003,
       name: 'InvalidSettlementAuthority',
       msg: 'One of the vaults has an invalid `settlement_authority`',
     },
     {
-      code: 6002,
+      code: 6004,
       name: 'ProposalTooYoung',
       msg: 'Proposal is too young to be executed or rejected',
     },
     {
-      code: 6003,
+      code: 6005,
       name: 'MarketsTooYoung',
       msg: 'Markets too young for proposal to be finalized',
     },
     {
-      code: 6004,
+      code: 6006,
       name: 'ProposalCannotPass',
       msg: 'The market dictates that this proposal cannot pass',
     },
     {
-      code: 6005,
+      code: 6007,
       name: 'ProposalAlreadyFinalized',
       msg: 'This proposal has already been finalized',
     },
     {
-      code: 6006,
+      code: 6008,
       name: 'InvalidVaultNonce',
       msg: 'A conditional vault has an invalid nonce. A nonce should encode pass = 0 / fail = 1 in its most significant bit, base = 0 / quote = 1 in its second most significant bit, and the proposal number in least significant 32 bits',
     },
