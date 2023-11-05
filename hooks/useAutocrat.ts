@@ -155,16 +155,18 @@ export function useAutocrat() {
   );
   const baseNonce: BN = new BN(daoState?.proposalCount || 0);
 
-  useEffect(() => {
-    async function fetchState() {
-      try {
-        console.log('fetch', dao);
-        setDaoState(await program.account.dao.fetch(dao));
-      } catch (err) {
-        console.log(err);
-      }
-    }
+  console.log(daoState);
 
+  const fetchState = async () => {
+    try {
+      console.log('fetch', dao);
+      setDaoState(await program.account.dao.fetch(dao));
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
     if (!daoState) {
       fetchState();
     }
@@ -375,6 +377,7 @@ export function useAutocrat() {
         );
       }
       setDaoState(await program.account.dao.fetch(dao));
+      fetchState();
     },
     [baseNonce, dao, program, connection, wallet],
   );
