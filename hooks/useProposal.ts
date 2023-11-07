@@ -32,14 +32,16 @@ export function useProposal(id: number) {
   const { program: vaultProgram, mintConditionalTokens } = useConditionalVault();
   const [markets, setMarkets] = useState<Markets>();
   const [proposal, setProposal] = useState<{ account: ProposalAccount; publicKey: PublicKey }>();
+  const [loading, setLoading] = useState(false);
 
   const fetchProposal = useCallback(async () => {
     setProposal((await program.account.proposal.all()).filter((t) => t.account.number === id)[0]);
   }, [program]);
 
   const fetchMarkets = useCallback(async () => {
-    console.log('market', proposal, openbook, openbookTwap);
     if (!proposal || !openbook || !openbookTwap || !openbookTwap.views) return;
+
+    setLoading(true);
 
     const pass = await openbook.account.market.fetch(proposal.account.openbookPassMarket);
     const fail = await openbook.account.market.fetch(proposal.account.openbookFailMarket);
@@ -83,6 +85,8 @@ export function useProposal(id: number) {
       baseVault,
       quoteVault,
     });
+
+    setLoading(false);
   }, [vaultProgram, openbook, openbookTwap]);
 
   useEffect(() => {
@@ -103,7 +107,7 @@ export function useProposal(id: number) {
         return;
       }
 
-      console.log(amount, proposal, fromBase);
+      setLoading(true);
 
       const mint = await mintConditionalTokens(
         amount,
@@ -112,19 +116,22 @@ export function useProposal(id: number) {
         fromBase,
       );
       const tx = new Transaction().add(...(mint?.ixs ?? []));
+
       const { blockhash } = await connection.getLatestBlockhash();
       tx.recentBlockhash = blockhash;
       tx.feePayer = wallet.publicKey;
-      console.log(tx);
+
       const signedTxs = await wallet.signAllTransactions([tx]);
       await Promise.all(
         signedTxs.map((t) => connection.sendRawTransaction(t.serialize(), { skipPreflight: true })),
       );
 
-      fetchMarkets();
+      await fetchMarkets();
+
+      setLoading(false);
     },
     [wallet, proposal, markets, connection],
   );
 
-  return { proposal, markets, fetchProposal, mintTokens };
+  return { proposal, markets, loading, fetchProposal, mintTokens };
 }
