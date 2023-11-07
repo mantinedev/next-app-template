@@ -16,10 +16,12 @@ export function useProposals() {
   }, [program]);
 
   useEffect(() => {
-    if (!proposals) {
+    if (!proposals || proposals.length === 0) {
       fetchProposals();
     }
   }, [proposals, fetchProposals]);
+
+  console.log(proposals);
 
   return { proposals, fetchProposals };
 }

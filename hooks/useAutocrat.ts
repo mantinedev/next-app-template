@@ -363,7 +363,7 @@ export function useAutocrat() {
       initProposalTx.sign(proposalKeypair);
 
       const txs = [
-        vaultTx.instructions.length > 0 ? vaultSigners : null,
+        vaultTx.instructions.length > 0 ? vaultTx : null,
         passMarketTx,
         failMarketTx,
         twapsTx,

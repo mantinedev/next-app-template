@@ -1,9 +1,15 @@
 import { useCallback, useMemo } from 'react';
 import { Program, utils, BN } from '@coral-xyz/anchor';
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddressSync,
+} from '@solana/spl-token';
+import numeral from 'numeral';
 import { ConditionalVault, IDL as CONDITIONAL_VAULT_IDL } from '../lib/idl/conditional_vault';
 import { useProvider } from './useProvider';
+import { useTokens } from './useTokens';
+import { ProposalAccount, VaultAccount } from '../lib/types';
 
 export function useConditionalVault() {
   const provider = useProvider();
@@ -12,6 +18,7 @@ export function useConditionalVault() {
     () => new Program<ConditionalVault>(CONDITIONAL_VAULT_IDL, programId, provider),
     [provider, programId],
   );
+  const { tokens } = useTokens();
 
   const initializeVault = useCallback(
     async (settlementAuthority: PublicKey, underlyingTokenMint: PublicKey, nonce: BN) => {
@@ -64,5 +71,66 @@ export function useConditionalVault() {
     [program],
   );
 
-  return { program, initializeVault };
+  const mintConditionalTokens = useCallback(
+    async (
+      amount: number,
+      proposal: ProposalAccount,
+      vault: VaultAccount,
+      fromBaseVault?: boolean,
+    ) => {
+      if (!tokens) {
+        return;
+      }
+      const token = Object.values(tokens).find(
+        (e) => e.publicKey.toString() === vault.underlyingTokenMint.toString(),
+      )!;
+
+      return {
+        ixs: [
+          createAssociatedTokenAccountIdempotentInstruction(
+            provider.publicKey,
+            getAssociatedTokenAddressSync(vault.conditionalOnFinalizeTokenMint, provider.publicKey),
+            provider.publicKey,
+            vault.conditionalOnFinalizeTokenMint,
+          ),
+          createAssociatedTokenAccountIdempotentInstruction(
+            provider.publicKey,
+            getAssociatedTokenAddressSync(vault.conditionalOnRevertTokenMint, provider.publicKey),
+            provider.publicKey,
+            vault.conditionalOnRevertTokenMint,
+          ),
+          await program.methods
+            .mintConditionalTokens(
+              new BN(
+                numeral(amount)
+                  .multiply(10 ** token.decimals)
+                  .format('0'),
+              ),
+            )
+            .accounts({
+              vault: fromBaseVault ? proposal.baseVault : proposal.quoteVault,
+              userConditionalOnFinalizeTokenAccount: getAssociatedTokenAddressSync(
+                vault.conditionalOnFinalizeTokenMint,
+                provider.publicKey,
+              ),
+              userConditionalOnRevertTokenAccount: getAssociatedTokenAddressSync(
+                vault.conditionalOnRevertTokenMint,
+                provider.publicKey,
+              ),
+              userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+                vault.underlyingTokenMint,
+                provider.publicKey,
+              ),
+              vaultUnderlyingTokenAccount: vault.underlyingTokenAccount,
+              conditionalOnFinalizeTokenMint: vault.conditionalOnFinalizeTokenMint,
+              conditionalOnRevertTokenMint: vault.conditionalOnRevertTokenMint,
+            })
+            .instruction(),
+        ],
+      };
+    },
+    [program, tokens],
+  );
+
+  return { program, initializeVault, mintConditionalTokens };
 }

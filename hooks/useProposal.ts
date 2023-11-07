@@ -1,27 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PublicKey } from '@solana/web3.js';
-import { IdlAccounts, Program } from '@coral-xyz/anchor';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { Program } from '@coral-xyz/anchor';
 import { useAutocrat } from './useAutocrat';
-import { AutocratV0 } from '../lib/idl/autocrat_v0';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '../lib/idl/openbook_v2';
 import { OpenbookTwap } from '../lib/idl/openbook_twap';
 import { useProvider } from './useProvider';
 import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '../lib/constants';
+import { Markets, ProposalAccount } from '../lib/types';
+import { useConditionalVault } from './useConditionalVault';
 
 const OPENBOOK_TWAP_IDL: OpenbookTwap = require('@/lib/idl/openbook_twap.json');
 
-export type ProposalAccount = IdlAccounts<AutocratV0>['proposal'];
-export type MarketAccount = IdlAccounts<OpenbookV2>['market'];
-export type TwapMarketAccount = IdlAccounts<OpenbookTwap>['twapMarket'];
-export type Markets = {
-  pass: MarketAccount;
-  fail: MarketAccount;
-  passTwap: TwapMarketAccount;
-  failTwap: TwapMarketAccount;
-};
-
 export function useProposal(id: number) {
   const { program } = useAutocrat();
+  const { connection } = useConnection();
+  const wallet = useWallet();
   const provider = useProvider();
   const openbook = useMemo(() => {
     if (!provider) {
@@ -35,6 +29,7 @@ export function useProposal(id: number) {
     }
     return new Program<OpenbookTwap>(OPENBOOK_TWAP_IDL, OPENBOOK_TWAP_PROGRAM_ID, provider);
   }, [provider]);
+  const { program: vaultProgram, mintConditionalTokens } = useConditionalVault();
   const [markets, setMarkets] = useState<Markets>();
   const [proposal, setProposal] = useState<{ account: ProposalAccount; publicKey: PublicKey }>();
 
@@ -44,18 +39,51 @@ export function useProposal(id: number) {
 
   const fetchMarkets = useCallback(async () => {
     console.log('market', proposal, openbook, openbookTwap);
-    if (!proposal || !openbook || !openbookTwap) return;
-    setMarkets({
-      pass: await openbook.account.market.fetch(proposal.account.openbookPassMarket),
-      fail: await openbook.account.market.fetch(proposal.account.openbookFailMarket),
-      passTwap: await openbookTwap.account.twapMarket.fetch(
-        proposal.account.openbookTwapPassMarket,
-      ),
-      failTwap: await openbookTwap.account.twapMarket.fetch(
-        proposal.account.openbookTwapFailMarket,
-      ),
+    if (!proposal || !openbook || !openbookTwap || !openbookTwap.views) return;
+
+    const pass = await openbook.account.market.fetch(proposal.account.openbookPassMarket);
+    const fail = await openbook.account.market.fetch(proposal.account.openbookFailMarket);
+    const passTwap = await openbookTwap.account.twapMarket.fetch(
+      proposal.account.openbookTwapPassMarket,
+    );
+    const failTwap = await openbookTwap.account.twapMarket.fetch(
+      proposal.account.openbookTwapFailMarket,
+    );
+    const baseVault = await vaultProgram.account.conditionalVault.fetch(proposal.account.baseVault);
+    const quoteVault = await vaultProgram.account.conditionalVault.fetch(
+      proposal.account.quoteVault,
+    );
+    const [passBid, passAsk] = await openbookTwap.views.getBestBidAndAsk({
+      accounts: {
+        market: proposal.account.openbookPassMarket,
+        bids: pass.bids,
+        asks: pass.asks,
+      },
     });
-  }, []);
+    const [failBid, failAsk] = await openbookTwap.views.getBestBidAndAsk({
+      accounts: {
+        market: proposal.account.openbookFailMarket,
+        bids: fail.bids,
+        asks: fail.asks,
+      },
+    });
+    setMarkets({
+      pass,
+      fail,
+      passTwap,
+      failTwap,
+      passPrice: {
+        bid: passBid,
+        ask: passAsk,
+      },
+      failPrice: {
+        bid: failBid,
+        ask: failAsk,
+      },
+      baseVault,
+      quoteVault,
+    });
+  }, [vaultProgram, openbook, openbookTwap]);
 
   useEffect(() => {
     if (!proposal) {
@@ -69,5 +97,34 @@ export function useProposal(id: number) {
     }
   }, [markets, fetchMarkets]);
 
-  return { proposal, markets, fetchProposal };
+  const mintTokens = useCallback(
+    async (amount: number, fromBase?: boolean) => {
+      if (!proposal || !markets || !wallet.publicKey || !wallet.signAllTransactions) {
+        return;
+      }
+
+      console.log(amount, proposal, fromBase);
+
+      const mint = await mintConditionalTokens(
+        amount,
+        proposal.account,
+        fromBase ? markets.baseVault : markets.quoteVault,
+        fromBase,
+      );
+      const tx = new Transaction().add(...(mint?.ixs ?? []));
+      const { blockhash } = await connection.getLatestBlockhash();
+      tx.recentBlockhash = blockhash;
+      tx.feePayer = wallet.publicKey;
+      console.log(tx);
+      const signedTxs = await wallet.signAllTransactions([tx]);
+      await Promise.all(
+        signedTxs.map((t) => connection.sendRawTransaction(t.serialize(), { skipPreflight: true })),
+      );
+
+      fetchMarkets();
+    },
+    [wallet, proposal, markets, connection],
+  );
+
+  return { proposal, markets, fetchProposal, mintTokens };
 }

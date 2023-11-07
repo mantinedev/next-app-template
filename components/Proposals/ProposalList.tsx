@@ -11,7 +11,7 @@ export default function ProposalList() {
   const router = useRouter();
   const { proposals } = useProposals();
 
-  return proposals ? (
+  return proposals && proposals.length > 0 ? (
     <Stack>
       {proposals.map((proposal) => (
         <Card key={proposal.publicKey.toString()} shadow="sm" padding="lg" radius="md" withBorder>
