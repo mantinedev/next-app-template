@@ -1,13 +1,24 @@
 import { useCallback, useState } from 'react';
-import { Button, Card, Fieldset, Group, Loader, Stack, Text, TextInput } from '@mantine/core';
+import {
+  Button,
+  Fieldset,
+  Grid,
+  GridCol,
+  Group,
+  Loader,
+  Stack,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import Link from 'next/link';
 import { IconExternalLink } from '@tabler/icons-react';
+import numeral from 'numeral';
 import { useProposal } from '../../hooks/useProposal';
 import { useTokens } from '../../hooks/useTokens';
 import { useTokenAmount } from '../../hooks/useTokenAmount';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
-  const { proposal, markets, mintTokens, loading } = useProposal(proposalNumber);
+  const { proposal, markets, mintTokens, placeOrder, loading } = useProposal(proposalNumber);
   const [mintBaseAmount, setMintBaseAmount] = useState<number>();
   const [mintQuoteAmount, setMintQuoteAmount] = useState<number>();
   const { amount: baseAmount } = useTokenAmount(markets?.baseVault.underlyingTokenMint);
@@ -25,6 +36,10 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     markets?.quoteVault.conditionalOnRevertTokenMint,
   );
   const { tokens } = useTokens();
+  const [bidPassAmount, setBidPassAmount] = useState<number>(0);
+  const [bidFailAmount, setBidFailAmount] = useState<number>(0);
+  const [bidPassPrice, setBidPassPrice] = useState<number>(0);
+  const [bidFailPrice, setBidFailPrice] = useState<number>(0);
 
   const handleMint = useCallback(
     async (fromBase?: boolean) => {
@@ -44,7 +59,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
       <Loader />
     </Group>
   ) : (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
+    <Stack>
       <Text fw="bolder" size="xl">
         Proposal #{proposal.account.number}
       </Text>
@@ -63,9 +78,57 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
               </Text>
               <Text>{markets.passTwap.twapOracle.expectedValue.toString()}</Text>
               <Group>
-                <Text>Bid: {markets.passPrice.ask.toString()}</Text>
-                <Text>Ask: {markets.passPrice.bid.toString()}</Text>
+                <Text>
+                  Best Bid:{' '}
+                  {numeral(markets.passPrice.bid.toString())
+                    .divide(10 ** (tokens?.usdc?.decimals || 0))
+                    .format('0.00a')}
+                </Text>
+                <Text>
+                  Best Ask:{' '}
+                  {numeral(markets.passPrice.ask.toString())
+                    .divide(10 ** (tokens?.meta?.decimals || 0))
+                    .format('0.00a')}
+                </Text>
               </Group>
+              <Group>
+                <Text>Expected: {markets.passTwap.twapOracle.expectedValue.toString()}</Text>
+                <Text>Last: {markets.passTwap.twapOracle.lastObservation.toString()}</Text>
+              </Group>
+              <TextInput
+                type="number"
+                label="Bid price"
+                placeholder="Enter price..."
+                onChange={(e) => setBidPassPrice(Number(e.target.value))}
+              />
+              <TextInput
+                type="number"
+                label="Bid amount"
+                placeholder="Enter amount..."
+                onChange={(e) => setBidPassAmount(Number(e.target.value))}
+              />
+              <Grid>
+                <GridCol span={6}>
+                  <Button
+                    color="green"
+                    onClick={() => placeOrder(bidPassAmount, bidPassPrice, false, true)}
+                    loading={loading}
+                    fullWidth
+                  >
+                    Bid
+                  </Button>
+                </GridCol>
+                <GridCol span={6}>
+                  <Button
+                    color="red"
+                    onClick={() => placeOrder(bidPassAmount, bidPassPrice, true, true)}
+                    loading={loading}
+                    fullWidth
+                  >
+                    Ask
+                  </Button>
+                </GridCol>
+              </Grid>
             </Stack>
           </Fieldset>
           <Fieldset>
@@ -75,9 +138,57 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
               </Text>
               <Text>{markets.failTwap.twapOracle.expectedValue.toString()}</Text>
               <Group>
-                <Text>Bid: {markets.failPrice.ask.toString()}</Text>
-                <Text>Ask: {markets.failPrice.bid.toString()}</Text>
+                <Text>
+                  Best Bid:{' '}
+                  {numeral(markets.failPrice.bid.toString())
+                    .divide(10 ** (tokens?.usdc?.decimals || 0))
+                    .format('0.00a')}
+                </Text>
+                <Text>
+                  Best Ask:{' '}
+                  {numeral(markets.failPrice.ask.toString())
+                    .divide(10 ** (tokens?.meta?.decimals || 0))
+                    .format('0.00a')}
+                </Text>
               </Group>
+              <Group>
+                <Text>Expected: {markets.failTwap.twapOracle.expectedValue.toString()}</Text>
+                <Text>Last: {markets.failTwap.twapOracle.lastObservation.toString()}</Text>
+              </Group>
+              <TextInput
+                label="Bid price"
+                placeholder="Enter price..."
+                type="number"
+                onChange={(e) => setBidFailPrice(Number(e.target.value))}
+              />
+              <TextInput
+                label="Bid amount"
+                placeholder="Enter amount..."
+                type="number"
+                onChange={(e) => setBidFailAmount(Number(e.target.value))}
+              />
+              <Grid>
+                <GridCol span={6}>
+                  <Button
+                    fullWidth
+                    color="green"
+                    onClick={() => placeOrder(bidFailAmount, bidFailPrice, false, false)}
+                    loading={loading}
+                  >
+                    Bid
+                  </Button>
+                </GridCol>
+                <GridCol span={6}>
+                  <Button
+                    fullWidth
+                    color="red"
+                    onClick={() => placeOrder(bidFailAmount, bidFailPrice, true, false)}
+                    loading={loading}
+                  >
+                    Ask
+                  </Button>
+                </GridCol>
+              </Grid>
             </Stack>
           </Fieldset>
         </Group>
@@ -132,6 +243,6 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
           </Fieldset>
         </Group>
       </Stack>
-    </Card>
+    </Stack>
   );
 }

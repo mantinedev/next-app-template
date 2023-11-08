@@ -24,7 +24,7 @@
     "@mantine/modals": "^7.1.5",
     "@mantine/notifications": "^7.1.5",
     "@next/bundle-analyzer": "^13.5.3",
-    "@openbook-dex/openbook-v2": "^0.0.10",
+    "@openbook-dex/openbook-v2": "^0.0.11",
     "@solana/spl-token": "^0.3.8",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-react": "^0.15.35",

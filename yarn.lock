@@ -1997,10 +1997,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@openbook-dex/openbook-v2@^0.0.10":
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/@openbook-dex/openbook-v2/-/openbook-v2-0.0.10.tgz#b3be5c95e11b4a7b529f212779e2ed9fe957a1f5"
-  integrity sha512-wzfeOGVGWC2AG2infHItJeIsqX1aZq1gHU/Lmdj/8OnVe+9aTp7Dhs9tRtv4SITuPIxODzuqqaDl/JrLPHxx/A==
+"@openbook-dex/openbook-v2@^0.0.11":
+  version "0.0.11"
+  resolved "https://registry.yarnpkg.com/@openbook-dex/openbook-v2/-/openbook-v2-0.0.11.tgz#d4ba7509a554575c41046451413d2aaceec79874"
+  integrity sha512-2QB5WS0jJ8V2lfKdOBi198r5qePVzLtZ/lzM4QyfvO5QUJvHKCUOvM4KnZzPaGdMbv21uu3IFygrTUwZmXkEdQ==
   dependencies:
     "@coral-xyz/anchor" "^0.28.0"
     "@solana/spl-token" "0.3.8"

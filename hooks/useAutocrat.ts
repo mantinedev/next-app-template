@@ -158,8 +158,6 @@ export function useAutocrat() {
   );
   const baseNonce: BN = new BN(daoState?.proposalCount || 0);
 
-  console.log(daoState);
-
   const fetchState = async () => {
     try {
       console.log('fetch', dao);
