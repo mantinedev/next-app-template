@@ -2,7 +2,7 @@
 
 import { useDisclosure } from '@mantine/hooks';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { AppShell, Burger, Button, Flex, Stack, Text } from '@mantine/core';
+import { AppShell, Burger, Button, Flex, NativeSelect, Stack, Text } from '@mantine/core';
 import {
   IconBooks,
   IconDeviceDesktopAnalytics,
@@ -16,22 +16,31 @@ import Link from 'next/link';
 import React, { ReactNode, useEffect } from 'react';
 import icon from '@/public/meta.jpg';
 import { shortKey } from '@/lib/utils';
+import { Networks, useNetworkConfiguration } from '../../hooks/useNetworkConfiguration';
 
 interface MenuItem {
   name: string;
   href: string;
   icon: ReactNode;
+  debug?: boolean;
 }
 const menuItems: MenuItem[] = [
   { name: 'Proposals', href: '/proposals', icon: <IconSpeakerphone /> },
   { name: 'Analytics', href: '/analytics', icon: <IconDeviceDesktopAnalytics /> },
   { name: 'Docs', href: 'https://themetadao.org/', icon: <IconBooks /> },
-  { name: 'Debug', href: '/debug', icon: <IconMicroscope /> },
+  { name: 'Debug', href: '/debug', icon: <IconMicroscope />, debug: true },
+];
+
+const networks = [
+  { label: 'Mainnet', value: Networks.Mainnet.toString() },
+  { label: 'Devnet', value: Networks.Devnet.toString() },
+  { label: 'Localnet', value: Networks.Localnet.toString() },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const wallet = useWallet();
   const modal = useWalletModal();
+  const { network, setNetwork } = useNetworkConfiguration();
   const [opened, { toggle }] = useDisclosure();
 
   useEffect(() => {
@@ -47,13 +56,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       padding="md"
     >
       <AppShell.Header>
-        <Flex justify="space-between" align="center" p="5">
-          <Flex justify="flex-start" align="center" gap="xs">
-            <Image src={icon} alt="App logo" width={48} height={48} />
-            <Text fw="bold">Futarchy</Text>
+        <Link href="/">
+          <Flex justify="space-between" align="center" p="5">
+            <Flex justify="flex-start" align="center" gap="xs">
+              <Image src={icon} alt="App logo" width={48} height={48} />
+              <Text fw="bold">Futarchy</Text>
+            </Flex>
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           </Flex>
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-        </Flex>
+        </Link>
       </AppShell.Header>
 
       <AppShell.Navbar p="md">
@@ -75,6 +86,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ) : (
             <Button onClick={() => modal.setVisible(true)}>Connect wallet</Button>
           )}
+          <NativeSelect
+            label="Network picker"
+            data={networks}
+            value={network}
+            onChange={(e) => setNetwork(e.target.value as Networks)}
+          />
         </Stack>
       </AppShell.Navbar>
 

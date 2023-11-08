@@ -16,7 +16,7 @@ export function useProposals() {
   }, [program]);
 
   useEffect(() => {
-    if (!proposals || proposals.length === 0) {
+    if (!proposals) {
       fetchProposals();
     }
   }, [proposals, fetchProposals]);

@@ -10,19 +10,10 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { Notifications } from '@mantine/notifications';
 import { theme } from '../../theme';
 import '@solana/wallet-adapter-react-ui/styles.css';
-
-export const metadata = {
-  title: 'Mantine Next.js template',
-  description: 'I am using Mantine with Next.js!',
-};
+import { useNetworkConfiguration } from '../../hooks/useNetworkConfiguration';
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  // const { autoConnect } = useAutoConnect();
-  // const { networkConfiguration } = useNetworkConfiguration();
-  // const networkConfiguration = 'devnet';
-  // const network = networkConfiguration as WalletAdapterNetwork;
-  // const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-  const endpoint = 'http://127.0.0.1:8899';
+  const { endpoint } = useNetworkConfiguration();
 
   const wallets = useMemo(() => [new SolflareWalletAdapter(), new PhantomWalletAdapter()], []);
 
@@ -34,11 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <MantineProvider theme={theme}>
       <Notifications />
       <ConnectionProvider endpoint={endpoint} config={{ commitment: 'confirmed' }}>
-        <WalletProvider
-          wallets={wallets}
-          onError={onError}
-          // autoConnect={autoConnect}
-        >
+        <WalletProvider wallets={wallets} onError={onError}>
           <WalletModalProvider>{children}</WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>
