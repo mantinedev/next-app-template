@@ -5,7 +5,6 @@ import { BN, Program } from '@coral-xyz/anchor';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
 import { SelfTradeBehavior, OrderType, Side } from '@openbook-dex/openbook-v2/dist/cjs/utils/utils';
-import numeral from 'numeral';
 import { useAutocrat } from './useAutocrat';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '../lib/idl/openbook_v2';
 import { OpenbookTwap } from '../lib/idl/openbook_twap';
@@ -204,7 +203,7 @@ export function useProposal(id: number) {
   );
 
   const placeOrder = useCallback(
-    async (amount: number, price: number, ask?: boolean, pass?: boolean) => {
+    async (amount: number, price: number, limitOrder?: boolean, ask?: boolean, pass?: boolean) => {
       if (
         !proposal ||
         !markets ||
@@ -267,7 +266,7 @@ export function useProposal(id: number) {
           maxBaseLots,
           maxQuoteLotsIncludingFees: priceLots.mul(maxBaseLots),
           clientOrderId: accountIndex,
-          orderType: OrderType.Limit,
+          orderType: limitOrder ? OrderType.Limit : OrderType.Market,
           expiryTimestamp: new BN(0),
           selfTradeBehavior: SelfTradeBehavior.DecrementTake,
           limit: 255,

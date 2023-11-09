@@ -6,6 +6,7 @@ import {
   GridCol,
   Group,
   Loader,
+  SegmentedControl,
   Stack,
   Text,
   TextInput,
@@ -40,6 +41,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   const [bidFailAmount, setBidFailAmount] = useState<number>(0);
   const [bidPassPrice, setBidPassPrice] = useState<number>(0);
   const [bidFailPrice, setBidFailPrice] = useState<number>(0);
+  const [orderType, setOrderType] = useState<string>();
 
   const handleMint = useCallback(
     async (fromBase?: boolean) => {
@@ -95,6 +97,11 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 <Text>Expected: {markets.passTwap.twapOracle.expectedValue.toString()}</Text>
                 <Text>Last: {markets.passTwap.twapOracle.lastObservation.toString()}</Text>
               </Group>
+              <SegmentedControl
+                data={['Limit', 'Market']}
+                onChange={(e) => setOrderType(e)}
+                fullWidth
+              />
               <TextInput
                 type="number"
                 label="Bid price"
@@ -111,7 +118,9 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 <GridCol span={6}>
                   <Button
                     color="green"
-                    onClick={() => placeOrder(bidPassAmount, bidPassPrice, false, true)}
+                    onClick={() =>
+                      placeOrder(bidPassAmount, bidPassPrice, orderType === 'Limit', false, true)
+                    }
                     loading={loading}
                     fullWidth
                   >
@@ -121,7 +130,9 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 <GridCol span={6}>
                   <Button
                     color="red"
-                    onClick={() => placeOrder(bidPassAmount, bidPassPrice, true, true)}
+                    onClick={() =>
+                      placeOrder(bidPassAmount, bidPassPrice, orderType === 'Limit', true, true)
+                    }
                     loading={loading}
                     fullWidth
                   >
@@ -172,7 +183,9 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   <Button
                     fullWidth
                     color="green"
-                    onClick={() => placeOrder(bidFailAmount, bidFailPrice, false, false)}
+                    onClick={() =>
+                      placeOrder(bidFailAmount, bidFailPrice, orderType === 'Limit', false, false)
+                    }
                     loading={loading}
                   >
                     Bid
@@ -182,7 +195,9 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   <Button
                     fullWidth
                     color="red"
-                    onClick={() => placeOrder(bidFailAmount, bidFailPrice, true, false)}
+                    onClick={() =>
+                      placeOrder(bidFailAmount, bidFailPrice, orderType === 'Limit', true, false)
+                    }
                     loading={loading}
                   >
                     Ask
