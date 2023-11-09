@@ -254,28 +254,24 @@ export function useProposal(id: number) {
           openOrdersIndexer,
         );
         openTx.add(...ixs);
+        console.log(openTx);
 
+        // const baseLot = 1;
+        const quoteLot = 0.0001;
+        const priceLots = new BN(Math.round(price / quoteLot));
+        const maxBaseLots = new BN(Math.round(amount));
+        console.log(priceLots.toString(), maxBaseLots.toString());
         const args: PlaceOrderArgs = {
           side: ask ? Side.Ask : Side.Bid,
-          priceLots: new BN(
-            numeral(price)
-              .multiply(10 ** (ask ? tokens.meta.decimals : tokens.usdc.decimals))
-              .format('0'),
-          ),
-          maxBaseLots: new BN(amount),
-          maxQuoteLotsIncludingFees: new BN(
-            numeral(amount)
-              .multiply(price)
-              .multiply(10 ** (ask ? tokens.meta.decimals : tokens.usdc.decimals))
-              .format('0'),
-          ),
+          priceLots,
+          maxBaseLots,
+          maxQuoteLotsIncludingFees: priceLots.mul(maxBaseLots),
           clientOrderId: accountIndex,
           orderType: OrderType.Limit,
           expiryTimestamp: new BN(0),
           selfTradeBehavior: SelfTradeBehavior.DecrementTake,
           limit: 255,
         };
-        console.log(Object.entries(args).map(([k, v]) => [k, v.toString()]));
         await openbookTwap.methods
           .placeOrder(args)
           .accounts({
@@ -293,17 +289,8 @@ export function useProposal(id: number) {
             userTokenAccount: getAssociatedTokenAddressSync(mint, wallet.publicKey),
             openbookProgram: openbook.programId,
           })
-          .preInstructions(ixs)
+          .preInstructions(openTx.instructions)
           .rpc({ skipPreflight: true });
-
-        // const { blockhash } = await connection.getLatestBlockhash();
-        // openTx.recentBlockhash = blockhash;
-        // placeTx.feePayer = wallet.publicKey;
-
-        // const signedTxs = await wallet.signAllTransactions([tx]);
-        // await Promise.all(
-        //   signedTxs.map((t) => connection.sendRawTransaction(t.serialize(), { skipPreflight: true })),
-        // );
 
         await fetchMarkets();
       } finally {

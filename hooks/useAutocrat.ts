@@ -306,20 +306,6 @@ export function useAutocrat() {
         })
         .instruction();
 
-      console.log(
-        'oiqsdfu',
-        {
-          market: openbookPassMarketKP.publicKey,
-          twapMarket: openbookTwapPassMarket,
-          payer: wallet.publicKey,
-        },
-        {
-          market: openbookFailMarketKP.publicKey,
-          twapMarket: openbookTwapFailMarket,
-          payer: wallet.publicKey,
-        },
-      );
-
       const twapsTx = new Transaction().add(createPassTwapMarketIx, createFailTwapMarketIx);
 
       const proposalKeypair = Keypair.generate();
@@ -375,6 +361,7 @@ export function useAutocrat() {
         await connection.confirmTransaction(
           // eslint-disable-next-line no-await-in-loop
           await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true }),
+          'singleGossip',
         );
       }
       setDaoState(await program.account.dao.fetch(dao));
