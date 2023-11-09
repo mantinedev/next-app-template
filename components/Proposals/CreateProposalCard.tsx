@@ -1,10 +1,11 @@
 import { useCallback } from 'react';
 import { Button, Card, Text } from '@mantine/core';
 import { useAutocrat } from '../../hooks/useAutocrat';
+import { InitializeProposalType } from '../../hooks/useProposals';
 
-export function CreateProposalCard() {
-  const { initializeProposal, program, dao, daoTreasury } = useAutocrat();
-
+export function CreateProposalCard({ action }: { action: InitializeProposalType }) {
+  const { program, dao, daoTreasury } = useAutocrat();
+  console.log(action);
   const handleCreate = useCallback(async () => {
     const dummyUrl = 'https://www.eff.org/cyberspace-independence';
     const accounts = [
@@ -29,8 +30,8 @@ export function CreateProposalCard() {
       data,
     };
 
-    initializeProposal(dummyUrl, instruction);
-  }, [program, initializeProposal, dao, daoTreasury]);
+    action(dummyUrl, instruction);
+  }, [program, action, dao, daoTreasury]);
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>

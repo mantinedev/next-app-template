@@ -4,12 +4,16 @@ import { Badge, Button, Card, Group, Stack, Text } from '@mantine/core';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { IconExternalLink, IconEyeglass } from '@tabler/icons-react';
-import { useProposals } from '../../hooks/useProposals';
+import { PublicKey } from '@solana/web3.js';
 import { shortKey } from '../../lib/utils';
+import { ProposalAccount } from '../../lib/types';
 
-export default function ProposalList() {
+export default function ProposalList({
+  proposals,
+}: {
+  proposals?: { account: ProposalAccount; publicKey: PublicKey }[];
+}) {
   const router = useRouter();
-  const { proposals } = useProposals();
 
   return proposals && proposals.length > 0 ? (
     <Stack>

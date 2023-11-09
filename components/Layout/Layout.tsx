@@ -2,7 +2,7 @@
 
 import { useDisclosure } from '@mantine/hooks';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { AppShell, Burger, Button, Flex, NativeSelect, Stack, Text } from '@mantine/core';
+import { AppShell, Burger, Button, Flex, NativeSelect, Stack, Text, Title } from '@mantine/core';
 import {
   IconBooks,
   IconDeviceDesktopAnalytics,
@@ -56,11 +56,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       padding="md"
     >
       <AppShell.Header>
-        <Link href="/">
+        <Link href="/" style={{ textDecoration: 'none' }}>
           <Flex justify="space-between" align="center" p="5">
             <Flex justify="flex-start" align="center" gap="xs">
               <Image src={icon} alt="App logo" width={48} height={48} />
-              <Text fw="bold">Futarchy</Text>
+              <Title c="initial">Futarchy</Title>
             </Flex>
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           </Flex>

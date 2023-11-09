@@ -1,4 +1,4 @@
-import { Title, Text, Anchor } from '@mantine/core';
+import { Title, Text } from '@mantine/core';
 import classes from './Welcome.module.css';
 
 export function Welcome() {
@@ -12,11 +12,7 @@ export function Welcome() {
       </Title>
       <Text c="dimmed" ta="center" size="lg" maw={580} mx="auto" mt="xl">
         The Meta-DAO is a new cybernetic institution managed by programs stored on the Solana
-        blockchain. Instead of token-voting or liquid democracy, the Meta-DAO uses futarchy.{' '}
-        <Anchor href="https://mantine.dev/guides/next/" size="lg">
-          this guide
-        </Anchor>
-        . To get started edit page.tsx file.
+        blockchain. Instead of token-voting or liquid democracy, the Meta-DAO uses futarchy.
       </Text>
     </>
   );

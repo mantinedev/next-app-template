@@ -79,24 +79,26 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 Pass market
               </Text>
               <Text>{markets.passTwap.twapOracle.expectedValue.toString()}</Text>
-              <Group>
-                <Text>
-                  Best Bid:{' '}
-                  {numeral(markets.passPrice.bid.toString())
-                    .divide(10 ** (tokens?.usdc?.decimals || 0))
-                    .format('0.00a')}
-                </Text>
-                <Text>
-                  Best Ask:{' '}
-                  {numeral(markets.passPrice.ask.toString())
-                    .divide(10 ** (tokens?.meta?.decimals || 0))
-                    .format('0.00a')}
-                </Text>
-              </Group>
-              <Group>
-                <Text>Expected: {markets.passTwap.twapOracle.expectedValue.toString()}</Text>
-                <Text>Last: {markets.passTwap.twapOracle.lastObservation.toString()}</Text>
-              </Group>
+              <Stack>
+                <Group>
+                  <Text>
+                    Best Bid:{' '}
+                    {numeral(markets.passPrice.bid.toString())
+                      .divide(10 ** (tokens?.usdc?.decimals || 0))
+                      .format('0.00a')}
+                  </Text>
+                  <Text>
+                    Best Ask:{' '}
+                    {numeral(markets.passPrice.ask.toString())
+                      .divide(10 ** (tokens?.meta?.decimals || 0))
+                      .format('0.00a')}
+                  </Text>
+                </Group>
+                <Group>
+                  <Text>Expected: {markets.passTwap.twapOracle.expectedValue.toString()}</Text>
+                  <Text>Last: {markets.passTwap.twapOracle.lastObservation.toString()}</Text>
+                </Group>
+              </Stack>
               <SegmentedControl
                 data={['Limit', 'Market']}
                 onChange={(e) => setOrderType(e)}
@@ -148,24 +150,26 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 Fail market
               </Text>
               <Text>{markets.failTwap.twapOracle.expectedValue.toString()}</Text>
-              <Group>
-                <Text>
-                  Best Bid:{' '}
-                  {numeral(markets.failPrice.bid.toString())
-                    .divide(10 ** (tokens?.usdc?.decimals || 0))
-                    .format('0.00a')}
-                </Text>
-                <Text>
-                  Best Ask:{' '}
-                  {numeral(markets.failPrice.ask.toString())
-                    .divide(10 ** (tokens?.meta?.decimals || 0))
-                    .format('0.00a')}
-                </Text>
-              </Group>
-              <Group>
-                <Text>Expected: {markets.failTwap.twapOracle.expectedValue.toString()}</Text>
-                <Text>Last: {markets.failTwap.twapOracle.lastObservation.toString()}</Text>
-              </Group>
+              <Stack>
+                <Group>
+                  <Text>
+                    Best Bid:{' '}
+                    {numeral(markets.failPrice.bid.toString())
+                      .divide(10 ** (tokens?.usdc?.decimals || 0))
+                      .format('0.00a')}
+                  </Text>
+                  <Text>
+                    Best Ask:{' '}
+                    {numeral(markets.failPrice.ask.toString())
+                      .divide(10 ** (tokens?.meta?.decimals || 0))
+                      .format('0.00a')}
+                  </Text>
+                </Group>
+                <Group>
+                  <Text>Expected: {markets.failTwap.twapOracle.expectedValue.toString()}</Text>
+                  <Text>Last: {markets.failTwap.twapOracle.lastObservation.toString()}</Text>
+                </Group>
+              </Stack>
               <TextInput
                 label="Bid price"
                 placeholder="Enter price..."
