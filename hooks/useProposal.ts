@@ -10,7 +10,7 @@ import { IDL as OPENBOOK_IDL, OpenbookV2 } from '../lib/idl/openbook_v2';
 import { OpenbookTwap } from '../lib/idl/openbook_twap';
 import { useProvider } from './useProvider';
 import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '../lib/constants';
-import { Markets, ProposalAccount } from '../lib/types';
+import { Markets, ProposalAccountWithKey } from '../lib/types';
 import { useConditionalVault } from './useConditionalVault';
 import { shortKey } from '../lib/utils';
 import { useTokens } from './useTokens';
@@ -80,7 +80,13 @@ const createOpenOrdersInstruction = async (
   return [ixs, openOrdersAccount];
 };
 
-export function useProposal(id: number) {
+export function useProposal({
+  fromNumber,
+  fromProposal,
+}: {
+  fromNumber?: number | undefined;
+  fromProposal?: ProposalAccountWithKey;
+}) {
   const { program } = useAutocrat();
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -100,12 +106,18 @@ export function useProposal(id: number) {
   }, [provider]);
   const { program: vaultProgram, mintConditionalTokens } = useConditionalVault();
   const [markets, setMarkets] = useState<Markets>();
-  const [proposal, setProposal] = useState<{ account: ProposalAccount; publicKey: PublicKey }>();
+  const [proposal, setProposal] = useState<ProposalAccountWithKey | undefined>(fromProposal);
   const [loading, setLoading] = useState(false);
 
   const fetchProposal = useCallback(async () => {
-    setProposal((await program.account.proposal.all()).filter((t) => t.account.number === id)[0]);
-  }, [program]);
+    setProposal(
+      (await program.account.proposal.all()).filter(
+        (t) =>
+          t.account.number === fromNumber ||
+          t.publicKey.toString() === fromProposal?.publicKey.toString(),
+      )[0],
+    );
+  }, [program, fromNumber]);
 
   const fetchMarkets = useCallback(async () => {
     if (!proposal || !openbook || !openbookTwap || !openbookTwap.views) return;
@@ -138,18 +150,19 @@ export function useProposal(id: number) {
         asks: fail.asks,
       },
     });
+    const quoteLot = 0.0001;
     setMarkets({
       pass,
       fail,
       passTwap,
       failTwap,
       passPrice: {
-        bid: passBid,
-        ask: passAsk,
+        bid: passBid.toNumber() * quoteLot,
+        ask: passAsk.toNumber() * quoteLot,
       },
       failPrice: {
-        bid: failBid,
-        ask: failAsk,
+        bid: failBid.toNumber() * quoteLot,
+        ask: failAsk.toNumber() * quoteLot,
       },
       baseVault,
       quoteVault,
@@ -170,13 +183,11 @@ export function useProposal(id: number) {
     }
   }, [markets, fetchMarkets]);
 
-  const mintTokens = useCallback(
+  const mintTokensTransactions = useCallback(
     async (amount: number, fromBase?: boolean) => {
-      if (!proposal || !markets || !wallet.publicKey || !wallet.signAllTransactions) {
+      if (!proposal || !markets) {
         return;
       }
-
-      setLoading(true);
 
       const mint = await mintConditionalTokens(
         amount,
@@ -186,20 +197,42 @@ export function useProposal(id: number) {
       );
       const tx = new Transaction().add(...(mint?.ixs ?? []));
 
-      const { blockhash } = await connection.getLatestBlockhash();
-      tx.recentBlockhash = blockhash;
-      tx.feePayer = wallet.publicKey;
-
-      const signedTxs = await wallet.signAllTransactions([tx]);
-      await Promise.all(
-        signedTxs.map((t) => connection.sendRawTransaction(t.serialize(), { skipPreflight: true })),
-      );
-
-      await fetchMarkets();
-
-      setLoading(false);
+      return [tx];
     },
-    [wallet, proposal, markets, connection],
+    [proposal, markets],
+  );
+
+  const mintTokens = useCallback(
+    async (amount: number, fromBase?: boolean) => {
+      const txs = await mintTokensTransactions(amount, fromBase);
+      if (!txs || !proposal || !wallet.publicKey || !wallet.signAllTransactions) {
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const { blockhash } = await connection.getLatestBlockhash();
+        const signedTxs = await wallet.signAllTransactions(
+          txs.map((t) => {
+            const tx = t;
+            tx.recentBlockhash = blockhash;
+            tx.feePayer = wallet.publicKey!;
+            return tx;
+          }),
+        );
+        await Promise.all(
+          signedTxs.map((t) =>
+            connection.sendRawTransaction(t.serialize(), { skipPreflight: true }),
+          ),
+        );
+
+        await fetchMarkets();
+      } finally {
+        setLoading(false);
+      }
+    },
+    [wallet, connection, mintTokensTransactions],
   );
 
   const placeOrder = useCallback(
@@ -227,7 +260,6 @@ export function useProposal(id: number) {
         let accountIndex = new BN(1);
         try {
           const indexer = await openbook.account.openOrdersIndexer.fetch(openOrdersIndexer);
-          console.log(indexer);
           if (indexer == null) {
             openTx.add(
               await createOpenOrdersIndexerInstruction(
@@ -253,13 +285,11 @@ export function useProposal(id: number) {
           openOrdersIndexer,
         );
         openTx.add(...ixs);
-        console.log(openTx);
 
         // const baseLot = 1;
         const quoteLot = 0.0001;
         const priceLots = new BN(Math.round(price / quoteLot));
         const maxBaseLots = new BN(Math.round(amount));
-        console.log(priceLots.toString(), maxBaseLots.toString());
         const args: PlaceOrderArgs = {
           side: ask ? Side.Ask : Side.Bid,
           priceLots,
@@ -271,6 +301,7 @@ export function useProposal(id: number) {
           selfTradeBehavior: SelfTradeBehavior.DecrementTake,
           limit: 255,
         };
+        console.log(Object.entries(args).map(([k, v]) => [k, v.toString()]));
         await openbookTwap.methods
           .placeOrder(args)
           .accounts({
@@ -299,5 +330,13 @@ export function useProposal(id: number) {
     [wallet, proposal, markets, connection, openbookTwap, tokens],
   );
 
-  return { proposal, markets, loading, fetchProposal, mintTokens, placeOrder };
+  return {
+    proposal,
+    markets,
+    loading,
+    fetchProposal,
+    mintTokensTransactions,
+    mintTokens,
+    placeOrder,
+  };
 }

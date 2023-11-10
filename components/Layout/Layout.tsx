@@ -70,14 +70,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <AppShell.Navbar p="md">
         <Stack gap={15}>
           <Stack>
-            {menuItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <Button variant="default" w="100%" justify="flex-start">
-                  {item.icon}
-                  <Text>{item.name}</Text>
-                </Button>
-              </Link>
-            ))}
+            {menuItems.map((item) =>
+              item.debug && network === Networks.Mainnet ? null : (
+                <Link key={item.href} href={item.href}>
+                  <Button variant="default" w="100%" justify="flex-start">
+                    {item.icon}
+                    <Text>{item.name}</Text>
+                  </Button>
+                </Link>
+              ),
+            )}
           </Stack>
           {wallet?.publicKey ? (
             <Button variant="danger" onClick={() => wallet.disconnect()}>

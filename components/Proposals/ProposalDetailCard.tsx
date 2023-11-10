@@ -19,7 +19,9 @@ import { useTokens } from '../../hooks/useTokens';
 import { useTokenAmount } from '../../hooks/useTokenAmount';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
-  const { proposal, markets, mintTokens, placeOrder, loading } = useProposal(proposalNumber);
+  const { proposal, markets, mintTokens, placeOrder, loading } = useProposal({
+    fromNumber: proposalNumber,
+  });
   const [mintBaseAmount, setMintBaseAmount] = useState<number>();
   const [mintQuoteAmount, setMintQuoteAmount] = useState<number>();
   const { amount: baseAmount } = useTokenAmount(markets?.baseVault.underlyingTokenMint);
@@ -56,6 +58,8 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     [mintTokens, mintBaseAmount, mintQuoteAmount],
   );
 
+  console.log(markets);
+
   return !proposal || !markets ? (
     <Group justify="center">
       <Loader />
@@ -78,19 +82,18 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
               <Text fw="bold" size="lg">
                 Pass market
               </Text>
-              <Text>{markets.passTwap.twapOracle.expectedValue.toString()}</Text>
               <Stack>
                 <Group>
                   <Text>
                     Best Bid:{' '}
                     {numeral(markets.passPrice.bid.toString())
-                      .divide(10 ** (tokens?.usdc?.decimals || 0))
+                      // .divide(10 ** (tokens?.usdc?.decimals || 0))
                       .format('0.00a')}
                   </Text>
                   <Text>
                     Best Ask:{' '}
                     {numeral(markets.passPrice.ask.toString())
-                      .divide(10 ** (tokens?.meta?.decimals || 0))
+                      // .divide(10 ** (tokens?.meta?.decimals || 0))
                       .format('0.00a')}
                   </Text>
                 </Group>
@@ -101,6 +104,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
               </Stack>
               <SegmentedControl
                 data={['Limit', 'Market']}
+                value={orderType}
                 onChange={(e) => setOrderType(e)}
                 fullWidth
               />
@@ -142,6 +146,14 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   </Button>
                 </GridCol>
               </Grid>
+              <Stack gap="0">
+                <Text fw="lighter" size="sm" c="green">
+                  Balance: {basePassAmount?.uiAmountString || 0} $p{tokens?.meta?.symbol}
+                </Text>
+                <Text fw="lighter" size="sm" c="green">
+                  Balance: {quotePassAmount?.uiAmountString || 0} $p{tokens?.usdc?.symbol}
+                </Text>
+              </Stack>
             </Stack>
           </Fieldset>
           <Fieldset>
@@ -149,19 +161,18 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
               <Text fw="bold" size="lg">
                 Fail market
               </Text>
-              <Text>{markets.failTwap.twapOracle.expectedValue.toString()}</Text>
               <Stack>
                 <Group>
                   <Text>
                     Best Bid:{' '}
                     {numeral(markets.failPrice.bid.toString())
-                      .divide(10 ** (tokens?.usdc?.decimals || 0))
+                      // .divide(10 ** (tokens?.usdc?.decimals || 0))
                       .format('0.00a')}
                   </Text>
                   <Text>
                     Best Ask:{' '}
                     {numeral(markets.failPrice.ask.toString())
-                      .divide(10 ** (tokens?.meta?.decimals || 0))
+                      // .divide(10 ** (tokens?.meta?.decimals || 0))
                       .format('0.00a')}
                   </Text>
                 </Group>
@@ -170,6 +181,12 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   <Text>Last: {markets.failTwap.twapOracle.lastObservation.toString()}</Text>
                 </Group>
               </Stack>
+              <SegmentedControl
+                data={['Limit', 'Market']}
+                value={orderType}
+                onChange={(e) => setOrderType(e)}
+                fullWidth
+              />
               <TextInput
                 label="Bid price"
                 placeholder="Enter price..."
@@ -208,6 +225,14 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   </Button>
                 </GridCol>
               </Grid>
+              <Stack gap="0">
+                <Text fw="lighter" size="sm" c="red">
+                  Balance: {baseFailAmount?.uiAmountString || 0} $f{tokens?.meta?.symbol}
+                </Text>
+                <Text fw="lighter" size="sm" c="red">
+                  Balance: {quoteFailAmount?.uiAmountString || 0} $f{tokens?.usdc?.symbol}
+                </Text>
+              </Stack>
             </Stack>
           </Fieldset>
         </Group>

@@ -1,10 +1,12 @@
 import { IdlAccounts, IdlTypes } from '@coral-xyz/anchor';
+import { PublicKey } from '@solana/web3.js';
 import { AutocratV0 } from './idl/autocrat_v0';
 import { OpenbookTwap } from './idl/openbook_twap';
 import { OpenbookV2 } from './idl/openbook_v2';
 import { ConditionalVault } from './idl/conditional_vault';
 
 export type ProposalAccount = IdlAccounts<AutocratV0>['proposal'];
+export type ProposalAccountWithKey = { account: ProposalAccount; publicKey: PublicKey };
 export type VaultAccount = IdlAccounts<ConditionalVault>['conditionalVault'];
 export type TwapMarketAccount = IdlAccounts<OpenbookTwap>['twapMarket'];
 export type Markets = {

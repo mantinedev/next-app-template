@@ -153,6 +153,7 @@ export function useProposals() {
 
   const initializeProposal: InitializeProposalType = useCallback(
     async (url: string, instruction: ProposalInstruction) => {
+      console.log(wallet, daoState, tokens);
       if (
         !wallet?.publicKey ||
         !wallet.signAllTransactions ||

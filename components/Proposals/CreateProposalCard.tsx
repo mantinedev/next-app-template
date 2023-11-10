@@ -5,7 +5,6 @@ import { InitializeProposalType } from '../../hooks/useProposals';
 
 export function CreateProposalCard({ action }: { action: InitializeProposalType }) {
   const { program, dao, daoTreasury } = useAutocrat();
-  console.log(action);
   const handleCreate = useCallback(async () => {
     const dummyUrl = 'https://www.eff.org/cyberspace-independence';
     const accounts = [
