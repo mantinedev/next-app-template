@@ -85,7 +85,8 @@ export function useAutocrat() {
     await Promise.all(
       signedTxs.map((tx) => connection.sendRawTransaction(tx.serialize(), { skipPreflight: true })),
     );
-  }, [program, dao, wallet, tokens, connection]);
+    fetchState();
+  }, [program, dao, wallet, tokens, connection, fetchState]);
 
   return { program, dao, daoTreasury, daoState, initializeDao, fetchState };
 }

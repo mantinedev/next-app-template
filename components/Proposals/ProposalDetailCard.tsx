@@ -39,11 +39,11 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     markets?.quoteVault.conditionalOnRevertTokenMint,
   );
   const { tokens } = useTokens();
-  const [bidPassAmount, setBidPassAmount] = useState<number>(0);
-  const [bidFailAmount, setBidFailAmount] = useState<number>(0);
-  const [bidPassPrice, setBidPassPrice] = useState<number>(0);
-  const [bidFailPrice, setBidFailPrice] = useState<number>(0);
-  const [orderType, setOrderType] = useState<string>();
+  const [passAmount, setPassAmount] = useState<number>(0);
+  const [failAmount, setFailAmount] = useState<number>(0);
+  const [passPrice, setPassPrice] = useState<number>(0);
+  const [failPrice, setFailPrice] = useState<number>(0);
+  const [orderType, setOrderType] = useState<string>('Limit');
 
   const handleMint = useCallback(
     async (fromBase?: boolean) => {
@@ -58,14 +58,12 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     [mintTokens, mintBaseAmount, mintQuoteAmount],
   );
 
-  console.log(markets);
-
   return !proposal || !markets ? (
     <Group justify="center">
       <Loader />
     </Group>
   ) : (
-    <Stack>
+    <Stack gap="0">
       <Text fw="bolder" size="xl">
         Proposal #{proposal.account.number}
       </Text>
@@ -76,9 +74,9 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
         </Group>
       </Link>
       <Stack>
-        <Group gap="md" justify="space-around" p="md">
+        <Group gap="md" justify="space-around" p="sm">
           <Fieldset>
-            <Stack>
+            <Stack gap="sm">
               <Text fw="bold" size="lg">
                 Pass market
               </Text>
@@ -112,22 +110,23 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 type="number"
                 label="Bid price"
                 placeholder="Enter price..."
-                onChange={(e) => setBidPassPrice(Number(e.target.value))}
+                onChange={(e) => setPassPrice(Number(e.target.value))}
               />
               <TextInput
                 type="number"
                 label="Bid amount"
                 placeholder="Enter amount..."
-                onChange={(e) => setBidPassAmount(Number(e.target.value))}
+                onChange={(e) => setPassAmount(Number(e.target.value))}
               />
               <Grid>
                 <GridCol span={6}>
                   <Button
                     color="green"
                     onClick={() =>
-                      placeOrder(bidPassAmount, bidPassPrice, orderType === 'Limit', false, true)
+                      placeOrder(passAmount, passPrice, orderType === 'Limit', false, true)
                     }
                     loading={loading}
+                    disabled={!passAmount || !passPrice}
                     fullWidth
                   >
                     Bid
@@ -137,9 +136,10 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   <Button
                     color="red"
                     onClick={() =>
-                      placeOrder(bidPassAmount, bidPassPrice, orderType === 'Limit', true, true)
+                      placeOrder(passAmount, passPrice, orderType === 'Limit', true, true)
                     }
                     loading={loading}
+                    disabled={!passAmount || !passPrice}
                     fullWidth
                   >
                     Ask
@@ -157,7 +157,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
             </Stack>
           </Fieldset>
           <Fieldset>
-            <Stack>
+            <Stack gap="sm">
               <Text fw="bold" size="lg">
                 Fail market
               </Text>
@@ -191,13 +191,13 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 label="Bid price"
                 placeholder="Enter price..."
                 type="number"
-                onChange={(e) => setBidFailPrice(Number(e.target.value))}
+                onChange={(e) => setFailPrice(Number(e.target.value))}
               />
               <TextInput
                 label="Bid amount"
                 placeholder="Enter amount..."
                 type="number"
-                onChange={(e) => setBidFailAmount(Number(e.target.value))}
+                onChange={(e) => setFailAmount(Number(e.target.value))}
               />
               <Grid>
                 <GridCol span={6}>
@@ -205,9 +205,10 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     fullWidth
                     color="green"
                     onClick={() =>
-                      placeOrder(bidFailAmount, bidFailPrice, orderType === 'Limit', false, false)
+                      placeOrder(failAmount, failPrice, orderType === 'Limit', false, false)
                     }
                     loading={loading}
+                    disabled={!failAmount || !failPrice}
                   >
                     Bid
                   </Button>
@@ -217,9 +218,10 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     fullWidth
                     color="red"
                     onClick={() =>
-                      placeOrder(bidFailAmount, bidFailPrice, orderType === 'Limit', true, false)
+                      placeOrder(failAmount, failPrice, orderType === 'Limit', true, false)
                     }
                     loading={loading}
+                    disabled={!failAmount || !failPrice}
                   >
                     Ask
                   </Button>

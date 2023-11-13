@@ -235,9 +235,101 @@ export function useProposal({
     [wallet, connection, mintTokensTransactions],
   );
 
+  const placeOrderTransactions = useCallback(
+    async (
+      amount: number,
+      price: number,
+      limitOrder?: boolean,
+      ask?: boolean,
+      pass?: boolean,
+      indexOffset?: number,
+    ) => {
+      if (
+        !proposal ||
+        !markets ||
+        !wallet.publicKey ||
+        !wallet.signAllTransactions ||
+        !openbook ||
+        !openbookTwap ||
+        !tokens?.meta ||
+        !tokens?.usdc
+      ) {
+        return;
+      }
+
+      const market = pass ? markets.pass : markets.fail;
+      const mint = ask ? market.baseMint : market.quoteMint;
+      const openTx = new Transaction();
+      const openOrdersIndexer = findOpenOrdersIndexer(wallet.publicKey);
+      let accountIndex = new BN(1);
+      try {
+        const indexer = await openbook.account.openOrdersIndexer.fetch(openOrdersIndexer);
+        if (indexer == null) {
+          openTx.add(
+            await createOpenOrdersIndexerInstruction(openbook, openOrdersIndexer, wallet.publicKey),
+          );
+        } else {
+          accountIndex = new BN(indexer.createdCounter + 1 + (indexOffset || 0));
+        }
+      } catch {
+        openTx.add(
+          await createOpenOrdersIndexerInstruction(openbook, openOrdersIndexer, wallet.publicKey),
+        );
+      }
+      const [ixs, openOrdersAccount] = await createOpenOrdersInstruction(
+        openbook,
+        pass ? proposal.account.openbookPassMarket : proposal.account.openbookFailMarket,
+        accountIndex,
+        `${shortKey(wallet.publicKey)}-${proposal.account.number}-${accountIndex.toString()}`,
+        wallet.publicKey,
+        openOrdersIndexer,
+      );
+      openTx.add(...ixs);
+
+      // const baseLot = 1;
+      const quoteLot = 0.0001;
+      const priceLots = new BN(Math.round(price / quoteLot));
+      const maxBaseLots = new BN(Math.round(amount));
+      const args: PlaceOrderArgs = {
+        side: ask ? Side.Ask : Side.Bid,
+        priceLots,
+        maxBaseLots,
+        maxQuoteLotsIncludingFees: priceLots.mul(maxBaseLots),
+        clientOrderId: accountIndex,
+        orderType: limitOrder ? OrderType.Limit : OrderType.Market,
+        expiryTimestamp: new BN(0),
+        selfTradeBehavior: SelfTradeBehavior.AbortTransaction,
+        limit: 255,
+      };
+      const placeTx = await openbookTwap.methods
+        .placeOrder(args)
+        .accounts({
+          openOrdersAccount,
+          asks: market.asks,
+          bids: market.bids,
+          eventHeap: market.eventHeap,
+          market: pass ? proposal.account.openbookPassMarket : proposal.account.openbookFailMarket,
+          marketVault: ask ? market.marketBaseVault : market.marketQuoteVault,
+          twapMarket: pass
+            ? proposal.account.openbookTwapPassMarket
+            : proposal.account.openbookTwapFailMarket,
+          userTokenAccount: getAssociatedTokenAddressSync(mint, wallet.publicKey),
+          openbookProgram: openbook.programId,
+        })
+        .preInstructions(openTx.instructions)
+        .transaction();
+
+      return [placeTx];
+    },
+    [wallet, proposal, markets, connection, openbookTwap, tokens],
+  );
+
   const placeOrder = useCallback(
     async (amount: number, price: number, limitOrder?: boolean, ask?: boolean, pass?: boolean) => {
+      const placeTxs = await placeOrderTransactions(amount, price, limitOrder, ask, pass);
+
       if (
+        !placeTxs ||
         !proposal ||
         !markets ||
         !wallet.publicKey ||
@@ -253,81 +345,30 @@ export function useProposal({
       try {
         setLoading(true);
 
-        const market = pass ? markets.pass : markets.fail;
-        const mint = ask ? market.baseMint : market.quoteMint;
-        const openTx = new Transaction();
-        const openOrdersIndexer = findOpenOrdersIndexer(wallet.publicKey);
-        let accountIndex = new BN(1);
-        try {
-          const indexer = await openbook.account.openOrdersIndexer.fetch(openOrdersIndexer);
-          if (indexer == null) {
-            openTx.add(
-              await createOpenOrdersIndexerInstruction(
-                openbook,
-                openOrdersIndexer,
-                wallet.publicKey,
-              ),
-            );
-          } else {
-            accountIndex = new BN(indexer.createdCounter + 1);
-          }
-        } catch {
-          openTx.add(
-            await createOpenOrdersIndexerInstruction(openbook, openOrdersIndexer, wallet.publicKey),
+        const blockhask = await connection.getLatestBlockhash();
+        const txs = placeTxs.map((e: Transaction) => {
+          const tx = e;
+          tx.recentBlockhash = blockhask.blockhash;
+          tx.feePayer = wallet.publicKey!;
+          return tx;
+        });
+        const signedTxs = await wallet.signAllTransactions(txs);
+        // Using loops here to make sure transaction are executed in the correct order
+        // eslint-disable-next-line no-restricted-syntax
+        for (const tx of signedTxs) {
+          // eslint-disable-next-line no-await-in-loop
+          await connection.confirmTransaction(
+            // eslint-disable-next-line no-await-in-loop
+            await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true }),
           );
         }
-        const [ixs, openOrdersAccount] = await createOpenOrdersInstruction(
-          openbook,
-          pass ? proposal.account.openbookPassMarket : proposal.account.openbookFailMarket,
-          accountIndex,
-          `${shortKey(wallet.publicKey)}-${proposal.account.number}-${accountIndex.toString()}`,
-          wallet.publicKey,
-          openOrdersIndexer,
-        );
-        openTx.add(...ixs);
-
-        // const baseLot = 1;
-        const quoteLot = 0.0001;
-        const priceLots = new BN(Math.round(price / quoteLot));
-        const maxBaseLots = new BN(Math.round(amount));
-        const args: PlaceOrderArgs = {
-          side: ask ? Side.Ask : Side.Bid,
-          priceLots,
-          maxBaseLots,
-          maxQuoteLotsIncludingFees: priceLots.mul(maxBaseLots),
-          clientOrderId: accountIndex,
-          orderType: limitOrder ? OrderType.Limit : OrderType.Market,
-          expiryTimestamp: new BN(0),
-          selfTradeBehavior: SelfTradeBehavior.DecrementTake,
-          limit: 255,
-        };
-        console.log(Object.entries(args).map(([k, v]) => [k, v.toString()]));
-        await openbookTwap.methods
-          .placeOrder(args)
-          .accounts({
-            openOrdersAccount,
-            asks: market.asks,
-            bids: market.bids,
-            eventHeap: market.eventHeap,
-            market: pass
-              ? proposal.account.openbookPassMarket
-              : proposal.account.openbookFailMarket,
-            marketVault: ask ? market.marketBaseVault : market.marketQuoteVault,
-            twapMarket: pass
-              ? proposal.account.openbookTwapPassMarket
-              : proposal.account.openbookTwapFailMarket,
-            userTokenAccount: getAssociatedTokenAddressSync(mint, wallet.publicKey),
-            openbookProgram: openbook.programId,
-          })
-          .preInstructions(openTx.instructions)
-          .rpc({ skipPreflight: true });
 
         await fetchMarkets();
       } finally {
         setLoading(false);
       }
     },
-    [wallet, proposal, markets, connection, openbookTwap, tokens],
+    [wallet, proposal, markets, connection, openbookTwap, tokens, placeOrderTransactions],
   );
 
   return {
@@ -335,8 +376,10 @@ export function useProposal({
     markets,
     loading,
     fetchProposal,
+    fetchMarkets,
     mintTokensTransactions,
     mintTokens,
+    placeOrderTransactions,
     placeOrder,
   };
 }
