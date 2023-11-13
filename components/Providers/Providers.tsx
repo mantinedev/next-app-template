@@ -1,6 +1,5 @@
 'use client';
 
-import '@mantine/core/styles.css';
 import React, { useCallback, useMemo } from 'react';
 import { MantineProvider } from '@mantine/core';
 import { WalletError } from '@solana/wallet-adapter-base';
@@ -9,7 +8,6 @@ import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adap
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { Notifications } from '@mantine/notifications';
 import { theme } from '../../theme';
-import '@solana/wallet-adapter-react-ui/styles.css';
 import { useNetworkConfiguration } from '../../hooks/useNetworkConfiguration';
 
 export function Providers({ children }: { children: React.ReactNode }) {

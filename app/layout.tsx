@@ -1,7 +1,8 @@
-import '@mantine/core/styles.css';
 import React from 'react';
 import { ColorSchemeScript } from '@mantine/core';
 import { Providers } from '../components/Providers/Providers';
+import '@solana/wallet-adapter-react-ui/styles.css';
+import '@mantine/core/styles.css';
 
 export const metadata = {
   title: 'Futarchy - MetaDAO',
