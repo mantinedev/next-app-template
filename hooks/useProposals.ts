@@ -303,7 +303,7 @@ export function useProposals() {
       fetchState();
       fetchProposals();
     },
-    [dao, program, connection, wallet],
+    [dao, program, connection, wallet, tokens],
   );
 
   return { proposals, fetchProposals, initializeProposal };
