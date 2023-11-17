@@ -33,7 +33,7 @@ export function CreateProposalCard({ action }: { action: InitializeProposalType 
   }, [program, action, dao, daoTreasury]);
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
+    <Card shadow="sm" padding="sm" radius="md" withBorder>
       <Text>Create a new proposal</Text>
       <Button onClick={handleCreate}>Create proposal</Button>
     </Card>

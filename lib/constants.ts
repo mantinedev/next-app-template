@@ -5,3 +5,5 @@ export const OPENBOOK_TWAP_PROGRAM_ID = new PublicKey(
   'TWAPrdhADy2aTKN5iFZtNnkQYXERD9NvKjPFVPMSCNN',
 );
 export const AUTOCRAT_PROGRAM_ID = new PublicKey('meta3cxKzFBmWYgCVozmvCQAS3y9b3fGxrG9HkHL7Wi');
+
+export const NUMERAL_FORMAT = '0.0a';

@@ -14,7 +14,7 @@ export default function ProposalList({ proposals }: { proposals?: ProposalAccoun
   return proposals && proposals.length > 0 ? (
     <Stack>
       {proposals.map((proposal) => (
-        <Card key={proposal.publicKey.toString()} shadow="sm" padding="lg" radius="md" withBorder>
+        <Card key={proposal.publicKey.toString()} shadow="sm" radius="md" withBorder m="0" p="0">
           <Accordion>
             <Accordion.Item value={proposal.publicKey.toString()}>
               <Accordion.Control>
@@ -48,8 +48,8 @@ export default function ProposalList({ proposals }: { proposals?: ProposalAccoun
                   </Group>
                 </Stack>
               </Accordion.Control>
-              <Accordion.Panel>
-                <Group justify="center">
+              <Accordion.Panel p="0" style={{ padding: '0' }}>
+                <Group justify="center" p="0">
                   <MarketCard proposal={proposal} />
                   <Button
                     variant="default"

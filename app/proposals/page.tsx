@@ -10,7 +10,7 @@ export default function ProposalsPage() {
   const { proposals, initializeProposal } = useProposals();
   return (
     <Layout>
-      <Container>
+      <Container p="0">
         <Stack gap="15">
           <ProposalList proposals={proposals} />
           <CreateProposalCard action={initializeProposal} />
