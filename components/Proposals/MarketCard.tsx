@@ -142,7 +142,7 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
                 onChange={(e) => setPassPrice(Number(e.target.value))}
               />
               <Text fw="lighter" size="sm">
-                You believe that if it fails, this proposal will change the value of the DAO by{' '}
+                You believe that if it fails, this proposal will change the value of the DAO to{' '}
                 <Text fw="bolder" ff="monospace" size="md" span>
                   {numeral(beliefPassValue).format(NUMERAL_FORMAT)} ${tokens?.usdc?.symbol}
                 </Text>
@@ -158,7 +158,7 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
                 onChange={(e) => setFailPrice(Number(e.target.value))}
               />
               <Text fw="lighter" size="sm">
-                You believe that if it fails, this proposal will change the value of the DAO by{' '}
+                You believe that if it fails, this proposal will change the value of the DAO to{' '}
                 <Text fw="bolder" ff="monospace" size="md" span>
                   {numeral(beliefFailValue).format(NUMERAL_FORMAT)} ${tokens?.usdc?.symbol}
                 </Text>

@@ -2,9 +2,22 @@
 
 import { useDisclosure } from '@mantine/hooks';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { AppShell, Burger, Button, Flex, NativeSelect, Stack, Text, Title } from '@mantine/core';
+import {
+  AppShell,
+  Burger,
+  Button,
+  Flex,
+  Group,
+  NativeSelect,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 import {
   IconBooks,
+  IconBrandDiscord,
+  IconBrandGithub,
+  IconBrandTwitter,
   IconDeviceDesktopAnalytics,
   IconMicroscope,
   IconSpeakerphone,
@@ -26,7 +39,7 @@ interface MenuItem {
 }
 const menuItems: MenuItem[] = [
   { name: 'Proposals', href: '/proposals', icon: <IconSpeakerphone /> },
-  { name: 'Analytics', href: '/analytics', icon: <IconDeviceDesktopAnalytics /> },
+  // { name: 'Analytics', href: '/analytics', icon: <IconDeviceDesktopAnalytics /> },
   { name: 'Docs', href: 'https://themetadao.org/', icon: <IconBooks /> },
   { name: 'Debug', href: '/debug', icon: <IconMicroscope />, debug: true },
 ];
@@ -94,6 +107,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
             value={network}
             onChange={(e) => setNetwork(e.target.value as Networks)}
           />
+          <Group justify="center">
+            <Link href="https://github.com/Dodecahedr0x/meta-dao-frontend">
+              <IconBrandGithub />
+            </Link>
+            <Link href="https://discord.gg/metadao">
+              <IconBrandDiscord />
+            </Link>
+            <Link href="https://twitter.com/MetaDAOProject">
+              <IconBrandTwitter />
+            </Link>
+          </Group>
         </Stack>
       </AppShell.Navbar>
 
