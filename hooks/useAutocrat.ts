@@ -36,14 +36,14 @@ export function useAutocrat() {
   );
   const [daoState, setDaoState] = useState<DaoState>();
 
-  const fetchState = async () => {
+  const fetchState = useCallback(async () => {
     try {
       console.log('fetch', dao);
       setDaoState(await program.account.dao.fetch(dao));
     } catch (err) {
       console.log(err);
     }
-  };
+  }, [dao]);
 
   useEffect(() => {
     if (!daoState) {
@@ -52,6 +52,7 @@ export function useAutocrat() {
   }, [dao, program, connection]);
 
   const initializeDao = useCallback(async () => {
+    console.log(tokens);
     if (
       !tokens?.meta?.publicKey ||
       !tokens?.usdc?.publicKey ||

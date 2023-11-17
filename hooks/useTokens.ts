@@ -1,6 +1,6 @@
-import { useLocalStorage } from '@mantine/hooks';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
+import { useLocalStorage } from '@mantine/hooks';
 import { Networks, useNetworkConfiguration } from './useNetworkConfiguration';
 
 export interface Token {
@@ -61,13 +61,24 @@ const devnetTokens: TokensDict = {
   },
 };
 
+const selectDefaultTokens = (n?: Networks) => {
+  switch (n) {
+    case Networks.Devnet:
+      return devnetTokens;
+    case Networks.Mainnet:
+      return mainnetTokens;
+    default:
+      return {};
+  }
+};
+
 type TokenKeys = 'meta' | 'usdc' | keyof typeof staticTokens;
 type TokensDict = Partial<{ [key in TokenKeys]: Token }>;
 
 export function useTokens() {
   const { network } = useNetworkConfiguration();
   const [tokens, setTokens] = useLocalStorage<TokensDict>({
-    defaultValue: staticTokens,
+    defaultValue: selectDefaultTokens(network),
     serialize: JSON.stringify,
     deserialize: (s) => {
       if (!s) return {};
@@ -81,16 +92,6 @@ export function useTokens() {
     },
     key: 'futarchy-tokens',
   });
-  const selectDefaultTokens = (n?: Networks) => {
-    switch (n) {
-      case Networks.Devnet:
-        return devnetTokens;
-      case Networks.Mainnet:
-        return mainnetTokens;
-      default:
-        return {};
-    }
-  };
 
   return {
     tokens: { ...tokens, ...selectDefaultTokens(network) },

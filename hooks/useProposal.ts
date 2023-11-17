@@ -5,15 +5,14 @@ import { BN, Program } from '@coral-xyz/anchor';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
 import { SelfTradeBehavior, OrderType, Side } from '@openbook-dex/openbook-v2/dist/cjs/utils/utils';
-import { useAutocrat } from './useAutocrat';
-import { IDL as OPENBOOK_IDL, OpenbookV2 } from '../lib/idl/openbook_v2';
-import { OpenbookTwap } from '../lib/idl/openbook_twap';
-import { useProvider } from './useProvider';
-import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '../lib/constants';
-import { Markets, ProposalAccountWithKey } from '../lib/types';
-import { useConditionalVault } from './useConditionalVault';
-import { shortKey } from '../lib/utils';
-import { useTokens } from './useTokens';
+import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
+import { OpenbookTwap } from '@/lib/idl/openbook_twap';
+import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '@/lib/constants';
+import { Markets, ProposalAccountWithKey } from '@/lib/types';
+import { shortKey } from '@/lib/utils';
+import { useAutocrat } from '@/hooks/useAutocrat';
+import { useProvider } from '@/hooks/useProvider';
+import { useConditionalVault } from '@/hooks/useConditionalVault';
 
 const OPENBOOK_TWAP_IDL: OpenbookTwap = require('@/lib/idl/openbook_twap.json');
 
@@ -91,7 +90,6 @@ export function useProposal({
   const { connection } = useConnection();
   const wallet = useWallet();
   const provider = useProvider();
-  const { tokens } = useTokens();
   const openbook = useMemo(() => {
     if (!provider) {
       return;
@@ -250,9 +248,7 @@ export function useProposal({
         !wallet.publicKey ||
         !wallet.signAllTransactions ||
         !openbook ||
-        !openbookTwap ||
-        !tokens?.meta ||
-        !tokens?.usdc
+        !openbookTwap
       ) {
         return;
       }
@@ -321,24 +317,14 @@ export function useProposal({
 
       return [placeTx];
     },
-    [wallet, proposal, markets, connection, openbookTwap, tokens],
+    [wallet, proposal, markets, openbookTwap],
   );
 
   const placeOrder = useCallback(
     async (amount: number, price: number, limitOrder?: boolean, ask?: boolean, pass?: boolean) => {
       const placeTxs = await placeOrderTransactions(amount, price, limitOrder, ask, pass);
 
-      if (
-        !placeTxs ||
-        !proposal ||
-        !markets ||
-        !wallet.publicKey ||
-        !wallet.signAllTransactions ||
-        !openbook ||
-        !openbookTwap ||
-        !tokens?.meta ||
-        !tokens?.usdc
-      ) {
+      if (!placeTxs || !wallet.publicKey || !wallet.signAllTransactions) {
         return;
       }
 
@@ -368,7 +354,7 @@ export function useProposal({
         setLoading(false);
       }
     },
-    [wallet, proposal, markets, connection, openbookTwap, tokens, placeOrderTransactions],
+    [wallet, connection, placeOrderTransactions],
   );
 
   return {
