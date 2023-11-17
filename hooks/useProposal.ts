@@ -264,7 +264,7 @@ export function useProposal({
       let accountIndex = new BN(1);
       try {
         const indexer = await openbook.account.openOrdersIndexer.fetch(openOrdersIndexer);
-        if (indexer == null) {
+        if (indexer == null && !indexOffset) {
           openTx.add(
             await createOpenOrdersIndexerInstruction(openbook, openOrdersIndexer, wallet.publicKey),
           );

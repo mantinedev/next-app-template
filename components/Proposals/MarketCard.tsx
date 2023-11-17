@@ -68,19 +68,19 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
   const beliefFailValue = failPrice * baseSupply;
 
   const handleBet = useCallback(async () => {
-    const mintTxs = await mintTokensTransactions(amount, !isBeneficial);
+    const mintTxs = await mintTokensTransactions(amount, usedToken !== tokens?.usdc);
     const placePassTxs = await placeOrderTransactions(
       passAmount,
       passPrice,
       true,
-      isBeneficial,
+      usedToken !== tokens?.usdc,
       true,
     );
     const placeFailTxs = await placeOrderTransactions(
       failAmount,
       failPrice,
       true,
-      !isBeneficial,
+      usedToken !== tokens?.usdc,
       false,
       1,
     );
