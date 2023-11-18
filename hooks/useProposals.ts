@@ -139,7 +139,11 @@ export function useProposals() {
   const baseNonce: BN = new BN(daoState?.proposalCount || 0);
 
   const fetchProposals = useCallback(async () => {
-    setProposals((await program.account.proposal.all()) as any);
+    setProposals(
+      (await program.account.proposal.all()).sort((a, b) =>
+        a.account.number < b.account.number ? 1 : -1,
+      ) as any,
+    );
   }, [program]);
 
   useEffect(() => {

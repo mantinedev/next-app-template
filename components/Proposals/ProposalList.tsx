@@ -21,7 +21,7 @@ export default function ProposalList({ proposals }: { proposals?: ProposalAccoun
                 <Stack pr="sm">
                   <Group justify="space-between">
                     <Text size="xl" fw={500}>
-                      Proposal #{proposal.account.number}
+                      Proposal #{proposal.account.number + 1}
                     </Text>
                     {proposal.account.state.failed ? (
                       <Badge color="red" variant="light">
@@ -72,6 +72,8 @@ export default function ProposalList({ proposals }: { proposals?: ProposalAccoun
       ))}
     </Stack>
   ) : (
-    <Text>There are no proposals yet</Text>
+    <Text size="lg" ta="center" fw="bold">
+      There are no proposals yet
+    </Text>
   );
 }

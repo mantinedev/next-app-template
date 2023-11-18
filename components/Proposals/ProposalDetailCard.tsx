@@ -65,7 +65,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   ) : (
     <Stack gap="0">
       <Text fw="bolder" size="xl">
-        Proposal #{proposal.account.number}
+        Proposal #{proposal.account.number + 1}
       </Text>
       <Link href={proposal.account.descriptionUrl}>
         <Group gap="sm">

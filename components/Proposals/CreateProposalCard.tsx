@@ -1,18 +1,61 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Card, Fieldset, NativeSelect, Stack, TextInput } from '@mantine/core';
+import { Button, Card, Fieldset, NativeSelect, Stack, Text, TextInput } from '@mantine/core';
+import numeral, { Numeral } from 'numeral';
+import { BN } from '@coral-xyz/anchor';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useAutocrat } from '@/hooks/useAutocrat';
 import { InitializeProposalType } from '@/hooks/useProposals';
 import { instructionGroups } from '@/lib/instructions';
 import { InstructionAction, ProposalInstruction } from '@/lib/types';
+import { NUMERAL_FORMAT } from '../../lib/constants';
 
 export function CreateProposalCard({ action }: { action: InitializeProposalType }) {
-  const { program, dao, daoTreasury } = useAutocrat();
+  const { connection } = useConnection();
+  const wallet = useWallet();
+  const { program, daoState, dao, daoTreasury } = useAutocrat();
   const [url, setUrl] = useState<string>('https://www.eff.org/cyberspace-independence');
   const [selectedInstruction, setSelectedInstruction] = useState<InstructionAction>(
     instructionGroups[0].actions[0],
   );
   const [instruction, setInstruction] = useState<ProposalInstruction>();
   const [params, setParams] = useState<any[]>();
+  const [balance, setBalance] = useState<Numeral>();
+  const [lastSlot, setLastSlot] = useState<number>();
+  const nextProposalCost = numeral(
+    daoState && lastSlot
+      ? daoState.baseBurnLamports
+          .sub(
+            new BN(lastSlot).sub(daoState.lastProposalSlot).mul(daoState.burnDecayPerSlotLamports),
+          )
+          .toString()
+      : 0,
+  ).divide(LAMPORTS_PER_SOL);
+  const fetchBalance = async () => {
+    if (!wallet.publicKey || !connection) return;
+    setBalance(numeral(await connection.getBalance(wallet.publicKey)).divide(LAMPORTS_PER_SOL));
+  };
+  const fetchSlot = async () => {
+    setLastSlot(await connection.getSlot());
+  };
+  useEffect(() => {
+    if (!balance) {
+      fetchBalance();
+    }
+  }, [balance]);
+  useEffect(() => {
+    if (!lastSlot && daoState?.lastProposalSlot.toNumber() > (lastSlot || 0)) {
+      fetchSlot();
+    }
+  }, [lastSlot, daoState]);
+  useEffect(() => {
+    if (lastSlot) {
+      const interval = setInterval(() => {
+        setLastSlot((old) => (old || daoState?.lastProposalSlot || 0) + 1);
+      }, 400);
+      return () => clearInterval(interval);
+    }
+  }, [daoState, lastSlot]);
 
   useEffect(() => {
     setParams(new Array(selectedInstruction.fields.length));
@@ -66,9 +109,23 @@ export function CreateProposalCard({ action }: { action: InitializeProposalType 
             />
           ))}
         </Fieldset>
-        <Button onClick={handleCreate} disabled={params?.includes(undefined)}>
+        <Button
+          onClick={handleCreate}
+          disabled={
+            params?.includes(undefined) || (balance?.value() || 0) < (nextProposalCost.value() || 0)
+          }
+        >
           Create proposal
         </Button>
+        {(nextProposalCost.value() || 0) > 0 ? (
+          <Stack gap="0">
+            <Text fw="lighter">Your balance: {balance?.format(NUMERAL_FORMAT)} $SOL</Text>
+            <Text fw="lighter">
+              A {nextProposalCost.format(NUMERAL_FORMAT)} $SOL fee is required to create the
+              proposal. This helps prevent spam.
+            </Text>
+          </Stack>
+        ) : null}
       </Stack>
     </Card>
   );
