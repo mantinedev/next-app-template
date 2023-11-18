@@ -16,9 +16,9 @@ export function useNetworkConfiguration() {
   const endpoint = useMemo(() => {
     switch (network) {
       case Networks.Mainnet:
-        return clusterApiUrl('mainnet-beta');
+        return 'https://mainnet.helius-rpc.com/?api-key=d1593552-6d2e-4ef5-b897-856c3d96c316';
       case Networks.Devnet:
-        return clusterApiUrl('devnet');
+        return 'https://devnet.helius-rpc.com/?api-key=d1593552-6d2e-4ef5-b897-856c3d96c316';
       case Networks.Localnet:
         return 'http://127.0.0.1:8899';
       default:
