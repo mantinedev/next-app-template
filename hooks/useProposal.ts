@@ -265,7 +265,7 @@ export function useProposal({
             await createOpenOrdersIndexerInstruction(openbook, openOrdersIndexer, wallet.publicKey),
           );
         } else {
-          accountIndex = new BN(indexer.createdCounter + 1 + (indexOffset || 0));
+          accountIndex = new BN((indexer?.createdCounter || 0) + 1 + (indexOffset || 0));
         }
       } catch {
         openTx.add(
@@ -285,7 +285,7 @@ export function useProposal({
       // const baseLot = 1;
       const quoteLot = 0.0001;
       const priceLots = new BN(Math.round(price / quoteLot));
-      const maxBaseLots = new BN(Math.round(amount));
+      const maxBaseLots = new BN(Math.round(ask ? amount : amount / price));
       const args: PlaceOrderArgs = {
         side: ask ? Side.Ask : Side.Bid,
         priceLots,

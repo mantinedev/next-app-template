@@ -96,7 +96,7 @@ export function useTokens() {
   return {
     tokens: { ...tokens, ...selectDefaultTokens(network) },
     setTokens: (newTokens: TokensDict) => {
-      console.log(tokens, newTokens, selectDefaultTokens(network));
+      console.log(tokens, newTokens, selectDefaultTokens(network), network);
       setTokens({ ...tokens, ...newTokens, ...selectDefaultTokens(network) });
     },
   };

@@ -25,16 +25,10 @@ import { useTokenMint } from '../../hooks/useTokenMint';
 import { useTransactionSender } from '../../hooks/useTransactionSender';
 
 export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccountWithKey }) {
-  const {
-    proposal,
-    markets,
-    mintTokensTransactions,
-    placeOrderTransactions,
-    fetchMarkets,
-    loading,
-  } = useProposal({
-    fromProposal,
-  });
+  const { proposal, markets, mintTokensTransactions, placeOrderTransactions, fetchMarkets } =
+    useProposal({
+      fromProposal,
+    });
   const { amount: baseBalance } = useTokenAmount(markets?.baseVault.underlyingTokenMint);
   const { amount: quoteBalance } = useTokenAmount(markets?.quoteVault.underlyingTokenMint);
   const { tokens } = useTokens();
@@ -44,11 +38,12 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
   const [failPrice, setFailPrice] = useState<number>(0);
   const [amount, setAmount] = useState<number>(0);
   const [selectedToken, setSelectedToken] = useState<Token | undefined>(tokens?.meta);
+  const [isBetting, setIsBetting] = useState<boolean>(false);
   const isBeneficial = passPrice > failPrice;
   const usedToken = (selectedToken !== tokens?.usdc ? tokens?.meta : tokens?.usdc) || tokens?.meta;
   const payoutToken = selectedToken === tokens?.usdc ? tokens?.meta : tokens?.usdc;
-  const passAmount = !isBeneficial ? (failPrice * amount) / passPrice : amount;
-  const failAmount = !isBeneficial ? amount : (passPrice * amount) / failPrice;
+  const passAmount = selectedToken !== tokens?.usdc ? (failPrice * amount) / passPrice : amount;
+  const failAmount = selectedToken !== tokens?.usdc ? amount : (passPrice * amount) / failPrice;
 
   useEffect(() => {
     if (!selectedToken) {
@@ -70,14 +65,14 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
   const handleBet = useCallback(async () => {
     const mintTxs = await mintTokensTransactions(amount, usedToken !== tokens?.usdc);
     const placePassTxs = await placeOrderTransactions(
-      passAmount,
+      usedToken !== tokens?.usdc ? failAmount : passAmount,
       passPrice,
       true,
       usedToken !== tokens?.usdc,
       true,
     );
     const placeFailTxs = await placeOrderTransactions(
-      failAmount,
+      usedToken !== tokens?.usdc ? passAmount : failAmount,
       failPrice,
       true,
       usedToken !== tokens?.usdc,
@@ -86,9 +81,14 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
     );
     if (!mintTxs || !placePassTxs || !placeFailTxs) return;
 
-    await sender([...mintTxs, ...placePassTxs, ...placeFailTxs].filter(Boolean));
+    try {
+      setIsBetting(true);
+      await sender([...mintTxs, ...placePassTxs, ...placeFailTxs].filter(Boolean));
+    } finally {
+      setIsBetting(false);
+    }
 
-    fetchMarkets();
+    setTimeout(() => fetchMarkets(), 1000);
   }, [
     amount,
     passPrice,
@@ -193,7 +193,7 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
               <Grid.Col span={10}>
                 <Button
                   onClick={handleBet}
-                  loading={loading}
+                  loading={isBetting}
                   fullWidth
                   disabled={
                     (isBeneficial && amount > (baseBalance?.uiAmount || 0)) ||
