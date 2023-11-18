@@ -229,6 +229,10 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
                           Otherwise you get back your {numeral(amount).format(NUMERAL_FORMAT)} $
                           {usedToken?.symbol}
                         </Text>
+                        <Text size="sm" fw="lighter">
+                          Places two {usedToken !== tokens?.usdc ? 'asks' : 'bids'} at the defined
+                          prices
+                        </Text>
                       </Stack>
                     </Container>
                   </HoverCard.Dropdown>

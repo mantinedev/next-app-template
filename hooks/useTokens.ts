@@ -64,11 +64,11 @@ const devnetTokens: TokensDict = {
 const selectDefaultTokens = (n?: Networks) => {
   switch (n) {
     case Networks.Devnet:
-      return devnetTokens;
+      return { ...staticTokens, ...devnetTokens };
     case Networks.Mainnet:
-      return mainnetTokens;
+      return { ...staticTokens, ...mainnetTokens };
     default:
-      return {};
+      return staticTokens;
   }
 };
 
@@ -95,7 +95,9 @@ export function useTokens() {
 
   return {
     tokens: { ...tokens, ...selectDefaultTokens(network) },
-    setTokens: (newTokens: TokensDict) =>
-      setTokens({ ...tokens, ...newTokens, ...selectDefaultTokens(network) }),
+    setTokens: (newTokens: TokensDict) => {
+      console.log(tokens, newTokens, selectDefaultTokens(network));
+      setTokens({ ...tokens, ...newTokens, ...selectDefaultTokens(network) });
+    },
   };
 }

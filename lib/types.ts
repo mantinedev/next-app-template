@@ -9,6 +9,7 @@ export type ProposalAccount = IdlAccounts<AutocratV0>['proposal'];
 export type ProposalAccountWithKey = { account: ProposalAccount; publicKey: PublicKey };
 export type VaultAccount = IdlAccounts<ConditionalVault>['conditionalVault'];
 export type TwapMarketAccount = IdlAccounts<OpenbookTwap>['twapMarket'];
+export type ProposalInstruction = IdlTypes<AutocratV0>['ProposalInstruction'];
 export type Markets = {
   pass: MarketAccount;
   fail: MarketAccount;
@@ -34,3 +35,25 @@ export type LeafNode = IdlTypes<OpenbookV2>['LeafNode'];
 export type AnyNode = IdlTypes<OpenbookV2>['AnyNode'];
 export type FillEvent = IdlTypes<OpenbookV2>['FillEvent'];
 export type OutEvent = IdlTypes<OpenbookV2>['OutEvent'];
+
+export enum InstructionFieldTypes {
+  Text,
+  Number,
+  BigNumber,
+  Key,
+}
+export type InstructionFieldType = {
+  type: InstructionFieldTypes;
+  label: string;
+  description: string;
+  deserialize: (value: string) => any;
+};
+export type InstructionAction = {
+  label: string;
+  fields: InstructionFieldType[];
+  instruction: (params: any[]) => ProposalInstruction;
+};
+export type InstructionSet = {
+  name: string;
+  actions: InstructionAction[];
+};

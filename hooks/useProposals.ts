@@ -7,7 +7,7 @@ import {
   TransactionInstruction,
   Signer,
 } from '@solana/web3.js';
-import { IdlAccounts, IdlTypes, Program, BN, utils } from '@coral-xyz/anchor';
+import { Program, BN, utils } from '@coral-xyz/anchor';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { OracleConfigParams } from '@openbook-dex/openbook-v2';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
@@ -17,11 +17,8 @@ import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '../lib/constants'
 import { useConditionalVault } from './useConditionalVault';
 import { OpenbookTwap, IDL as OPENBOOK_TWAP_IDL } from '../lib/idl/openbook_twap';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '../lib/idl/openbook_v2';
-import { AutocratV0 } from '../lib/idl/autocrat_v0';
 import { useProvider } from './useProvider';
-
-export type ProposalAccount = IdlAccounts<AutocratV0>['proposal'];
-export type ProposalInstruction = IdlTypes<AutocratV0>['ProposalInstruction'];
+import { ProposalAccount, ProposalInstruction } from '../lib/types';
 
 const BooksideSpace = 90944 + 8;
 const EventHeapSpace = 91280 + 8;

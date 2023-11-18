@@ -52,7 +52,6 @@ export function useAutocrat() {
   }, [dao, program, connection]);
 
   const initializeDao = useCallback(async () => {
-    console.log(tokens);
     if (
       !tokens?.meta?.publicKey ||
       !tokens?.usdc?.publicKey ||

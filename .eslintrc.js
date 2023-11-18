@@ -13,6 +13,7 @@ module.exports = {
   rules: {
     'react/react-in-jsx-scope': 'off',
     'import/extensions': 'off',
+    'no-param-reassign': 'off',
     'consistent-return': 'off'
   },
 };

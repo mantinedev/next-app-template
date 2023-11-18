@@ -51,18 +51,21 @@ export default function ProposalList({ proposals }: { proposals?: ProposalAccoun
               <Accordion.Panel p="0" style={{ padding: '0' }}>
                 <Group justify="center" p="0">
                   <MarketCard proposal={proposal} />
-                  <Button
-                    variant="default"
-                    fullWidth
-                    onClick={() => router.push(`/proposal?id=${proposal.account.number}`)}
-                  >
-                    <Group>
-                      <Text>Details</Text>
-                      <IconEyeglass />
-                    </Group>
-                  </Button>
                 </Group>
               </Accordion.Panel>
+              <Group>
+                <Button
+                  m="sm"
+                  variant="default"
+                  fullWidth
+                  onClick={() => router.push(`/proposal?id=${proposal.account.number}`)}
+                >
+                  <Group>
+                    <Text>Details</Text>
+                    <IconEyeglass />
+                  </Group>
+                </Button>
+              </Group>
             </Accordion.Item>
           </Accordion>
         </Card>

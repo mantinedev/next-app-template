@@ -18,7 +18,6 @@ import {
   IconBrandDiscord,
   IconBrandGithub,
   IconBrandTwitter,
-  IconDeviceDesktopAnalytics,
   IconMicroscope,
   IconSpeakerphone,
 } from '@tabler/icons-react';
