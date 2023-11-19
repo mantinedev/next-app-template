@@ -10,8 +10,12 @@ import {
   Group,
   NativeSelect,
   Stack,
+  Switch,
   Text,
   Title,
+  rem,
+  useMantineColorScheme,
+  useMantineTheme,
 } from '@mantine/core';
 import {
   IconBooks,
@@ -19,7 +23,9 @@ import {
   IconBrandGithub,
   IconBrandTwitter,
   IconMicroscope,
+  IconMoonStars,
   IconSpeakerphone,
+  IconSun,
 } from '@tabler/icons-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import '@mantine/notifications/styles.css';
@@ -54,6 +60,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const modal = useWalletModal();
   const { network, setNetwork } = useNetworkConfiguration();
   const [opened, { toggle }] = useDisclosure();
+  const theme = useMantineTheme();
+  const { setColorScheme } = useMantineColorScheme();
+
+  const sunIcon = (
+    <IconSun
+      style={{ width: rem(16), height: rem(16) }}
+      stroke={2.5}
+      color={theme.colors.yellow[4]}
+    />
+  );
+
+  const moonIcon = (
+    <IconMoonStars
+      style={{ width: rem(16), height: rem(16) }}
+      stroke={2.5}
+      color={theme.colors.blue[6]}
+    />
+  );
 
   useEffect(() => {
     if (!wallet.connected && wallet.wallet) {
@@ -116,6 +140,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link href="https://twitter.com/MetaDAOProject">
               <IconBrandTwitter />
             </Link>
+          </Group>
+          <Group justify="center">
+            <Switch
+              size="md"
+              color="dark.4"
+              onLabel={sunIcon}
+              offLabel={moonIcon}
+              onChange={(e) => setColorScheme(e.currentTarget.checked ? 'light' : 'dark')}
+            />
           </Group>
         </Stack>
       </AppShell.Navbar>
