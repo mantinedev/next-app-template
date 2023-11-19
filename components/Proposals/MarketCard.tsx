@@ -23,8 +23,10 @@ import { useTokenAmount } from '../../hooks/useTokenAmount';
 import { ProposalAccountWithKey } from '../../lib/types';
 import { useTokenMint } from '../../hooks/useTokenMint';
 import { useTransactionSender } from '../../hooks/useTransactionSender';
+import { useAutocrat } from '../../contexts/AutocratContext';
 
 export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccountWithKey }) {
+  const { daoTreasury } = useAutocrat();
   const { proposal, markets, mintTokensTransactions, placeOrderTransactions, fetchMarkets } =
     useProposal({
       fromProposal,
@@ -32,6 +34,7 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
   const { amount: baseBalance } = useTokenAmount(markets?.baseVault.underlyingTokenMint);
   const { amount: quoteBalance } = useTokenAmount(markets?.quoteVault.underlyingTokenMint);
   const { tokens } = useTokens();
+  const { amount: treasuryBalance } = useTokenAmount(tokens?.meta?.publicKey, daoTreasury);
   const { mint } = useTokenMint(tokens?.meta?.publicKey);
   const { send: sender } = useTransactionSender();
   const [passPrice, setPassPrice] = useState<number>(0);
@@ -49,16 +52,26 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
     }
   }, [selectedToken, tokens]);
 
-  const baseSupply =
+  const totalSupply =
     numeral(mint?.supply || 0)
       .divide(10 ** (mint?.decimals || 0))
       .value() || 0;
-  const marketPassValue =
-    (baseSupply * ((markets?.passPrice.ask || 0) + (markets?.passPrice.bid || 0))) / 2;
-  const marketFailValue =
-    (baseSupply * ((markets?.failPrice.ask || 0) + (markets?.failPrice.bid || 0))) / 2;
-  const beliefPassValue = passPrice * baseSupply;
-  const beliefFailValue = failPrice * baseSupply;
+  const circulatingSupply =
+    numeral(totalSupply)
+      .subtract(treasuryBalance?.uiAmount || 0)
+      .value() || 0;
+  const circulatingMarketPassValue =
+    (circulatingSupply * ((markets?.passPrice.ask || 0) + (markets?.passPrice.bid || 0))) / 2;
+  const circulatingMarketFailValue =
+    (circulatingSupply * ((markets?.failPrice.ask || 0) + (markets?.failPrice.bid || 0))) / 2;
+  const totalMarketPassValue =
+    (totalSupply * ((markets?.passPrice.ask || 0) + (markets?.passPrice.bid || 0))) / 2;
+  const totalMarketFailValue =
+    (totalSupply * ((markets?.failPrice.ask || 0) + (markets?.failPrice.bid || 0))) / 2;
+  const circulatingBeliefPassValue = passPrice * circulatingSupply;
+  const circulatingBeliefFailValue = failPrice * circulatingSupply;
+  const totalBeliefPassValue = passPrice * totalSupply;
+  const totalBeliefFailValue = failPrice * totalSupply;
 
   const handleBet = useCallback(async () => {
     const mintTxs = await mintTokensTransactions(amount, usedToken !== tokens?.usdc);
@@ -111,7 +124,10 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
                 On PASS
               </Title>
               <Text ta="center">The market thinks it will change the value of the DAO to</Text>
-              <Title>{numeral(marketPassValue).format(NUMERAL_FORMAT)}$</Title>
+              <Title>{numeral(circulatingMarketPassValue).format(NUMERAL_FORMAT)}$</Title>
+              <Text ta="center" fw="lighter" size="sm">
+                {numeral(totalMarketPassValue).format(NUMERAL_FORMAT)}$ FDV
+              </Text>
             </Stack>
           </Fieldset>
         </Container>
@@ -122,7 +138,10 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
                 On FAIL
               </Title>
               <Text ta="center">The market thinks it will change the value of the DAO to</Text>
-              <Title>{numeral(marketFailValue).format(NUMERAL_FORMAT)}$</Title>
+              <Title>{numeral(circulatingMarketFailValue).format(NUMERAL_FORMAT)}$</Title>
+              <Text ta="center" fw="lighter" size="sm">
+                {numeral(totalMarketFailValue).format(NUMERAL_FORMAT)}$ FDV
+              </Text>
             </Stack>
           </Fieldset>
         </Container>
@@ -142,8 +161,9 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
               <Text fw="lighter" size="sm">
                 You believe that if it fails, this proposal will change the value of the DAO to{' '}
                 <Text fw="bolder" ff="monospace" size="md" span>
-                  {numeral(beliefPassValue).format(NUMERAL_FORMAT)} ${tokens?.usdc?.symbol}
-                </Text>
+                  {numeral(circulatingBeliefPassValue).format(NUMERAL_FORMAT)}$
+                </Text>{' '}
+                ({numeral(totalBeliefPassValue).format(NUMERAL_FORMAT)}$ FDV)
               </Text>
             </Stack>
             <Stack align="center" gap="0">
@@ -158,8 +178,9 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
               <Text fw="lighter" size="sm">
                 You believe that if it fails, this proposal will change the value of the DAO to{' '}
                 <Text fw="bolder" ff="monospace" size="md" span>
-                  {numeral(beliefFailValue).format(NUMERAL_FORMAT)} ${tokens?.usdc?.symbol}
-                </Text>
+                  {numeral(circulatingBeliefFailValue).format(NUMERAL_FORMAT)}$
+                </Text>{' '}
+                ({numeral(totalBeliefFailValue).format(NUMERAL_FORMAT)}$ FDV)
               </Text>
             </Stack>
             <Text size="sm" fw="bold" c={isBeneficial ? 'green' : 'red'}>
