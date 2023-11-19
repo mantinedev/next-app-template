@@ -42,10 +42,12 @@ interface MenuItem {
   href: string;
   icon: ReactNode;
   debug?: boolean;
+  external?: boolean;
 }
 const menuItems: MenuItem[] = [
   { name: 'Proposals', href: '/proposals', icon: <IconSpeakerphone /> },
   // { name: 'Analytics', href: '/analytics', icon: <IconDeviceDesktopAnalytics /> },
+  { name: 'Docs', href: 'https://themetadao.org/', icon: <IconBooks />, external: true },
   { name: 'Debug', href: '/debug', icon: <IconMicroscope />, debug: true },
 ];
 
@@ -110,7 +112,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <Stack>
             {menuItems.map((item) =>
               item.debug && network === Networks.Mainnet ? null : (
-                <Link key={item.href} href={item.href}>
+                <Link key={item.href} href={item.href} target={item.external ? '_blank' : '_self'}>
                   <Button variant="default" w="100%" justify="flex-start">
                     {item.icon}
                     <Text>{item.name}</Text>
@@ -118,12 +120,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               ),
             )}
-            <a target="_blank" href="https://themetadao.org/" rel="noopener noreferrer">
-              <Button variant="default" w="100%" justify="flex-start">
-                <IconBooks />
-                <Text>Docs</Text>
-              </Button>
-            </a>
           </Stack>
           {wallet?.publicKey ? (
             <Button variant="danger" onClick={() => wallet.disconnect()}>
