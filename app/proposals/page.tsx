@@ -11,7 +11,6 @@ export default function ProposalsPage() {
       <Container p="0">
         <Stack gap="15">
           <ProposalList />
-          <CreateProposalCard />
         </Stack>
       </Container>
     </Layout>
