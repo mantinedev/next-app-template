@@ -2,12 +2,14 @@
 
 import { Button } from '@mantine/core';
 import { useCallback } from 'react';
-import { useAutocrat } from '../../hooks/useAutocrat';
+import { useAutocrat } from '../../contexts/AutocratContext';
 import { useTokens } from '../../hooks/useTokens';
+import { useAutocratDebug } from '../../hooks/useAutocratDebug';
 
 export default function CreateDaoButton() {
   const { tokens } = useTokens();
-  const { program: autocratProgram, initializeDao } = useAutocrat();
+  const { program: autocratProgram } = useAutocrat();
+  const { initializeDao } = useAutocratDebug();
 
   const handleCreateDao = useCallback(async () => {
     await initializeDao();

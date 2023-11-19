@@ -9,6 +9,7 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { Notifications } from '@mantine/notifications';
 import { theme } from '../../theme';
 import { useNetworkConfiguration } from '../../hooks/useNetworkConfiguration';
+import { AutocratProvider } from '../../contexts/AutocratContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const { endpoint } = useNetworkConfiguration();
@@ -24,7 +25,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <Notifications />
       <ConnectionProvider endpoint={endpoint}>
         <WalletProvider wallets={wallets} onError={onError}>
-          <WalletModalProvider>{children}</WalletModalProvider>
+          <WalletModalProvider>
+            <AutocratProvider>{children}</AutocratProvider>
+          </WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>
     </MantineProvider>

@@ -8,6 +8,7 @@ import { ConditionalVault } from './idl/conditional_vault';
 export type ProposalAccount = IdlAccounts<AutocratV0>['proposal'];
 export type ProposalAccountWithKey = { account: ProposalAccount; publicKey: PublicKey };
 export type VaultAccount = IdlAccounts<ConditionalVault>['conditionalVault'];
+export type DaoState = IdlAccounts<AutocratV0>['dao'];
 export type TwapMarketAccount = IdlAccounts<OpenbookTwap>['twapMarket'];
 export type ProposalInstruction = IdlTypes<AutocratV0>['ProposalInstruction'];
 export type Markets = {

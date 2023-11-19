@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { Transaction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
@@ -10,74 +10,16 @@ import { OpenbookTwap } from '@/lib/idl/openbook_twap';
 import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '@/lib/constants';
 import { Markets, ProposalAccountWithKey } from '@/lib/types';
 import { shortKey } from '@/lib/utils';
-import { useAutocrat } from '@/hooks/useAutocrat';
+import { useAutocrat } from '@/contexts/AutocratContext';
 import { useProvider } from '@/hooks/useProvider';
 import { useConditionalVault } from '@/hooks/useConditionalVault';
+import {
+  createOpenOrdersIndexerInstruction,
+  createOpenOrdersInstruction,
+  findOpenOrdersIndexer,
+} from '../lib/openbook';
 
 const OPENBOOK_TWAP_IDL: OpenbookTwap = require('@/lib/idl/openbook_twap.json');
-
-const findOpenOrdersIndexer = (owner: PublicKey): PublicKey => {
-  const [openOrdersIndexer] = PublicKey.findProgramAddressSync(
-    [Buffer.from('OpenOrdersIndexer'), owner.toBuffer()],
-    OPENBOOK_PROGRAM_ID,
-  );
-  return openOrdersIndexer;
-};
-
-const createOpenOrdersIndexerInstruction = async (
-  program: Program<OpenbookV2>,
-  openOrdersIndexer: PublicKey,
-  owner: PublicKey,
-): Promise<TransactionInstruction> =>
-  program.methods
-    .createOpenOrdersIndexer()
-    .accounts({
-      openOrdersIndexer,
-      owner,
-      payer: owner,
-    })
-    .instruction();
-
-const findOpenOrders = (accountIndex: BN, owner: PublicKey): PublicKey => {
-  const [openOrders] = PublicKey.findProgramAddressSync(
-    [Buffer.from('OpenOrders'), owner.toBuffer(), accountIndex.toArrayLike(Buffer, 'le', 4)],
-    OPENBOOK_PROGRAM_ID,
-  );
-  return openOrders;
-};
-
-const createOpenOrdersInstruction = async (
-  program: Program<OpenbookV2>,
-  market: PublicKey,
-  accountIndex: BN,
-  name: string,
-  owner: PublicKey,
-  openOrdersIndexer: PublicKey,
-): Promise<[TransactionInstruction[], PublicKey]> => {
-  const ixs: TransactionInstruction[] = [];
-
-  if (accountIndex.toNumber() === 0) {
-    throw Object.assign(new Error('accountIndex can not be 0'), {
-      code: 403,
-    });
-  }
-  const openOrdersAccount = findOpenOrders(accountIndex, owner);
-
-  ixs.push(
-    await program.methods
-      .createOpenOrdersAccount(name)
-      .accounts({
-        openOrdersIndexer,
-        openOrdersAccount,
-        market,
-        owner,
-        delegateAccount: null,
-      })
-      .instruction(),
-  );
-
-  return [ixs, openOrdersAccount];
-};
 
 export function useProposal({
   fromNumber,
@@ -86,7 +28,7 @@ export function useProposal({
   fromNumber?: number | undefined;
   fromProposal?: ProposalAccountWithKey;
 }) {
-  const { program } = useAutocrat();
+  const { proposals } = useAutocrat();
   const { connection } = useConnection();
   const wallet = useWallet();
   const provider = useProvider();
@@ -104,23 +46,19 @@ export function useProposal({
   }, [provider]);
   const { program: vaultProgram, mintConditionalTokens } = useConditionalVault();
   const [markets, setMarkets] = useState<Markets>();
-  const [proposal, setProposal] = useState<ProposalAccountWithKey | undefined>(fromProposal);
   const [loading, setLoading] = useState(false);
-
-  const fetchProposal = useCallback(async () => {
-    setProposal(
-      (await program.account.proposal.all()).filter(
+  const proposal = useMemo<ProposalAccountWithKey | undefined>(
+    () =>
+      proposals?.filter(
         (t) =>
           t.account.number === fromNumber ||
           t.publicKey.toString() === fromProposal?.publicKey.toString(),
       )[0],
-    );
-  }, [program, fromNumber]);
+    [proposals, fromProposal],
+  );
 
   const fetchMarkets = useCallback(async () => {
     if (!proposal || !openbook || !openbookTwap || !openbookTwap.views) return;
-
-    setLoading(true);
 
     const pass = await openbook.account.market.fetch(proposal.account.openbookPassMarket);
     const fail = await openbook.account.market.fetch(proposal.account.openbookFailMarket);
@@ -165,15 +103,7 @@ export function useProposal({
       baseVault,
       quoteVault,
     });
-
-    setLoading(false);
   }, [vaultProgram, openbook, openbookTwap]);
-
-  useEffect(() => {
-    if (!proposal) {
-      fetchProposal();
-    }
-  }, [proposal, fetchProposal]);
 
   useEffect(() => {
     if (!markets) {
@@ -260,17 +190,15 @@ export function useProposal({
       let accountIndex = new BN(1);
       try {
         const indexer = await openbook.account.openOrdersIndexer.fetch(openOrdersIndexer);
-        if (indexer == null && !indexOffset) {
+        accountIndex = new BN((indexer?.createdCounter || 0) + 1 + (indexOffset || 0));
+      } catch {
+        if (!indexOffset) {
           openTx.add(
             await createOpenOrdersIndexerInstruction(openbook, openOrdersIndexer, wallet.publicKey),
           );
         } else {
-          accountIndex = new BN((indexer?.createdCounter || 0) + 1 + (indexOffset || 0));
+          accountIndex = new BN(1 + (indexOffset || 0));
         }
-      } catch {
-        openTx.add(
-          await createOpenOrdersIndexerInstruction(openbook, openOrdersIndexer, wallet.publicKey),
-        );
       }
       const [ixs, openOrdersAccount] = await createOpenOrdersInstruction(
         openbook,
@@ -284,8 +212,8 @@ export function useProposal({
 
       // const baseLot = 1;
       const quoteLot = 0.0001;
-      const priceLots = new BN(Math.round(price / quoteLot));
-      const maxBaseLots = new BN(Math.round(ask ? amount : amount / price));
+      const priceLots = new BN(Math.floor(price / quoteLot));
+      const maxBaseLots = new BN(Math.floor(amount));
       const args: PlaceOrderArgs = {
         side: ask ? Side.Ask : Side.Bid,
         priceLots,
@@ -361,7 +289,6 @@ export function useProposal({
     proposal,
     markets,
     loading,
-    fetchProposal,
     fetchMarkets,
     mintTokensTransactions,
     mintTokens,

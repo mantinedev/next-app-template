@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 import { IconExternalLink, IconEyeglass } from '@tabler/icons-react';
 import { shortKey } from '../../lib/utils';
 import { MarketCard } from './MarketCard';
-import { ProposalAccountWithKey } from '../../lib/types';
+import { useAutocrat } from '../../contexts/AutocratContext';
 
-export default function ProposalList({ proposals }: { proposals?: ProposalAccountWithKey[] }) {
+export default function ProposalList() {
   const router = useRouter();
+  const { proposals } = useAutocrat();
 
   return proposals && proposals.length > 0 ? (
     <Stack>

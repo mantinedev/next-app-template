@@ -42,8 +42,6 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
   const isBeneficial = passPrice > failPrice;
   const usedToken = (selectedToken !== tokens?.usdc ? tokens?.meta : tokens?.usdc) || tokens?.meta;
   const payoutToken = selectedToken === tokens?.usdc ? tokens?.meta : tokens?.usdc;
-  const passAmount = selectedToken !== tokens?.usdc ? (failPrice * amount) / passPrice : amount;
-  const failAmount = selectedToken !== tokens?.usdc ? amount : (passPrice * amount) / failPrice;
 
   useEffect(() => {
     if (!selectedToken) {
@@ -65,14 +63,14 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
   const handleBet = useCallback(async () => {
     const mintTxs = await mintTokensTransactions(amount, usedToken !== tokens?.usdc);
     const placePassTxs = await placeOrderTransactions(
-      usedToken !== tokens?.usdc ? failAmount : passAmount,
+      amount / passPrice,
       passPrice,
       true,
       usedToken !== tokens?.usdc,
       true,
     );
     const placeFailTxs = await placeOrderTransactions(
-      usedToken !== tokens?.usdc ? passAmount : failAmount,
+      amount / failPrice,
       failPrice,
       true,
       usedToken !== tokens?.usdc,
@@ -196,8 +194,10 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
                   loading={isBetting}
                   fullWidth
                   disabled={
-                    (isBeneficial && amount > (baseBalance?.uiAmount || 0)) ||
-                    (!isBeneficial && amount > (quoteBalance?.uiAmount || 0))
+                    (selectedToken?.publicKey.toString() === tokens?.meta?.publicKey.toString() &&
+                      amount > (baseBalance?.uiAmount || 0)) ||
+                    (selectedToken?.publicKey.toString() === tokens?.usdc?.publicKey.toString() &&
+                      amount > (quoteBalance?.uiAmount || 0))
                   }
                 >
                   Bet

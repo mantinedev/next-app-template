@@ -4,16 +4,17 @@ import numeral, { Numeral } from 'numeral';
 import { BN } from '@coral-xyz/anchor';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { useAutocrat } from '@/hooks/useAutocrat';
-import { InitializeProposalType } from '@/hooks/useProposals';
+import { useAutocrat } from '@/contexts/AutocratContext';
 import { instructionGroups } from '@/lib/instructions';
 import { InstructionAction, ProposalInstruction } from '@/lib/types';
 import { NUMERAL_FORMAT } from '../../lib/constants';
+import { useInitializeProposal } from '../../hooks/useInitializeProposal';
 
-export function CreateProposalCard({ action }: { action: InitializeProposalType }) {
+export function CreateProposalCard() {
   const { connection } = useConnection();
   const wallet = useWallet();
-  const { program, daoState, dao, daoTreasury } = useAutocrat();
+  const { daoState } = useAutocrat();
+  const initializeProposal = useInitializeProposal();
   const [url, setUrl] = useState<string>('https://www.eff.org/cyberspace-independence');
   const [selectedInstruction, setSelectedInstruction] = useState<InstructionAction>(
     instructionGroups[0].actions[0],
@@ -31,27 +32,28 @@ export function CreateProposalCard({ action }: { action: InitializeProposalType 
           .toString()
       : 0,
   ).divide(LAMPORTS_PER_SOL);
+
   const fetchBalance = async () => {
     if (!wallet.publicKey || !connection) return;
     setBalance(numeral(await connection.getBalance(wallet.publicKey)).divide(LAMPORTS_PER_SOL));
   };
-  const fetchSlot = async () => {
+  const fetchSlot = useCallback(async () => {
     setLastSlot(await connection.getSlot());
-  };
+  }, [connection]);
   useEffect(() => {
     if (!balance) {
       fetchBalance();
     }
   }, [balance]);
   useEffect(() => {
-    if (!lastSlot && daoState?.lastProposalSlot.toNumber() > (lastSlot || 0)) {
+    if (!lastSlot || daoState?.lastProposalSlot.toNumber() > (lastSlot || 0)) {
       fetchSlot();
     }
-  }, [lastSlot, daoState]);
+  }, [lastSlot, daoState, fetchSlot]);
   useEffect(() => {
-    if (lastSlot) {
+    if (lastSlot && daoState) {
       const interval = setInterval(() => {
-        setLastSlot((old) => (old || daoState?.lastProposalSlot || 0) + 1);
+        setLastSlot((old) => (old || daoState.lastProposalSlot.toNumber()) + 1);
       }, 400);
       return () => clearInterval(interval);
     }
@@ -68,10 +70,10 @@ export function CreateProposalCard({ action }: { action: InitializeProposalType 
   }, [params, selectedInstruction]);
 
   const handleCreate = useCallback(async () => {
-    if (!instruction) return;
+    if (!instruction || !initializeProposal) return;
 
-    action(url, instruction);
-  }, [program, action, dao, daoTreasury, url, instruction]);
+    initializeProposal(url, instruction);
+  }, [initializeProposal, url, instruction]);
 
   return (
     <Card shadow="sm" padding="sm" radius="md" withBorder>
@@ -97,6 +99,7 @@ export function CreateProposalCard({ action }: { action: InitializeProposalType 
           <Fieldset legend="Instruction parameters">
             {selectedInstruction?.fields.map((field, index) => (
               <TextInput
+                key={field.label + index}
                 label={field.label}
                 description={field.description}
                 onChange={(e) =>

@@ -1,130 +1,21 @@
-import { useCallback, useEffect, useState } from 'react';
-import {
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-  TransactionInstruction,
-  Signer,
-} from '@solana/web3.js';
+import { useCallback } from 'react';
+import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { Program, BN, utils } from '@coral-xyz/anchor';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { OracleConfigParams } from '@openbook-dex/openbook-v2';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { useAutocrat } from './useAutocrat';
+import { useAutocrat } from '@/contexts/AutocratContext';
 import { useTokens } from './useTokens';
 import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '../lib/constants';
 import { useConditionalVault } from './useConditionalVault';
 import { OpenbookTwap, IDL as OPENBOOK_TWAP_IDL } from '../lib/idl/openbook_twap';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '../lib/idl/openbook_v2';
 import { useProvider } from './useProvider';
-import { ProposalAccount, ProposalInstruction } from '../lib/types';
+import { ProposalInstruction } from '../lib/types';
+import { createOpenbookMarket } from '../lib/openbook';
 
-const BooksideSpace = 90944 + 8;
-const EventHeapSpace = 91280 + 8;
-
-const createProgramAccount = async (
-  program: Program<OpenbookV2>,
-  authority: PublicKey,
-  size: number,
-) => {
-  const lamports = await program.provider.connection.getMinimumBalanceForRentExemption(size);
-  const address = Keypair.generate();
-  const tx = new Transaction().add(
-    SystemProgram.createAccount({
-      fromPubkey: authority,
-      newAccountPubkey: address.publicKey,
-      lamports,
-      space: size,
-      programId: program.programId,
-    }),
-  );
-  return { tx, signers: [address] };
-};
-
-const createOpenbookMarket = async (
-  program: Program<OpenbookV2>,
-  creator: PublicKey,
-  baseMint: PublicKey,
-  quoteMint: PublicKey,
-  name: string,
-  quoteLotSize: BN,
-  baseLotSize: BN,
-  makerFee: BN,
-  takerFee: BN,
-  timeExpiry: BN,
-  oracleA: PublicKey | null,
-  oracleB: PublicKey | null,
-  openOrdersAdmin: PublicKey | null,
-  consumeEventsAdmin: PublicKey | null,
-  closeMarketAdmin: PublicKey | null,
-  oracleConfigParams: OracleConfigParams = { confFilter: 0.1, maxStalenessSlots: 100 },
-  market: Keypair = Keypair.generate(),
-  collectFeeAdmin?: PublicKey,
-): Promise<{ signers: Signer[]; instructions: (Transaction | TransactionInstruction)[] }> => {
-  const bids = await createProgramAccount(program, creator, BooksideSpace);
-  const asks = await createProgramAccount(program, creator, BooksideSpace);
-  const eventHeap = await createProgramAccount(program, creator, EventHeapSpace);
-  const [marketAuthority] = PublicKey.findProgramAddressSync(
-    [Buffer.from('Market'), market.publicKey.toBuffer()],
-    program.programId,
-  );
-  const baseVault = getAssociatedTokenAddressSync(baseMint, marketAuthority, true);
-  const quoteVault = getAssociatedTokenAddressSync(quoteMint, marketAuthority, true);
-  const [eventAuthority] = PublicKey.findProgramAddressSync(
-    [Buffer.from('__event_authority')],
-    program.programId,
-  );
-
-  return {
-    signers: [...bids.signers, ...asks.signers, ...eventHeap.signers, market],
-    instructions: [
-      bids.tx,
-      asks.tx,
-      eventHeap.tx,
-      await program.methods
-        .createMarket(
-          name,
-          oracleConfigParams,
-          quoteLotSize,
-          baseLotSize,
-          makerFee,
-          takerFee,
-          timeExpiry,
-        )
-        .accounts({
-          market: market.publicKey,
-          marketAuthority,
-          bids: bids.signers[0].publicKey,
-          asks: asks.signers[0].publicKey,
-          eventHeap: eventHeap.signers[0].publicKey,
-          payer: creator,
-          marketBaseVault: baseVault,
-          marketQuoteVault: quoteVault,
-          baseMint,
-          quoteMint,
-          oracleA,
-          oracleB,
-          collectFeeAdmin: collectFeeAdmin != null ? collectFeeAdmin : creator,
-          openOrdersAdmin,
-          consumeEventsAdmin,
-          closeMarketAdmin,
-          eventAuthority,
-          program: program.programId,
-        })
-        .instruction(),
-    ],
-  };
-};
-
-export type InitializeProposalType = (
-  url: string,
-  instruction: ProposalInstruction,
-) => Promise<void>;
-export function useProposals() {
+export function useInitializeProposal() {
   const { connection } = useConnection();
   const { initializeVault } = useConditionalVault();
-  const { program, dao, daoTreasury, daoState, fetchState } = useAutocrat();
+  const { program, dao, daoTreasury, daoState, fetchState, fetchProposals } = useAutocrat();
   const wallet = useWallet();
   const provider = useProvider();
   const openbook = new Program<OpenbookV2>(OPENBOOK_IDL, OPENBOOK_PROGRAM_ID, provider);
@@ -134,27 +25,18 @@ export function useProposals() {
     provider,
   );
   const { tokens } = useTokens();
-  const [proposals, setProposals] =
-    useState<{ account: ProposalAccount; publicKey: PublicKey }[]>();
   const baseNonce: BN = new BN(daoState?.proposalCount || 0);
 
-  const fetchProposals = useCallback(async () => {
-    setProposals(
-      (await program.account.proposal.all()).sort((a, b) =>
-        a.account.number < b.account.number ? 1 : -1,
-      ) as any,
-    );
-  }, [program]);
-
-  useEffect(() => {
-    if (!proposals) {
-      fetchProposals();
-    }
-  }, [proposals, fetchProposals]);
-
-  const initializeProposal: InitializeProposalType = useCallback(
+  const initializeProposal = useCallback(
     async (url: string, instruction: ProposalInstruction) => {
-      if (!wallet?.publicKey || !wallet.signAllTransactions || !tokens?.meta || !tokens?.usdc) {
+      if (
+        !wallet?.publicKey ||
+        !wallet.signAllTransactions ||
+        !tokens?.meta ||
+        !tokens?.usdc ||
+        !daoTreasury ||
+        !program
+      ) {
         return;
       }
 
@@ -307,5 +189,5 @@ export function useProposals() {
     [dao, program, connection, wallet, tokens],
   );
 
-  return { proposals, fetchProposals, initializeProposal };
+  return initializeProposal;
 }
