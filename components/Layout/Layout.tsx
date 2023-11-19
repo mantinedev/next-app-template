@@ -92,15 +92,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       padding="md"
     >
       <AppShell.Header>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <Flex justify="space-between" align="center" p="5">
+        <Flex justify="space-between" align="center" p="5" w="">
+          <Link href="/" style={{ textDecoration: 'none' }}>
             <Flex justify="flex-start" align="center" gap="xs">
               <Image src={icon} alt="App logo" width={48} height={48} />
               <Title c="initial">Futarchy</Title>
             </Flex>
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-          </Flex>
-        </Link>
+          </Link>
+          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+        </Flex>
       </AppShell.Header>
 
       <AppShell.Navbar p="md">

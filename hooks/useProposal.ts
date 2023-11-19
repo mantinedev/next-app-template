@@ -60,18 +60,35 @@ export function useProposal({
   const fetchMarkets = useCallback(async () => {
     if (!proposal || !openbook || !openbookTwap || !openbookTwap.views) return;
 
-    const pass = await openbook.account.market.fetch(proposal.account.openbookPassMarket);
-    const fail = await openbook.account.market.fetch(proposal.account.openbookFailMarket);
-    const passTwap = await openbookTwap.account.twapMarket.fetch(
+    const accountInfos = await connection.getMultipleAccountsInfo([
+      proposal.account.openbookPassMarket,
+      proposal.account.openbookFailMarket,
       proposal.account.openbookTwapPassMarket,
-    );
-    const failTwap = await openbookTwap.account.twapMarket.fetch(
       proposal.account.openbookTwapFailMarket,
-    );
-    const baseVault = await vaultProgram.account.conditionalVault.fetch(proposal.account.baseVault);
-    const quoteVault = await vaultProgram.account.conditionalVault.fetch(
+      proposal.account.baseVault,
       proposal.account.quoteVault,
+    ]);
+    if (!accountInfos || accountInfos.indexOf(null) >= 0) return;
+
+    const pass = await openbook.coder.accounts.decode('market', accountInfos[0]!.data);
+    const fail = await openbook.coder.accounts.decode('market', accountInfos[1]!.data);
+    const passTwap = await openbookTwap.coder.accounts.decodeUnchecked(
+      'TWAPMarket',
+      accountInfos[2]!.data,
     );
+    const failTwap = await openbookTwap.coder.accounts.decodeUnchecked(
+      'TWAPMarket',
+      accountInfos[3]!.data,
+    );
+    const baseVault = await vaultProgram.coder.accounts.decode(
+      'conditionalVault',
+      accountInfos[4]!.data,
+    );
+    const quoteVault = await vaultProgram.coder.accounts.decode(
+      'conditionalVault',
+      accountInfos[5]!.data,
+    );
+
     const [passBid, passAsk] = await openbookTwap.views.getBestBidAndAsk({
       accounts: {
         market: proposal.account.openbookPassMarket,
