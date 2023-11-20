@@ -9,6 +9,7 @@ import { useAutocrat } from '@/contexts/AutocratContext';
 import { useProvider } from '@/hooks/useProvider';
 import { useConditionalVault } from '@/hooks/useConditionalVault';
 import { useOpenbookTwap } from './useOpenbookTwap';
+import { getLeafNodes } from '../lib/openbook';
 
 export function useProposal({
   fromNumber,
@@ -53,7 +54,11 @@ export function useProposal({
       { memcmp: { offset: 8, bytes: wallet.publicKey.toBase58() } },
       { memcmp: { offset: 40, bytes: proposal.account.openbookFailMarket.toBase58() } },
     ]);
-    setOrders(passOrders.concat(failOrders));
+    setOrders(
+      passOrders
+        .concat(failOrders)
+        .sort((a, b) => (a.account.accountNum < b.account.accountNum ? 1 : -1)),
+    );
   }, [openbook, proposal]);
 
   useEffect(() => {
@@ -94,6 +99,29 @@ export function useProposal({
       accountInfos[5]!.data,
     );
 
+    const bookAccountInfos = await connection.getMultipleAccountsInfo([
+      pass.asks,
+      pass.bids,
+      fail.asks,
+      fail.bids,
+    ]);
+    const passAsks = getLeafNodes(
+      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[0]!.data),
+      openbook,
+    );
+    const passBids = getLeafNodes(
+      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[1]!.data),
+      openbook,
+    );
+    const failBids = getLeafNodes(
+      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[2]!.data),
+      openbook,
+    );
+    const failAsks = getLeafNodes(
+      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[3]!.data),
+      openbook,
+    );
+
     const [passBid, passAsk] = await openbookTwap.views.getBestBidAndAsk({
       accounts: {
         market: proposal.account.openbookPassMarket,
@@ -111,7 +139,11 @@ export function useProposal({
     const quoteLot = 0.0001;
     setMarkets({
       pass,
+      passAsks,
+      passBids,
       fail,
+      failAsks,
+      failBids,
       passTwap,
       failTwap,
       passPrice: {

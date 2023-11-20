@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActionIcon,
   Button,
@@ -7,6 +7,7 @@ import {
   GridCol,
   Group,
   Loader,
+  Progress,
   SegmentedControl,
   Stack,
   Table,
@@ -22,7 +23,7 @@ import { BN } from '@coral-xyz/anchor';
 import { useProposal } from '@/hooks/useProposal';
 import { useTokens } from '@/hooks/useTokens';
 import { useTokenAmount } from '@/hooks/useTokenAmount';
-import { TWAPOracle, OpenOrdersAccountWithKey } from '@/lib/types';
+import { TWAPOracle, OpenOrdersAccountWithKey, LeafNode } from '@/lib/types';
 import { NUMERAL_FORMAT } from '@/lib/constants';
 import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
 import { useTransactionSender } from '@/hooks/useTransactionSender';
@@ -58,6 +59,27 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   const [failPrice, setFailPrice] = useState<number>(0);
   const [orderType, setOrderType] = useState<string>('Limit');
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
+
+  const orderbook = useMemo(() => {
+    if (!markets) return;
+
+    const getSide = (side: LeafNode[], bids?: boolean) => {
+      const parsed = side.map((e) => ({
+        price: e.key.shrn(64).toNumber() * 0.0001,
+        size: e.quantity.toNumber(),
+      }));
+      const total = parsed.reduce((a, b) => ({
+        price: a.price + b.price,
+        size: a.size + b.size,
+      }));
+      return { parsed: bids ? parsed.toReversed() : parsed, total };
+    };
+
+    return {
+      pass: { asks: getSide(markets.passAsks), bids: getSide(markets.passBids, true) },
+      fail: { asks: getSide(markets.failAsks), bids: getSide(markets.failBids, true) },
+    };
+  }, [markets]);
 
   const handleCancel = useCallback(
     async (order: OpenOrdersAccountWithKey) => {
@@ -333,7 +355,84 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
             </Button>
           </Fieldset>
         </Group>
-
+        {orderbook ? (
+          <Group justify="space-around" align="start">
+            <Stack>
+              <Text fw="bolder" size="lg">
+                Pass market orderbook
+              </Text>
+              <Group gap="0">
+                {orderbook.pass.asks.parsed.map((ask) => (
+                  <Grid w="100%" gutter={0} mih="md">
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span="auto">
+                      <Progress
+                        key={ask.price + ask.size}
+                        value={Math.ceil((ask.price / orderbook.pass.asks.total.price) * 100)}
+                        color="red"
+                        w="100%"
+                      />
+                    </Grid.Col>
+                  </Grid>
+                ))}
+                {orderbook.pass.bids.parsed.map((bid) => (
+                  <Grid w="100%" gutter={0} mih="md">
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span="auto">
+                      <Progress
+                        key={bid.price + bid.size}
+                        value={Math.ceil((bid.price / orderbook.pass.bids.total.price) * 100)}
+                        color="green"
+                        w="100%"
+                      />
+                    </Grid.Col>
+                  </Grid>
+                ))}
+              </Group>
+            </Stack>
+            <Stack>
+              <Text fw="bolder" size="lg">
+                Fail market orderbook
+              </Text>
+              <Group gap="0">
+                {orderbook.fail.asks.parsed.map((ask) => (
+                  <Grid w="100%" gutter={0} mih="md">
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span="auto">
+                      <Progress
+                        key={ask.price + ask.size}
+                        value={Math.ceil((ask.price / orderbook.fail.asks.total.price) * 100)}
+                        color="red"
+                        w="100%"
+                      />
+                    </Grid.Col>
+                  </Grid>
+                ))}
+                {orderbook.fail.bids.parsed.map((bid) => (
+                  <Grid w="100%" gutter={0} mih="md">
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span="auto">
+                      <Progress
+                        key={bid.price + bid.size}
+                        value={Math.ceil((bid.price / orderbook.fail.bids.total.price) * 100)}
+                        color="green"
+                        w="100%"
+                      />
+                    </Grid.Col>
+                  </Grid>
+                ))}
+              </Group>
+            </Stack>
+          </Group>
+        ) : null}
         {proposal && orders ? (
           <Stack>
             <Group justify="space-between">

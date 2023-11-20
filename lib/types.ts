@@ -16,7 +16,11 @@ export type TWAPOracle = IdlTypes<OpenbookTwap>['TWAPOracle'];
 export type ProposalInstruction = IdlTypes<AutocratV0>['ProposalInstruction'];
 export type Markets = {
   pass: MarketAccount;
+  passAsks: LeafNode[];
+  passBids: LeafNode[];
   fail: MarketAccount;
+  failAsks: LeafNode[];
+  failBids: LeafNode[];
   passTwap: TwapMarketAccount;
   failTwap: TwapMarketAccount;
   baseVault: VaultAccount;
