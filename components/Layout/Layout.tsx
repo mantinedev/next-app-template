@@ -1,7 +1,5 @@
 'use client';
 
-import { shortKey } from '@/lib/utils';
-import icon from '@/public/meta.jpg';
 import {
   AppShell,
   Burger,
@@ -35,6 +33,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { ReactNode, useEffect } from 'react';
 import { Networks, useNetworkConfiguration } from '../../hooks/useNetworkConfiguration';
+import { shortKey } from '@/lib/utils';
+import icon from '@/public/meta.jpg';
 
 interface MenuItem {
   name: string;
