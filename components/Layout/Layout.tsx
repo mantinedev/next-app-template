@@ -15,7 +15,7 @@ import {
   useMantineColorScheme,
   useMantineTheme,
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useFavicon } from '@mantine/hooks';
 import '@mantine/notifications/styles.css';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
@@ -35,6 +35,7 @@ import React, { ReactNode, useEffect } from 'react';
 import { Networks, useNetworkConfiguration } from '../../hooks/useNetworkConfiguration';
 import { shortKey } from '@/lib/utils';
 import icon from '@/public/meta.jpg';
+import _favicon from '@/public/favicon.ico';
 
 interface MenuItem {
   name: string;
@@ -61,6 +62,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [opened, { toggle }] = useDisclosure();
   const theme = useMantineTheme();
   const { setColorScheme } = useMantineColorScheme();
+
+  useFavicon(_favicon.src);
 
   const sunIcon = (
     <IconSun
