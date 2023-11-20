@@ -1,7 +1,7 @@
 'use client';
 
-import { useDisclosure } from '@mantine/hooks';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { shortKey } from '@/lib/utils';
+import icon from '@/public/meta.jpg';
 import {
   AppShell,
   Burger,
@@ -17,6 +17,10 @@ import {
   useMantineColorScheme,
   useMantineTheme,
 } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import '@mantine/notifications/styles.css';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import {
   IconBooks,
   IconBrandDiscord,
@@ -27,13 +31,9 @@ import {
   IconSpeakerphone,
   IconSun,
 } from '@tabler/icons-react';
-import { useWallet } from '@solana/wallet-adapter-react';
-import '@mantine/notifications/styles.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { ReactNode, useEffect } from 'react';
-import icon from '@/public/meta.jpg';
-import { shortKey } from '@/lib/utils';
 import { Networks, useNetworkConfiguration } from '../../hooks/useNetworkConfiguration';
 
 interface MenuItem {
@@ -45,7 +45,6 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { name: 'Proposals', href: '/proposals', icon: <IconSpeakerphone /> },
   // { name: 'Analytics', href: '/analytics', icon: <IconDeviceDesktopAnalytics /> },
-  { name: 'Docs', href: 'https://themetadao.org/', icon: <IconBooks /> },
   { name: 'Debug', href: '/debug', icon: <IconMicroscope />, debug: true },
 ];
 
@@ -116,6 +115,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               ),
             )}
+            <a target="_blank" href="https://themetadao.org/" rel="noopener noreferrer">
+              <Button variant="default" w="100%" justify="flex-start">
+                <IconBooks />
+                <Text>Docs</Text>
+              </Button>
+            </a>
           </Stack>
           {wallet?.publicKey ? (
             <Button variant="danger" onClick={() => wallet.disconnect()}>
