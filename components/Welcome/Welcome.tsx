@@ -11,8 +11,8 @@ export function Welcome() {
         </Text>
       </Title>
       <Text c="dimmed" ta="center" size="lg" maw={580} mx="auto" mt="xl">
-        The Meta-DAO is the first organization in human history that&apos;s
-        governed by markets, not politics.
+        The Meta-DAO is the first organization in human history that&apos;s governed by markets, not
+        politics.
       </Text>
     </>
   );
