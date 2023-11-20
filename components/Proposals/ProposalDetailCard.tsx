@@ -17,6 +17,7 @@ import numeral from 'numeral';
 import { useProposal } from '../../hooks/useProposal';
 import { useTokens } from '../../hooks/useTokens';
 import { useTokenAmount } from '../../hooks/useTokenAmount';
+import { TWAPOracle } from '@/lib/types';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
   const { proposal, markets, mintTokens, placeOrder, loading } = useProposal({
@@ -58,6 +59,15 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     [mintTokens, mintBaseAmount, mintQuoteAmount],
   );
 
+  const calculateTWAP = (twapOracle: TWAPOracle) => {
+    const slotsPassed = twapOracle.lastUpdatedSlot.sub(twapOracle.initialSlot);
+    const twapValue = twapOracle.observationAggregator.div(slotsPassed);
+    return numeral(twapValue.toString()).divide(10_000).format('0.0000a');
+  };
+
+  const passTwap = markets ? calculateTWAP(markets.passTwap.twapOracle) : null;
+  const failTwap = markets ? calculateTWAP(markets.failTwap.twapOracle) : null;
+
   return !proposal || !markets ? (
     <Group justify="center">
       <Loader />
@@ -96,8 +106,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   </Text>
                 </Group>
                 <Group>
-                  <Text>Expected: {markets.passTwap.twapOracle.expectedValue.toString()}</Text>
-                  <Text>Last: {markets.passTwap.twapOracle.lastObservation.toString()}</Text>
+                  <Text>TWAP: {passTwap}</Text>
                 </Group>
               </Stack>
               <SegmentedControl
@@ -177,8 +186,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   </Text>
                 </Group>
                 <Group>
-                  <Text>Expected: {markets.failTwap.twapOracle.expectedValue.toString()}</Text>
-                  <Text>Last: {markets.failTwap.twapOracle.lastObservation.toString()}</Text>
+                  <Text>TWAP: {failTwap}</Text>
                 </Group>
               </Stack>
               <SegmentedControl

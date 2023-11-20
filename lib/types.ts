@@ -10,6 +10,7 @@ export type ProposalAccountWithKey = { account: ProposalAccount; publicKey: Publ
 export type VaultAccount = IdlAccounts<ConditionalVault>['conditionalVault'];
 export type DaoState = IdlAccounts<AutocratV0>['dao'];
 export type TwapMarketAccount = IdlAccounts<OpenbookTwap>['twapMarket'];
+export type TWAPOracle = IdlTypes<OpenbookTwap>['TWAPOracle'];
 export type ProposalInstruction = IdlTypes<AutocratV0>['ProposalInstruction'];
 export type Markets = {
   pass: MarketAccount;

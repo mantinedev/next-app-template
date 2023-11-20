@@ -1,9 +1,13 @@
 export type OpenbookTwap = {
-  version: '0.1.0';
+  version: '1.0.0';
   name: 'openbook_twap';
   instructions: [
     {
       name: 'createTwapMarket';
+      docs: [
+        '`expected_value` will be the first observation of the TWAP, which is',
+        'necessary for anti-manipulation',
+      ];
       accounts: [
         {
           name: 'market';
@@ -343,12 +347,6 @@ export type OpenbookTwap = {
           isSigner: false;
         },
         {
-          name: 'referrerAccount';
-          isMut: true;
-          isSigner: false;
-          isOptional: true;
-        },
-        {
           name: 'tokenProgram';
           isMut: false;
           isSigner: false;
@@ -524,6 +522,10 @@ export type OpenbookTwap = {
             type: 'u64';
           },
           {
+            name: 'initialSlot';
+            type: 'u64';
+          },
+          {
             name: 'lastUpdatedSlot';
             type: 'u64';
           },
@@ -538,21 +540,6 @@ export type OpenbookTwap = {
           {
             name: 'observationAggregator';
             type: 'u128';
-          },
-          {
-            name: 'maxObservationChangePerUpdateBps';
-            docs: [
-              'The most, in basis points, an observation can change per update.',
-              'For example, if it is 100 (1%), then the new observation can be between',
-              'last_observation * 0.99 and last_observation * 1.01',
-            ];
-            type: 'u16';
-          },
-          {
-            name: 'padding';
-            type: {
-              array: ['u8', 6];
-            };
           },
         ];
       };
@@ -721,18 +708,37 @@ export type OpenbookTwap = {
     },
     {
       code: 6004;
-      name: 'InvalidExpectedValue';
-      msg: 'Expected value must be gte 0';
+      name: 'InvalidMakerFee';
+      msg: 'Maker fee must be zero';
+    },
+    {
+      code: 6005;
+      name: 'InvalidTakerFee';
+      msg: 'Taker fee must be zero';
+    },
+    {
+      code: 6006;
+      name: 'InvalidSeqNum';
+      msg: 'Seq num must be zero';
+    },
+    {
+      code: 6007;
+      name: 'InvalidConsumeEventsAdmin';
+      msg: 'Consume events admin must be None';
     },
   ];
 };
 
 export const IDL: OpenbookTwap = {
-  version: '0.1.0',
+  version: '1.0.0',
   name: 'openbook_twap',
   instructions: [
     {
       name: 'createTwapMarket',
+      docs: [
+        '`expected_value` will be the first observation of the TWAP, which is',
+        'necessary for anti-manipulation',
+      ],
       accounts: [
         {
           name: 'market',
@@ -1072,12 +1078,6 @@ export const IDL: OpenbookTwap = {
           isSigner: false,
         },
         {
-          name: 'referrerAccount',
-          isMut: true,
-          isSigner: false,
-          isOptional: true,
-        },
-        {
           name: 'tokenProgram',
           isMut: false,
           isSigner: false,
@@ -1253,6 +1253,10 @@ export const IDL: OpenbookTwap = {
             type: 'u64',
           },
           {
+            name: 'initialSlot',
+            type: 'u64',
+          },
+          {
             name: 'lastUpdatedSlot',
             type: 'u64',
           },
@@ -1267,21 +1271,6 @@ export const IDL: OpenbookTwap = {
           {
             name: 'observationAggregator',
             type: 'u128',
-          },
-          {
-            name: 'maxObservationChangePerUpdateBps',
-            docs: [
-              'The most, in basis points, an observation can change per update.',
-              'For example, if it is 100 (1%), then the new observation can be between',
-              'last_observation * 0.99 and last_observation * 1.01',
-            ],
-            type: 'u16',
-          },
-          {
-            name: 'padding',
-            type: {
-              array: ['u8', 6],
-            },
           },
         ],
       },
@@ -1450,8 +1439,23 @@ export const IDL: OpenbookTwap = {
     },
     {
       code: 6004,
-      name: 'InvalidExpectedValue',
-      msg: 'Expected value must be gte 0',
+      name: 'InvalidMakerFee',
+      msg: 'Maker fee must be zero',
+    },
+    {
+      code: 6005,
+      name: 'InvalidTakerFee',
+      msg: 'Taker fee must be zero',
+    },
+    {
+      code: 6006,
+      name: 'InvalidSeqNum',
+      msg: 'Seq num must be zero',
+    },
+    {
+      code: 6007,
+      name: 'InvalidConsumeEventsAdmin',
+      msg: 'Consume events admin must be None',
     },
   ],
 };
