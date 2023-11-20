@@ -1,26 +1,39 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
+  ActionIcon,
   Button,
   Fieldset,
   Grid,
   GridCol,
   Group,
   Loader,
+  Progress,
   SegmentedControl,
   Stack,
+  Table,
   Text,
   TextInput,
+  useMantineTheme,
 } from '@mantine/core';
 import Link from 'next/link';
-import { IconExternalLink } from '@tabler/icons-react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { IconExternalLink, IconRefresh, IconTrash } from '@tabler/icons-react';
 import numeral from 'numeral';
-import { useProposal } from '../../hooks/useProposal';
-import { useTokens } from '../../hooks/useTokens';
-import { useTokenAmount } from '../../hooks/useTokenAmount';
-import { TWAPOracle } from '@/lib/types';
+import { BN } from '@coral-xyz/anchor';
+import { useProposal } from '@/hooks/useProposal';
+import { useTokens } from '@/hooks/useTokens';
+import { useTokenAmount } from '@/hooks/useTokenAmount';
+import { TWAPOracle, OpenOrdersAccountWithKey, LeafNode } from '@/lib/types';
+import { NUMERAL_FORMAT } from '@/lib/constants';
+import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
+import { useTransactionSender } from '@/hooks/useTransactionSender';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
-  const { proposal, markets, mintTokens, placeOrder, loading } = useProposal({
+  const theme = useMantineTheme();
+  const { cancelOrderTransactions } = useOpenbookTwap();
+  const sender = useTransactionSender();
+  const wallet = useWallet();
+  const { proposal, markets, orders, mintTokens, placeOrder, loading, fetchOrders } = useProposal({
     fromNumber: proposalNumber,
   });
   const [mintBaseAmount, setMintBaseAmount] = useState<number>();
@@ -45,6 +58,52 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   const [passPrice, setPassPrice] = useState<number>(0);
   const [failPrice, setFailPrice] = useState<number>(0);
   const [orderType, setOrderType] = useState<string>('Limit');
+  const [isCanceling, setIsCanceling] = useState<boolean>(false);
+
+  const orderbook = useMemo(() => {
+    if (!markets) return;
+
+    const getSide = (side: LeafNode[], bids?: boolean) => {
+      const parsed = side.map((e) => ({
+        price: e.key.shrn(64).toNumber() * 0.0001,
+        size: e.quantity.toNumber(),
+      }));
+      const total = parsed.reduce((a, b) => ({
+        price: a.price + b.price,
+        size: a.size + b.size,
+      }));
+      return { parsed: bids ? parsed.toReversed() : parsed, total };
+    };
+
+    return {
+      pass: { asks: getSide(markets.passAsks), bids: getSide(markets.passBids, true) },
+      fail: { asks: getSide(markets.failAsks), bids: getSide(markets.failBids, true) },
+    };
+  }, [markets]);
+
+  const handleCancel = useCallback(
+    async (order: OpenOrdersAccountWithKey) => {
+      if (!proposal || !markets) return;
+
+      const txs = await cancelOrderTransactions(
+        new BN(order.account.accountNum),
+        proposal.account.openbookPassMarket.equals(order.account.market)
+          ? { publicKey: proposal.account.openbookPassMarket, account: markets.pass }
+          : { publicKey: proposal.account.openbookFailMarket, account: markets.fail },
+      );
+
+      if (!wallet.publicKey || !txs) return;
+
+      try {
+        setIsCanceling(true);
+        await sender.send(txs);
+        setTimeout(() => fetchOrders(), 3000);
+      } finally {
+        setIsCanceling(false);
+      }
+    },
+    [proposal, cancelOrderTransactions, fetchOrders, sender],
+  );
 
   const handleMint = useCallback(
     async (fromBase?: boolean) => {
@@ -296,6 +355,144 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
             </Button>
           </Fieldset>
         </Group>
+        {orderbook ? (
+          <Group justify="space-around" align="start">
+            <Stack>
+              <Text fw="bolder" size="lg">
+                Pass market orderbook
+              </Text>
+              <Group gap="0">
+                {orderbook.pass.asks.parsed.map((ask) => (
+                  <Grid w="100%" gutter={0} mih="md">
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span="auto">
+                      <Progress
+                        key={ask.price + ask.size}
+                        value={Math.ceil((ask.price / orderbook.pass.asks.total.price) * 100)}
+                        color="red"
+                        w="100%"
+                      />
+                    </Grid.Col>
+                  </Grid>
+                ))}
+                {orderbook.pass.bids.parsed.map((bid) => (
+                  <Grid w="100%" gutter={0} mih="md">
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span="auto">
+                      <Progress
+                        key={bid.price + bid.size}
+                        value={Math.ceil((bid.price / orderbook.pass.bids.total.price) * 100)}
+                        color="green"
+                        w="100%"
+                      />
+                    </Grid.Col>
+                  </Grid>
+                ))}
+              </Group>
+            </Stack>
+            <Stack>
+              <Text fw="bolder" size="lg">
+                Fail market orderbook
+              </Text>
+              <Group gap="0">
+                {orderbook.fail.asks.parsed.map((ask) => (
+                  <Grid w="100%" gutter={0} mih="md">
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span="auto">
+                      <Progress
+                        key={ask.price + ask.size}
+                        value={Math.ceil((ask.price / orderbook.fail.asks.total.price) * 100)}
+                        color="red"
+                        w="100%"
+                      />
+                    </Grid.Col>
+                  </Grid>
+                ))}
+                {orderbook.fail.bids.parsed.map((bid) => (
+                  <Grid w="100%" gutter={0} mih="md">
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span="auto">
+                      <Progress
+                        key={bid.price + bid.size}
+                        value={Math.ceil((bid.price / orderbook.fail.bids.total.price) * 100)}
+                        color="green"
+                        w="100%"
+                      />
+                    </Grid.Col>
+                  </Grid>
+                ))}
+              </Group>
+            </Stack>
+          </Group>
+        ) : null}
+        {proposal && orders ? (
+          <Stack>
+            <Group justify="space-between">
+              <Text fw="bolder" size="xl">
+                Open orders
+              </Text>
+              <ActionIcon variant="subtle" onClick={() => fetchOrders()}>
+                <IconRefresh />
+              </ActionIcon>
+            </Group>
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Market</Table.Th>
+                  <Table.Th>Side</Table.Th>
+                  <Table.Th>Quantity</Table.Th>
+                  <Table.Th>Price</Table.Th>
+                  <Table.Th>Order ID</Table.Th>
+                  <Table.Th>Actions</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {orders.map((order) => {
+                  const pass = order.account.market.equals(proposal.account.openbookPassMarket);
+                  const bids = order.account.position.bidsBaseLots.gt(
+                    order.account.position.asksBaseLots,
+                  );
+                  return (
+                    <Table.Tr key={order.publicKey.toString()}>
+                      <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
+                        {pass ? 'PASS' : 'FAIL'}
+                      </Table.Td>
+                      <Table.Td c={bids ? theme.colors.green[9] : theme.colors.red[9]}>
+                        {bids ? 'BID' : 'ASK'}
+                      </Table.Td>
+                      <Table.Td>
+                        {numeral(
+                          bids
+                            ? order.account.position.bidsBaseLots.toString()
+                            : order.account.position.asksBaseLots.toString(),
+                        ).format(NUMERAL_FORMAT)}
+                      </Table.Td>
+                      <Table.Td>???</Table.Td>
+                      <Table.Td>{order.account.accountNum}</Table.Td>
+                      <Table.Td>
+                        <ActionIcon
+                          variant="subtle"
+                          loading={isCanceling}
+                          onClick={() => handleCancel(order)}
+                        >
+                          <IconTrash />
+                        </ActionIcon>
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
+              </Table.Tbody>
+            </Table>
+          </Stack>
+        ) : null}
       </Stack>
     </Stack>
   );

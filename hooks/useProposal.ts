@@ -1,25 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { Transaction } from '@solana/web3.js';
-import { BN, Program } from '@coral-xyz/anchor';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
-import { SelfTradeBehavior, OrderType, Side } from '@openbook-dex/openbook-v2/dist/cjs/utils/utils';
+import { Program } from '@coral-xyz/anchor';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
-import { OpenbookTwap } from '@/lib/idl/openbook_twap';
-import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '@/lib/constants';
-import { Markets, ProposalAccountWithKey } from '@/lib/types';
-import { shortKey } from '@/lib/utils';
+import { OPENBOOK_PROGRAM_ID } from '@/lib/constants';
+import { Markets, OpenOrdersAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
 import { useAutocrat } from '@/contexts/AutocratContext';
 import { useProvider } from '@/hooks/useProvider';
 import { useConditionalVault } from '@/hooks/useConditionalVault';
-import {
-  createOpenOrdersIndexerInstruction,
-  createOpenOrdersInstruction,
-  findOpenOrdersIndexer,
-} from '../lib/openbook';
-
-const OPENBOOK_TWAP_IDL: OpenbookTwap = require('@/lib/idl/openbook_twap.json');
+import { useOpenbookTwap } from './useOpenbookTwap';
+import { getLeafNodes } from '../lib/openbook';
 
 export function useProposal({
   fromNumber,
@@ -38,14 +28,10 @@ export function useProposal({
     }
     return new Program<OpenbookV2>(OPENBOOK_IDL, OPENBOOK_PROGRAM_ID, provider);
   }, [provider]);
-  const openbookTwap = useMemo(() => {
-    if (!provider) {
-      return;
-    }
-    return new Program<OpenbookTwap>(OPENBOOK_TWAP_IDL, OPENBOOK_TWAP_PROGRAM_ID, provider);
-  }, [provider]);
+  const { placeOrderTransactions, program: openbookTwap } = useOpenbookTwap();
   const { program: vaultProgram, mintConditionalTokens } = useConditionalVault();
   const [markets, setMarkets] = useState<Markets>();
+  const [orders, setOrders] = useState<OpenOrdersAccountWithKey[]>();
   const [loading, setLoading] = useState(false);
   const proposal = useMemo<ProposalAccountWithKey | undefined>(
     () =>
@@ -56,9 +42,33 @@ export function useProposal({
       )[0],
     [proposals, fromProposal],
   );
+  const fetchOrders = useCallback(async () => {
+    if (!proposal || !openbook || !wallet.publicKey) {
+      return;
+    }
+    const passOrders = await openbook.account.openOrdersAccount.all([
+      { memcmp: { offset: 8, bytes: wallet.publicKey.toBase58() } },
+      { memcmp: { offset: 40, bytes: proposal.account.openbookPassMarket.toBase58() } },
+    ]);
+    const failOrders = await openbook.account.openOrdersAccount.all([
+      { memcmp: { offset: 8, bytes: wallet.publicKey.toBase58() } },
+      { memcmp: { offset: 40, bytes: proposal.account.openbookFailMarket.toBase58() } },
+    ]);
+    setOrders(
+      passOrders
+        .concat(failOrders)
+        .sort((a, b) => (a.account.accountNum < b.account.accountNum ? 1 : -1)),
+    );
+  }, [openbook, proposal]);
+
+  useEffect(() => {
+    if (!orders) {
+      fetchOrders();
+    }
+  }, [orders, markets, fetchOrders]);
 
   const fetchMarkets = useCallback(async () => {
-    if (!proposal || !openbook || !openbookTwap || !openbookTwap.views) return;
+    if (!wallet.publicKey || !proposal || !openbook || !openbookTwap || !openbookTwap.views) return;
 
     const accountInfos = await connection.getMultipleAccountsInfo([
       proposal.account.openbookPassMarket,
@@ -89,6 +99,29 @@ export function useProposal({
       accountInfos[5]!.data,
     );
 
+    const bookAccountInfos = await connection.getMultipleAccountsInfo([
+      pass.asks,
+      pass.bids,
+      fail.asks,
+      fail.bids,
+    ]);
+    const passAsks = getLeafNodes(
+      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[0]!.data),
+      openbook,
+    );
+    const passBids = getLeafNodes(
+      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[1]!.data),
+      openbook,
+    );
+    const failBids = getLeafNodes(
+      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[2]!.data),
+      openbook,
+    );
+    const failAsks = getLeafNodes(
+      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[3]!.data),
+      openbook,
+    );
+
     const [passBid, passAsk] = await openbookTwap.views.getBestBidAndAsk({
       accounts: {
         market: proposal.account.openbookPassMarket,
@@ -106,7 +139,11 @@ export function useProposal({
     const quoteLot = 0.0001;
     setMarkets({
       pass,
+      passAsks,
+      passBids,
       fail,
+      failAsks,
+      failBids,
       passTwap,
       failTwap,
       passPrice: {
@@ -180,94 +217,13 @@ export function useProposal({
     [wallet, connection, mintTokensTransactions],
   );
 
-  const placeOrderTransactions = useCallback(
-    async (
-      amount: number,
-      price: number,
-      limitOrder?: boolean,
-      ask?: boolean,
-      pass?: boolean,
-      indexOffset?: number,
-    ) => {
-      if (
-        !proposal ||
-        !markets ||
-        !wallet.publicKey ||
-        !wallet.signAllTransactions ||
-        !openbook ||
-        !openbookTwap
-      ) {
-        return;
-      }
-
-      const market = pass ? markets.pass : markets.fail;
-      const mint = ask ? market.baseMint : market.quoteMint;
-      const openTx = new Transaction();
-      const openOrdersIndexer = findOpenOrdersIndexer(wallet.publicKey);
-      let accountIndex = new BN(1);
-      try {
-        const indexer = await openbook.account.openOrdersIndexer.fetch(openOrdersIndexer);
-        accountIndex = new BN((indexer?.createdCounter || 0) + 1 + (indexOffset || 0));
-      } catch {
-        if (!indexOffset) {
-          openTx.add(
-            await createOpenOrdersIndexerInstruction(openbook, openOrdersIndexer, wallet.publicKey),
-          );
-        } else {
-          accountIndex = new BN(1 + (indexOffset || 0));
-        }
-      }
-      const [ixs, openOrdersAccount] = await createOpenOrdersInstruction(
-        openbook,
-        pass ? proposal.account.openbookPassMarket : proposal.account.openbookFailMarket,
-        accountIndex,
-        `${shortKey(wallet.publicKey)}-${proposal.account.number}-${accountIndex.toString()}`,
-        wallet.publicKey,
-        openOrdersIndexer,
-      );
-      openTx.add(...ixs);
-
-      // const baseLot = 1;
-      const quoteLot = 0.0001;
-      const priceLots = new BN(Math.floor(price / quoteLot));
-      const maxBaseLots = new BN(Math.floor(amount));
-      const args: PlaceOrderArgs = {
-        side: ask ? Side.Ask : Side.Bid,
-        priceLots,
-        maxBaseLots,
-        maxQuoteLotsIncludingFees: priceLots.mul(maxBaseLots),
-        clientOrderId: accountIndex,
-        orderType: limitOrder ? OrderType.Limit : OrderType.Market,
-        expiryTimestamp: new BN(0),
-        selfTradeBehavior: SelfTradeBehavior.AbortTransaction,
-        limit: 255,
-      };
-      const placeTx = await openbookTwap.methods
-        .placeOrder(args)
-        .accounts({
-          openOrdersAccount,
-          asks: market.asks,
-          bids: market.bids,
-          eventHeap: market.eventHeap,
-          market: pass ? proposal.account.openbookPassMarket : proposal.account.openbookFailMarket,
-          marketVault: ask ? market.marketBaseVault : market.marketQuoteVault,
-          twapMarket: pass
-            ? proposal.account.openbookTwapPassMarket
-            : proposal.account.openbookTwapFailMarket,
-          userTokenAccount: getAssociatedTokenAddressSync(mint, wallet.publicKey),
-          openbookProgram: openbook.programId,
-        })
-        .preInstructions(openTx.instructions)
-        .transaction();
-
-      return [placeTx];
-    },
-    [wallet, proposal, markets, openbookTwap],
-  );
-
   const placeOrder = useCallback(
     async (amount: number, price: number, limitOrder?: boolean, ask?: boolean, pass?: boolean) => {
-      const placeTxs = await placeOrderTransactions(amount, price, limitOrder, ask, pass);
+      if (!proposal || !markets) return;
+      const market = pass
+        ? { publicKey: proposal?.account.openbookPassMarket, account: markets?.pass }
+        : { publicKey: proposal?.account.openbookFailMarket, account: markets?.fail };
+      const placeTxs = await placeOrderTransactions(amount, price, market, limitOrder, ask, pass);
 
       if (!placeTxs || !wallet.publicKey || !wallet.signAllTransactions) {
         return;
@@ -295,6 +251,7 @@ export function useProposal({
         }
 
         await fetchMarkets();
+        await fetchOrders();
       } finally {
         setLoading(false);
       }
@@ -305,7 +262,9 @@ export function useProposal({
   return {
     proposal,
     markets,
+    orders,
     loading,
+    fetchOrders,
     fetchMarkets,
     mintTokensTransactions,
     mintTokens,

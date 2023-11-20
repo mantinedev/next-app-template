@@ -74,10 +74,13 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
   const totalBeliefFailValue = failPrice * totalSupply;
 
   const handleBet = useCallback(async () => {
+    if (!markets || !proposal) return;
+
     const mintTxs = await mintTokensTransactions(amount, usedToken !== tokens?.usdc);
     const placePassTxs = await placeOrderTransactions(
       amount / passPrice,
       passPrice,
+      { publicKey: proposal.account.openbookPassMarket, account: markets.pass },
       true,
       usedToken !== tokens?.usdc,
       true,
@@ -85,6 +88,7 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
     const placeFailTxs = await placeOrderTransactions(
       amount / failPrice,
       failPrice,
+      { publicKey: proposal.account.openbookFailMarket, account: markets.fail },
       true,
       usedToken !== tokens?.usdc,
       false,

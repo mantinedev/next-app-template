@@ -9,7 +9,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { OracleConfigParams } from './types';
+import { AnyNode, BookSideAccount, LeafNode, OracleConfigParams } from './types';
 import { OPENBOOK_PROGRAM_ID } from './constants';
 
 const BooksideSpace = 90944 + 8;
@@ -171,3 +171,10 @@ export const createOpenOrdersInstruction = async (
 
   return [ixs, openOrdersAccount];
 };
+
+export function getLeafNodes(bookside: BookSideAccount, program: Program<OpenbookV2>): LeafNode[] {
+  const leafNodesData = bookside.nodes.nodes.filter((x: AnyNode) => x.tag === 2);
+  return leafNodesData.map((e) =>
+    program.coder.types.decode('LeafNode', Buffer.from([0, ...e.data])),
+  );
+}
