@@ -6,7 +6,7 @@ describe('Welcome component', () => {
     render(<Welcome />);
     expect(screen.getByText('this guide')).toHaveAttribute(
       'href',
-      'https://mantine.dev/guides/next/'
+      'https://mantine.dev/guides/next/',
     );
   });
 });
