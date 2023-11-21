@@ -11,6 +11,8 @@ import {
   Stack,
   Text,
   TextInput,
+  Card,
+  Switch,
 } from '@mantine/core';
 import Link from 'next/link';
 import { IconExternalLink } from '@tabler/icons-react';
@@ -21,7 +23,7 @@ import { useTokenAmount } from '@/hooks/useTokenAmount';
 import { TWAPOracle, LeafNode } from '@/lib/types';
 import { NUMERAL_FORMAT } from '@/lib/constants';
 import { ProposalOrdersCard } from './ProposalOrdersCard';
-import { OrderBook } from "@lab49/react-order-book";
+import { OrderBook } from '@lab49/react-order-book';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
   const { proposal, markets, orders, mintTokens, placeOrder, loading } = useProposal({
@@ -57,15 +59,19 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
       if (side.length === 0) {
         return null;
       }
-      const parsed = side.map((e) => ({
-        price: e.key.shrn(64).toNumber(),
-        size: e.quantity.toNumber(),
-      })).sort((a, b) => a.price - b.price);
+      const parsed = side
+        .map((e) => ({
+          price: e.key.shrn(64).toNumber(),
+          size: e.quantity.toNumber(),
+        }))
+        .sort((a, b) => a.price - b.price);
 
-      const sorted = bids ? parsed.sort((a, b) => b.price - a.price) : parsed.sort((a, b) => a.price - b.price);
+      const sorted = bids
+        ? parsed.sort((a, b) => b.price - a.price)
+        : parsed.sort((a, b) => a.price - b.price);
 
       let deduped = new Map();
-      sorted.map(order => {
+      sorted.map((order) => {
         if (deduped.get(order.price) == undefined) {
           deduped.set(order.price, order.size);
         } else {
@@ -339,21 +345,17 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
         {orderbook ? (
           <Group justify="space-around" align="start">
             <Stack p={0} m={0} gap={0}>
-              <Text fw="bolder" size="lg">
-                Pass market orderbook
-              </Text>
               <style
-        
-        dangerouslySetInnerHTML={{
-          __html: `
+                dangerouslySetInnerHTML={{
+                  __html: `
             .MakeItNice {
               font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-              font-size: 13px;
+              font-size: 15px;
               font-variant-numeric: tabular-nums;
-              // display: inline-block;
+              display: inline-block;
               // background-color: #070F15;
-              // color: rgba(255, 255, 255, 0.6);
-              padding: 50px 0;
+              // color: rgba(250, 255, 255, 0.6);
+              // padding: 50px 0;
             }
 
             // .MakeItNice__side-header {
@@ -363,14 +365,14 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
             // }
 
             .MakeItNice__list {
-              // list-style-type: none;
+              list-style-type: none;
               padding: 0;
               margin: 0;
             }
 
             .MakeItNice__list-item {
               cursor: pointer;
-              padding: 2px 50px 2px 20px;
+              padding: 1px 20px 1px 20px;
               display: flex;
             }
 
@@ -393,7 +395,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
             .MakeItNice__spread {
               border-width: 1px 0;
               border-style: solid;
-              border-color: rgba(255, 255, 255, 0.2);
+              border-color: rgba(150, 150, 150, 0.2);
               padding: 5px 20px;
               text-align: center;
               display: flex;
@@ -410,25 +412,93 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
               overflow: hidden;
             }
           `,
-        }}
-      />
-
-      <OrderBook
-        // book={{ bids: book.bids, asks: book.asks }}
-        book={{
-          bids: Array.from(orderbook.pass.bids?.deduped.entries()).map(bid => [(bid[0] / 10_000).toFixed(2), bid[1]]),
-          asks: Array.from(orderbook.pass.asks?.deduped.entries()).map(ask => [(ask[0] / 10_000).toFixed(2), ask[1]]),
-        }}
-        fullOpacity
-        interpolateColor={(color) => color}
-        listLength={7}
-        stylePrefix="MakeItNice"
-      />
+                }}
+              />
+              <Card withBorder radius="md" style={{ width: '22rem' }}>
+                <Text fw="bolder" size="lg" style={{ paddingBottom: '1rem' }}>
+                  Pass market
+                </Text>
+                <Text fw="bold">Order book</Text>
+                <Card withBorder style={{ backgroundColor: 'rgb(250, 250, 250)' }}>
+                  <OrderBook
+                    // book={{ bids: book.bids, asks: book.asks }}
+                    book={{
+                      bids: Array.from(orderbook.pass.bids?.deduped.entries()).map((bid) => [
+                        (bid[0] / 10_000).toFixed(2),
+                        bid[1],
+                      ]),
+                      asks: Array.from(orderbook.pass.asks?.deduped.entries()).map((ask) => [
+                        (ask[0] / 10_000).toFixed(2),
+                        ask[1],
+                      ]),
+                    }}
+                    fullOpacity
+                    interpolateColor={(color) => color}
+                    listLength={4}
+                    stylePrefix="MakeItNice"
+                  />
+                </Card>
+                <Text fw="bold" style={{ marginTop: '1rem' }}>
+                  Time-weighted average price
+                </Text>
+                <Text>{passTwap}</Text>
+                <Stack>
+                  <Text fw="bold" style={{ marginTop: '1rem' }}>
+                    Trade
+                  </Text>
+                  <SegmentedControl
+                    data={['Limit', 'Market']}
+                    value={orderType}
+                    onChange={(e) => setOrderType(e)}
+                    fullWidth
+                  />
+                  <TextInput
+                    label="Price"
+                    placeholder="Enter price..."
+                    type="number"
+                    onChange={(e) => setFailPrice(Number(e.target.value))}
+                  />
+                  <TextInput
+                    label="Amount of META"
+                    placeholder="Enter amount..."
+                    type="number"
+                    onChange={(e) => setFailAmount(Number(e.target.value))}
+                  />
+                  <Grid>
+                    <GridCol span={6}>
+                      <Button
+                        fullWidth
+                        color="green"
+                        onClick={() =>
+                          placeOrder(failAmount, failPrice, orderType === 'Limit', false, false)
+                        }
+                        loading={loading}
+                        disabled={!failAmount || !failPrice}
+                      >
+                        Bid
+                      </Button>
+                    </GridCol>
+                    <GridCol span={6}>
+                      <Button
+                        fullWidth
+                        color="red"
+                        onClick={() =>
+                          placeOrder(failAmount, failPrice, orderType === 'Limit', true, false)
+                        }
+                        loading={loading}
+                        disabled={!failAmount || !failPrice}
+                      >
+                        Ask
+                      </Button>
+                    </GridCol>
+                  </Grid>
+                </Stack>
+              </Card>
               {/* <OrderBook book={{
                 bids: orderbook.pass.bids?.parsed.map(bid => [bid.price, bid.size]),
                 asks: [["2.0404", "40"]],
               }} /> */}
-              
+
               <Group gap="0">
                 {orderbook.pass.asks?.parsed.map((ask, index) => (
                   <Grid key={index} w="100%" gutter={0} mih="md">
@@ -522,11 +592,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
           </Group>
         ) : null}
         {proposal && orders ? (
-          <ProposalOrdersCard
-            markets={markets}
-            proposal={proposal}
-            orders={orders}
-          />
+          <ProposalOrdersCard markets={markets} proposal={proposal} orders={orders} />
         ) : null}
       </Stack>
     </Stack>

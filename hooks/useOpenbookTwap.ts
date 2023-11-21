@@ -124,7 +124,7 @@ export function useOpenbookTwap() {
       orderId: BN,
       passMarket: boolean,
       proposal: ProposalAccountWithKey,
-      market: MarketAccountWithKey
+      market: MarketAccountWithKey,
     ) => {
       if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
         return;
@@ -136,19 +136,19 @@ export function useOpenbookTwap() {
       // TODO: Determine if order is on pass or fail market?
       const userBasePass = getAssociatedTokenAddressSync(
         baseVault.conditionalOnFinalizeTokenMint,
-        wallet.publicKey
+        wallet.publicKey,
       );
       const userQuotePass = getAssociatedTokenAddressSync(
         quoteVault.conditionalOnFinalizeTokenMint,
-        wallet.publicKey
+        wallet.publicKey,
       );
       const userBaseFail = getAssociatedTokenAddressSync(
         baseVault.conditionalOnRevertTokenMint,
-        wallet.publicKey
+        wallet.publicKey,
       );
       const userQuoteFail = getAssociatedTokenAddressSync(
         quoteVault.conditionalOnRevertTokenMint,
-        wallet.publicKey
+        wallet.publicKey,
       );
       let userBaseAccount = userBaseFail;
       let userQuoteAccount = userQuoteFail;
@@ -174,9 +174,9 @@ export function useOpenbookTwap() {
           systemProgram: SYSTEM_PROGRAM,
         })
         .transaction();
-        return [placeTx];
+      return [placeTx];
     },
-    [wallet, openbook, openbookTwap]
+    [wallet, openbook, openbookTwap],
   );
 
   const cancelOrderTransactions = useCallback(

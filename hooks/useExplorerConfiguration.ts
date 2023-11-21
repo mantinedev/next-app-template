@@ -5,7 +5,7 @@ export enum Explorers {
   SolanaFM = 'solanafm',
   Solscan = 'solscan',
   Xray = 'xray',
-  Solana = 'solana'
+  Solana = 'solana',
 }
 
 export function useExplorerConfiguration() {
@@ -45,12 +45,12 @@ export function useExplorerConfiguration() {
           return url;
       }
     },
-    [explorer, url]
+    [explorer, url],
   );
 
   const generateExplorerLink = useCallback(
     (element: string, type: string) => matchSuffix(type) + element,
-    [explorer]
+    [explorer],
   );
 
   return { url, explorer, setExplorer, generateExplorerLink };
