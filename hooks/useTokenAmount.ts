@@ -19,10 +19,19 @@ export function useTokenAmount(mint?: PublicKey, owner?: PublicKey) {
         decimals: 0.0,
         uiAmount: 0.0,
       };
-      const accountTokenBalance = (await connection.getTokenAccountBalance(account)).value;
-      if (accountTokenBalance.uiAmount != null) {
-        setAmount(accountTokenBalance);
-      } else {
+      try {
+        if (typeof (account) !== 'string') {
+          setAmount(defaultAmount);
+        } else {
+          const accountTokenBalance = (await connection.getTokenAccountBalance(account)).value;
+          if (accountTokenBalance.uiAmount != null) {
+            setAmount(accountTokenBalance);
+          } else {
+            setAmount(defaultAmount);
+          }
+        }
+      } catch (err) {
+        console.error(err);
         setAmount(defaultAmount);
       }
     }

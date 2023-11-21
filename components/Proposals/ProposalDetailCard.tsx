@@ -357,17 +357,18 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
         </Group>
         {orderbook ? (
           <Group justify="space-around" align="start">
-            <Stack>
+            <Stack p={0} m={0} gap={0}>
               <Text fw="bolder" size="lg">
                 Pass market orderbook
               </Text>
-              <Group gap="0">
+              <Group w="100%" m={0} p={0} gap="0">
                 {orderbook.pass.asks.parsed.map((ask) => (
-                  <Grid w="100%" gutter={0} mih="md">
+                  <Grid w="100%" gutter={0} mih="md" m={0} p={0}>
+                    <Grid.Col span={3} h="sm" p="0" />
                     <Grid.Col span={1} h="sm" p="0">
                       <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
                     </Grid.Col>
-                    <Grid.Col span="auto">
+                    <Grid.Col span={3}>
                       <Progress
                         key={ask.price + ask.size}
                         value={Math.ceil((ask.price / orderbook.pass.asks.total.price) * 100)}
@@ -378,11 +379,8 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   </Grid>
                 ))}
                 {orderbook.pass.bids.parsed.map((bid) => (
-                  <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
-                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span="auto">
+                  <Grid w="100%" gutter={0} mih="md" m={0} p={0}>
+                    <Grid.Col span={3}>
                       <Progress
                         key={bid.price + bid.size}
                         value={Math.ceil((bid.price / orderbook.pass.bids.total.price) * 100)}
@@ -390,21 +388,26 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                         w="100%"
                       />
                     </Grid.Col>
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span={3} h="sm" p="0" />
                   </Grid>
                 ))}
               </Group>
             </Stack>
-            <Stack>
+            <Stack p={0} m={0} gap={0}>
               <Text fw="bolder" size="lg">
                 Fail market orderbook
               </Text>
-              <Group gap="0">
+              <Group w="100%" gap="0">
                 {orderbook.fail.asks.parsed.map((ask) => (
-                  <Grid w="100%" gutter={0} mih="md">
+                  <Grid w="100%" gutter={0} mih="md" m={0} p={0}>
+                    <Grid.Col span={3} h="sm" p="0" />
                     <Grid.Col span={1} h="sm" p="0">
                       <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
                     </Grid.Col>
-                    <Grid.Col span="auto">
+                    <Grid.Col span={3}>
                       <Progress
                         key={ask.price + ask.size}
                         value={Math.ceil((ask.price / orderbook.fail.asks.total.price) * 100)}
@@ -415,11 +418,8 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   </Grid>
                 ))}
                 {orderbook.fail.bids.parsed.map((bid) => (
-                  <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
-                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span="auto">
+                  <Grid w="100%" gutter={0} mih="md" m={0} p={0}>
+                    <Grid.Col span={3}>
                       <Progress
                         key={bid.price + bid.size}
                         value={Math.ceil((bid.price / orderbook.fail.bids.total.price) * 100)}
@@ -427,6 +427,10 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                         w="100%"
                       />
                     </Grid.Col>
+                    <Grid.Col span={1} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span={3} h="sm" p="0" />
                   </Grid>
                 ))}
               </Group>
