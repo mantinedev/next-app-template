@@ -64,6 +64,9 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     if (!markets) return;
 
     const getSide = (side: LeafNode[], bids?: boolean) => {
+      if (side.length == 0) {
+        return null;
+      }
       const parsed = side.map((e) => ({
         price: e.key.shrn(64).toNumber() * 0.0001,
         size: e.quantity.toNumber(),
@@ -362,7 +365,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 Pass market orderbook
               </Text>
               <Group gap="0">
-                {orderbook.pass.asks.parsed.map((ask) => (
+                {orderbook.pass.asks?.parsed.map((ask) => (
                   <Grid w="100%" gutter={0} mih="md">
                     <Grid.Col span={1} h="sm" p="0">
                       <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
@@ -377,7 +380,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     </Grid.Col>
                   </Grid>
                 ))}
-                {orderbook.pass.bids.parsed.map((bid) => (
+                {orderbook.pass.bids?.parsed.map((bid) => (
                   <Grid w="100%" gutter={0} mih="md">
                     <Grid.Col span={1} h="sm" p="0">
                       <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
@@ -399,7 +402,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 Fail market orderbook
               </Text>
               <Group gap="0">
-                {orderbook.fail.asks.parsed.map((ask) => (
+                {orderbook.fail.asks?.parsed.map((ask) => (
                   <Grid w="100%" gutter={0} mih="md">
                     <Grid.Col span={1} h="sm" p="0">
                       <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
@@ -414,7 +417,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     </Grid.Col>
                   </Grid>
                 ))}
-                {orderbook.fail.bids.parsed.map((bid) => (
+                {orderbook.fail.bids?.parsed.map((bid) => (
                   <Grid w="100%" gutter={0} mih="md">
                     <Grid.Col span={1} h="sm" p="0">
                       <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
