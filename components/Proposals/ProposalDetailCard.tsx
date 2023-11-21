@@ -468,7 +468,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                      <Table.Tr key={order.publicKey.toString()}>
                       <Table.Td>
                         <a href={`https://solana.fm/accounts/${order.publicKey.toString()}`} target="_blank" rel="noreferrer">
-                          {order.account.openOrders[0].clientId.toString()}
+                          {order.account.accountNum}
                         </a>
                       </Table.Td>
                       <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
@@ -516,7 +516,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                       <Table.Tr key={order.publicKey.toString()}>
                        <Table.Td>
                          <a href={`https://solana.fm/accounts/${order.publicKey.toString()}`} target="_blank" rel="noreferrer">
-                           {order.account.openOrders[0].clientId.toString()}
+                           {order.account.accountNum}
                          </a>
                        </Table.Td>
                        <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
