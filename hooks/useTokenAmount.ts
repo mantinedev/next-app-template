@@ -13,14 +13,14 @@ export function useTokenAmount(mint?: PublicKey, owner?: PublicKey) {
   const [amount, setAmount] = useState<TokenAmount>();
 
   const fetchAmount = async () => {
-    if (account) {
+    if (account && connection) {
       setAmount((await connection.getTokenAccountBalance(account)).value);
     }
   };
 
   useEffect(() => {
     fetchAmount();
-  }, [account]);
+  }, [account, connection]);
 
   return { amount, account, fetchAmount };
 }

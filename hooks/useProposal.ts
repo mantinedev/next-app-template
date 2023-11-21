@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { Transaction } from '@solana/web3.js';
-import { Program } from '@coral-xyz/anchor';
+import { BN, Program } from '@coral-xyz/anchor';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
 import { OPENBOOK_PROGRAM_ID } from '@/lib/constants';
 import { Markets, OpenOrdersAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
@@ -122,20 +122,32 @@ export function useProposal({
       openbook,
     );
 
-    const [passBid, passAsk] = await openbookTwap.views.getBestBidAndAsk({
-      accounts: {
-        market: proposal.account.openbookPassMarket,
-        bids: pass.bids,
-        asks: pass.asks,
-      },
-    });
-    const [failBid, failAsk] = await openbookTwap.views.getBestBidAndAsk({
-      accounts: {
-        market: proposal.account.openbookFailMarket,
-        bids: fail.bids,
-        asks: fail.asks,
-      },
-    });
+    const prices: BN[] = [];
+    try {
+      prices.push(
+        ...(await openbookTwap.views.getBestBidAndAsk({
+          accounts: {
+            market: proposal.account.openbookPassMarket,
+            bids: pass.bids,
+            asks: pass.asks,
+          },
+        })),
+      );
+      prices.push(
+        ...(await openbookTwap.views.getBestBidAndAsk({
+          accounts: {
+            market: proposal.account.openbookFailMarket,
+            bids: fail.bids,
+            asks: fail.asks,
+          },
+        })),
+      );
+    } catch (err) {
+      /// Get mid prices failed, do not update prices yet
+      return;
+    }
+
+    const [passBid, passAsk, failBid, failAsk] = prices;
     const quoteLot = 0.0001;
     setMarkets({
       pass,

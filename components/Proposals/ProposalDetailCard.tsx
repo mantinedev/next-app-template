@@ -64,7 +64,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     if (!markets) return;
 
     const getSide = (side: LeafNode[], bids?: boolean) => {
-      if (side.length == 0) {
+      if (side.length === 0) {
         return null;
       }
       const parsed = side.map((e) => ({
@@ -373,7 +373,11 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     <Grid.Col span="auto">
                       <Progress
                         key={ask.price + ask.size}
-                        value={Math.ceil((ask.price / orderbook.pass.asks.total.price) * 100)}
+                        value={
+                          orderbook.pass.asks
+                            ? Math.ceil((ask.price / orderbook.pass.asks.total.price) * 100)
+                            : 0
+                        }
                         color="red"
                         w="100%"
                       />
@@ -388,7 +392,11 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     <Grid.Col span="auto">
                       <Progress
                         key={bid.price + bid.size}
-                        value={Math.ceil((bid.price / orderbook.pass.bids.total.price) * 100)}
+                        value={
+                          orderbook.pass.bids
+                            ? Math.ceil((bid.price / orderbook.pass.bids.total.price) * 100)
+                            : 0
+                        }
                         color="green"
                         w="100%"
                       />
@@ -410,7 +418,11 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     <Grid.Col span="auto">
                       <Progress
                         key={ask.price + ask.size}
-                        value={Math.ceil((ask.price / orderbook.fail.asks.total.price) * 100)}
+                        value={
+                          orderbook.fail.asks
+                            ? Math.ceil((ask.price / orderbook.fail.asks.total.price) * 100)
+                            : 0
+                        }
                         color="red"
                         w="100%"
                       />
@@ -425,7 +437,11 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     <Grid.Col span="auto">
                       <Progress
                         key={bid.price + bid.size}
-                        value={Math.ceil((bid.price / orderbook.fail.bids.total.price) * 100)}
+                        value={
+                          orderbook.fail.bids
+                            ? Math.ceil((bid.price / orderbook.fail.bids.total.price) * 100)
+                            : 0
+                        }
                         color="green"
                         w="100%"
                       />

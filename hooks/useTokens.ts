@@ -67,6 +67,8 @@ const selectDefaultTokens = (n?: Networks) => {
       return { ...staticTokens, ...devnetTokens };
     case Networks.Mainnet:
       return { ...staticTokens, ...mainnetTokens };
+    case Networks.Custom:
+      return { ...staticTokens, ...mainnetTokens };
     default:
       return staticTokens;
   }
@@ -78,7 +80,9 @@ type TokensDict = Partial<{ [key in TokenKeys]: Token }>;
 export function useTokens() {
   const { network } = useNetworkConfiguration();
   const [tokens, setTokens] = useLocalStorage<TokensDict>({
+    key: 'futarchy-tokens',
     defaultValue: selectDefaultTokens(network),
+    getInitialValueInEffect: true,
     serialize: JSON.stringify,
     deserialize: (s) => {
       if (!s) return {};
@@ -90,13 +94,11 @@ export function useTokens() {
         ]),
       );
     },
-    key: 'futarchy-tokens',
   });
 
   return {
     tokens: { ...tokens, ...selectDefaultTokens(network) },
     setTokens: (newTokens: TokensDict) => {
-      console.log(tokens, newTokens, selectDefaultTokens(network), network);
       setTokens({ ...tokens, ...newTokens, ...selectDefaultTokens(network) });
     },
   };
