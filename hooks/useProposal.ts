@@ -42,7 +42,8 @@ export function useProposal({
       )[0],
     [proposals, fromProposal],
   );
-  const fetchOrders = useCallback(async () => {
+
+  const fetchOpenOrders = useCallback(async () => {
     if (!proposal || !openbook || !wallet.publicKey) {
       return;
     }
@@ -63,9 +64,9 @@ export function useProposal({
 
   useEffect(() => {
     if (!orders) {
-      fetchOrders();
+      fetchOpenOrders();
     }
-  }, [orders, markets, fetchOrders]);
+  }, [orders, markets, fetchOpenOrders]);
 
   const fetchMarkets = useCallback(async () => {
     if (!wallet.publicKey || !proposal || !openbook || !openbookTwap || !openbookTwap.views) return;
@@ -263,12 +264,12 @@ export function useProposal({
         }
 
         await fetchMarkets();
-        await fetchOrders();
+        await fetchOpenOrders();
       } finally {
         setLoading(false);
       }
     },
-    [wallet, connection, placeOrderTransactions],
+    [wallet, proposal, markets, connection, placeOrderTransactions],
   );
 
   return {
@@ -276,7 +277,7 @@ export function useProposal({
     markets,
     orders,
     loading,
-    fetchOrders,
+    fetchOpenOrders,
     fetchMarkets,
     mintTokensTransactions,
     mintTokens,

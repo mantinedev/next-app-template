@@ -8,7 +8,7 @@ import { SelfTradeBehavior, OrderType, Side } from '@openbook-dex/openbook-v2/di
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
 import { OpenbookTwap } from '@/lib/idl/openbook_twap';
 import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '@/lib/constants';
-import { MarketAccountWithKey } from '@/lib/types';
+import { MarketAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
 import { shortKey } from '@/lib/utils';
 import { useProvider } from '@/hooks/useProvider';
 import {
@@ -17,6 +17,7 @@ import {
   findOpenOrders,
   findOpenOrdersIndexer,
 } from '../lib/openbook';
+import { useConditionalVault } from './useConditionalVault';
 
 const OPENBOOK_TWAP_IDL: OpenbookTwap = require('@/lib/idl/openbook_twap.json');
 
@@ -25,6 +26,7 @@ const SYSTEM_PROGRAM: PublicKey = new PublicKey('1111111111111111111111111111111
 export function useOpenbookTwap() {
   const wallet = useWallet();
   const provider = useProvider();
+  const { getVaultMint } = useConditionalVault();
   const openbook = useMemo(() => {
     if (!provider) {
       return;
@@ -118,20 +120,43 @@ export function useOpenbookTwap() {
   );
 
   const settleFundsTransactions = useCallback(
-    async (orderId: BN, market: MarketAccountWithKey) => {
+    async (
+      orderId: BN,
+      passMarket: boolean,
+      proposal: ProposalAccountWithKey,
+      market: MarketAccountWithKey
+    ) => {
       if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
         return;
       }
       console.log(market.publicKey.toString());
+      const quoteVault = await getVaultMint(proposal.account.quoteVault);
+      const baseVault = await getVaultMint(proposal.account.baseVault);
       const openOrdersAccount = findOpenOrders(orderId, wallet.publicKey);
-      const userBaseAccount = getAssociatedTokenAddressSync(
-        market.account.marketBaseVault,
+      // TODO: Determine if order is on pass or fail market?
+      const userBasePass = getAssociatedTokenAddressSync(
+        baseVault.conditionalOnFinalizeTokenMint,
         wallet.publicKey
       );
-      const userQuoteAccount = getAssociatedTokenAddressSync(
-        market.account.marketQuoteVault,
+      const userQuotePass = getAssociatedTokenAddressSync(
+        quoteVault.conditionalOnFinalizeTokenMint,
         wallet.publicKey
       );
+      const userBaseFail = getAssociatedTokenAddressSync(
+        baseVault.conditionalOnRevertTokenMint,
+        wallet.publicKey
+      );
+      const userQuoteFail = getAssociatedTokenAddressSync(
+        quoteVault.conditionalOnRevertTokenMint,
+        wallet.publicKey
+      );
+      let userBaseAccount = userBaseFail;
+      let userQuoteAccount = userQuoteFail;
+      if (passMarket) {
+        userBaseAccount = userBasePass;
+        userQuoteAccount = userQuotePass;
+      }
+      // TODO: 2x Txns for each side..
       const placeTx = await openbook.methods
         .settleFunds()
         .accounts({
