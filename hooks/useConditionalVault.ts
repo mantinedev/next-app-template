@@ -18,7 +18,16 @@ export function useConditionalVault() {
     () => new Program<ConditionalVault>(CONDITIONAL_VAULT_IDL, programId, provider),
     [provider, programId],
   );
+
   const { tokens } = useTokens();
+
+  const getVaultMint = useCallback(
+    async (vault: PublicKey) => {
+      const storedVault = await program.account.conditionalVault.fetch(vault);
+      return storedVault;
+    },
+    [program, tokens],
+  );
 
   const initializeVault = useCallback(
     async (settlementAuthority: PublicKey, underlyingTokenMint: PublicKey, nonce: BN) => {
@@ -132,5 +141,5 @@ export function useConditionalVault() {
     [program, tokens],
   );
 
-  return { program, initializeVault, mintConditionalTokens };
+  return { program, initializeVault, mintConditionalTokens, getVaultMint };
 }
