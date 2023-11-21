@@ -475,7 +475,9 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                             : order.account.position.asksBaseLots.toString(),
                         ).format(NUMERAL_FORMAT)}
                       </Table.Td>
-                      <Table.Td>???</Table.Td>
+                      <Table.Td>
+                        {(parseFloat(order.account.openOrders[0].lockedPrice.toString()) / 10000)}
+                      </Table.Td>
                       <Table.Td>{order.account.accountNum}</Table.Td>
                       <Table.Td>
                         <ActionIcon

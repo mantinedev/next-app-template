@@ -13,14 +13,28 @@ export function useTokenAmount(mint?: PublicKey, owner?: PublicKey) {
   const [amount, setAmount] = useState<TokenAmount>();
 
   const fetchAmount = async () => {
-    if (account) {
-      setAmount((await connection.getTokenAccountBalance(account)).value);
+    if (wallet && account) {
+      const defaultAmount: TokenAmount = {
+        amount: '0.0',
+        decimals: 0.0,
+        uiAmount: 0.0,
+      };
+      const accountTokenBalance = (await connection.getTokenAccountBalance(account)).value;
+      if (accountTokenBalance.uiAmount != null) {
+        setAmount(accountTokenBalance);
+      } else {
+        setAmount(defaultAmount);
+      }
     }
   };
 
   useEffect(() => {
-    fetchAmount();
-  }, [account]);
+    if (wallet) {
+      fetchAmount();
+    } else {
+      console.error('waiting for wallet connection');
+    }
+  }, [account, wallet]);
 
   return { amount, account, fetchAmount };
 }
