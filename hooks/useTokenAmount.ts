@@ -20,15 +20,11 @@ export function useTokenAmount(mint?: PublicKey, owner?: PublicKey) {
         uiAmount: 0.0,
       };
       try {
-        if (typeof (account) !== 'string') {
-          setAmount(defaultAmount);
+        const accountTokenBalance = (await connection.getTokenAccountBalance(account)).value;
+        if (accountTokenBalance.uiAmount != null) {
+          setAmount(accountTokenBalance);
         } else {
-          const accountTokenBalance = (await connection.getTokenAccountBalance(account)).value;
-          if (accountTokenBalance.uiAmount != null) {
-            setAmount(accountTokenBalance);
-          } else {
-            setAmount(defaultAmount);
-          }
+          setAmount(defaultAmount);
         }
       } catch (err) {
         console.error(err);
@@ -38,12 +34,8 @@ export function useTokenAmount(mint?: PublicKey, owner?: PublicKey) {
   };
 
   useEffect(() => {
-    if (wallet) {
-      fetchAmount();
-    } else {
-      console.error('waiting for wallet connection');
-    }
-  }, [account, wallet]);
+    fetchAmount();
+  }, [account]);
 
   return { amount, account, fetchAmount };
 }
