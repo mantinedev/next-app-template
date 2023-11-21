@@ -114,11 +114,11 @@ export function useProposal({
       await openbook.coder.accounts.decode('bookSide', bookAccountInfos[1]!.data),
       openbook,
     );
-    const failBids = getLeafNodes(
+    const failAsks = getLeafNodes(
       await openbook.coder.accounts.decode('bookSide', bookAccountInfos[2]!.data),
       openbook,
     );
-    const failAsks = getLeafNodes(
+    const failBids = getLeafNodes(
       await openbook.coder.accounts.decode('bookSide', bookAccountInfos[3]!.data),
       openbook,
     );
