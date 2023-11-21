@@ -36,6 +36,7 @@ import { Networks, useNetworkConfiguration } from '../../hooks/useNetworkConfigu
 import { shortKey } from '@/lib/utils';
 import icon from '@/public/meta.jpg';
 import _favicon from '@/public/favicon.ico';
+import { Explorers, useExplorerConfiguration } from '@/hooks/useExplorerConfiguration';
 
 interface MenuItem {
   name: string;
@@ -57,10 +58,18 @@ const networks = [
   { label: 'Localnet', value: Networks.Localnet.toString() },
 ];
 
+const explorers = [
+  { label: 'Solana.fm', value: Explorers.SolanaFM.toString() },
+  { label: 'Solscan', value: Explorers.Solscan.toString() },
+  { label: 'X-Ray', value: Explorers.Xray.toString() },
+  { label: 'Solana Explorer', value: Explorers.Solana.toString() },
+];
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const wallet = useWallet();
   const modal = useWalletModal();
   const { network, setNetwork } = useNetworkConfiguration();
+  const { explorer, setExplorer } = useExplorerConfiguration();
   const [opened, { toggle }] = useDisclosure();
   const theme = useMantineTheme();
   const { setColorScheme } = useMantineColorScheme();
@@ -129,10 +138,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Button onClick={() => modal.setVisible(true)}>Connect wallet</Button>
           )}
           <NativeSelect
-            label="Network picker"
+            label="Network"
             data={networks}
             value={network}
             onChange={(e) => setNetwork(e.target.value as Networks)}
+          />
+          <NativeSelect
+            label="Explorer"
+            data={explorers}
+            value={explorer}
+            onChange={(e) => setExplorer(e.target.value as Explorers)}
           />
           <Group justify="center">
             <Link href="https://github.com/Dodecahedr0x/meta-dao-frontend">
