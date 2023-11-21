@@ -1,11 +1,10 @@
-import { OrderBook } from '@lab49/react-order-book';
-import { PublicKey } from '@solana/web3.js';
-import { LeafNode } from '@/lib/types';
 import { useMemo } from 'react';
+import { OrderBook } from '@lab49/react-order-book';
+import { LeafNode } from '@/lib/types';
 
 export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; asks: LeafNode[] }) {
   const orderbook = useMemo(() => {
-    const getSide = (side: LeafNode[], bids?: boolean) => {
+    const getSide = (side: LeafNode[], isBidSide?: boolean) => {
       if (side.length === 0) {
         return null;
       }
@@ -16,13 +15,13 @@ export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; a
         }))
         .sort((a, b) => a.price - b.price);
 
-      const sorted = bids
+      const sorted = isBidSide
         ? parsed.sort((a, b) => b.price - a.price)
         : parsed.sort((a, b) => a.price - b.price);
 
-      let deduped = new Map();
-      sorted.map((order) => {
-        if (deduped.get(order.price) == undefined) {
+      const deduped = new Map();
+      sorted.forEach((order) => {
+        if (deduped.get(order.price) === undefined) {
           deduped.set(order.price, order.size);
         } else {
           deduped.set(order.price, deduped.get(order.price) + order.size);
@@ -33,7 +32,7 @@ export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; a
         price: a.price + b.price,
         size: a.size + b.size,
       }));
-      return { parsed: bids ? parsed : parsed, total, deduped };
+      return { parsed, total, deduped };
     };
 
     return {
@@ -106,14 +105,18 @@ export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; a
       />
       <OrderBook
         book={{
-          bids: Array.from(orderbook.bids?.deduped.entries()).map((bid) => [
-            (bid[0] / 10_000).toFixed(2),
-            bid[1],
-          ]),
-          asks: Array.from(orderbook.asks?.deduped.entries()).map((ask) => [
-            (ask[0] / 10_000).toFixed(2),
-            ask[1],
-          ]),
+          bids: orderbook.bids
+            ? Array.from(orderbook.bids.deduped.entries()).map((bid) => [
+                (bid[0] / 10_000).toFixed(2),
+                bid[1],
+              ])
+            : [],
+          asks: orderbook.asks
+            ? Array.from(orderbook.asks.deduped.entries()).map((ask) => [
+                (ask[0] / 10_000).toFixed(2),
+                ask[1],
+              ])
+            : [],
         }}
         fullOpacity
         interpolateColor={(color) => color}

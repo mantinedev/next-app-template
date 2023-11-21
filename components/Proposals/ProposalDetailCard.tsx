@@ -1,31 +1,12 @@
-import { useCallback, useMemo, useState } from 'react';
-import {
-  Button,
-  Fieldset,
-  Grid,
-  GridCol,
-  Group,
-  Loader,
-  Progress,
-  SegmentedControl,
-  Stack,
-  Text,
-  TextInput,
-  Card,
-  Switch,
-} from '@mantine/core';
+import { useCallback, useState } from 'react';
+import { Button, Fieldset, Group, Loader, Stack, Text, TextInput } from '@mantine/core';
 import Link from 'next/link';
 import { IconExternalLink } from '@tabler/icons-react';
-import numeral from 'numeral';
 import { useProposal } from '@/hooks/useProposal';
 import { useTokens } from '@/hooks/useTokens';
 import { useTokenAmount } from '@/hooks/useTokenAmount';
-import { TWAPOracle, LeafNode } from '@/lib/types';
-import { NUMERAL_FORMAT } from '@/lib/constants';
+// import { TWAPOracle, LeafNode } from '@/lib/types';
 import { ProposalOrdersCard } from './ProposalOrdersCard';
-import { OrderBook } from '@lab49/react-order-book';
-import { ConditionalMarketOrderBook } from '../Markets/ConditionalMarketOrderBook';
-import { MarketCard } from './MarketCard';
 import { ConditionalMarketCard } from '../Markets/ConditionalMarketCard';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
@@ -49,11 +30,6 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     markets?.quoteVault.conditionalOnRevertTokenMint,
   );
   const { tokens } = useTokens();
-  const [passAmount, setPassAmount] = useState<number>(0);
-  const [failAmount, setFailAmount] = useState<number>(0);
-  const [passPrice, setPassPrice] = useState<number>(0);
-  const [failPrice, setFailPrice] = useState<number>(0);
-  const [orderType, setOrderType] = useState<string>('Limit');
 
   const handleMint = useCallback(
     async (fromBase?: boolean) => {
@@ -68,14 +44,14 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     [mintTokens, mintBaseAmount, mintQuoteAmount],
   );
 
-  const calculateTWAP = (twapOracle: TWAPOracle) => {
-    const slotsPassed = twapOracle.lastUpdatedSlot.sub(twapOracle.initialSlot);
-    const twapValue = twapOracle.observationAggregator.div(slotsPassed);
-    return numeral(twapValue.toString()).divide(10_000).format('0.0000a');
-  };
+  // const calculateTWAP = (twapOracle: TWAPOracle) => {
+  //   const slotsPassed = twapOracle.lastUpdatedSlot.sub(twapOracle.initialSlot);
+  //   const twapValue = twapOracle.observationAggregator.div(slotsPassed);
+  //   return numeral(twapValue.toString()).divide(10_000).format('0.0000a');
+  // };
 
-  const passTwap = markets ? calculateTWAP(markets.passTwap.twapOracle) : null;
-  const failTwap = markets ? calculateTWAP(markets.failTwap.twapOracle) : null;
+  // const passTwap = markets ? calculateTWAP(markets.passTwap.twapOracle) : null;
+  // const failTwap = markets ? calculateTWAP(markets.failTwap.twapOracle) : null;
 
   return !proposal || !markets ? (
     <Group justify="center">
@@ -93,11 +69,12 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
         </Group>
       </Link>
       <Stack>
-        {markets ? 
-        <Group gap="md" justify="space-around" p="sm">
-          <ConditionalMarketCard isPassMarket={true} markets={markets} placeOrder={placeOrder} />
-          <ConditionalMarketCard isPassMarket={false} markets={markets} placeOrder={placeOrder} />
-        </Group> : null}
+        {markets ? (
+          <Group gap="md" justify="space-around" p="sm">
+            <ConditionalMarketCard isPassMarket markets={markets} placeOrder={placeOrder} />
+            <ConditionalMarketCard isPassMarket={false} markets={markets} placeOrder={placeOrder} />
+          </Group>
+        ) : null}
         <Group justify="space-around">
           <Fieldset legend={`Mint conditional $${tokens?.meta?.symbol}`}>
             <TextInput

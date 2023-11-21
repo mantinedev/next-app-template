@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Card,
   Stack,
@@ -9,9 +10,23 @@ import {
   Button,
 } from '@mantine/core';
 import { ConditionalMarketOrderBook } from './ConditionalMarketOrderBook';
-import { useState } from 'react';
+import { Markets } from '@/lib/types';
 
-export function ConditionalMarketCard({ isPassMarket, markets, placeOrder }) {
+export function ConditionalMarketCard({
+  isPassMarket,
+  markets,
+  placeOrder,
+}: {
+  isPassMarket: boolean;
+  markets: Markets;
+  placeOrder: (
+    amount: number,
+    price: number,
+    limitOrder?: boolean,
+    ask?: boolean,
+    pass?: boolean,
+  ) => void;
+}) {
   const [orderType, setOrderType] = useState<string>('Limit');
   const [amount, setAmount] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
