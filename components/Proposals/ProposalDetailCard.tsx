@@ -21,6 +21,7 @@ import { useTokenAmount } from '@/hooks/useTokenAmount';
 import { TWAPOracle, LeafNode } from '@/lib/types';
 import { NUMERAL_FORMAT } from '@/lib/constants';
 import { ProposalOrdersCard } from './ProposalOrdersCard';
+import { OrderBook } from "@lab49/react-order-book";
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
   const { proposal, markets, orders, mintTokens, placeOrder, loading } = useProposal({
@@ -57,14 +58,26 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
         return null;
       }
       const parsed = side.map((e) => ({
-        price: e.key.shrn(64).toNumber() * 0.0001,
+        price: e.key.shrn(64).toNumber(),
         size: e.quantity.toNumber(),
-      }));
+      })).sort((a, b) => a.price - b.price);
+
+      const sorted = bids ? parsed.sort((a, b) => b.price - a.price) : parsed.sort((a, b) => a.price - b.price);
+
+      let deduped = new Map();
+      sorted.map(order => {
+        if (deduped.get(order.price) == undefined) {
+          deduped.set(order.price, order.size);
+        } else {
+          deduped.set(order.price, deduped.get(order.price) + order.size);
+        }
+      });
+
       const total = parsed.reduce((a, b) => ({
         price: a.price + b.price,
         size: a.size + b.size,
       }));
-      return { parsed: bids ? parsed.toReversed() : parsed, total };
+      return { parsed: bids ? parsed : parsed, total, deduped };
     };
 
     return {
@@ -329,6 +342,93 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
               <Text fw="bolder" size="lg">
                 Pass market orderbook
               </Text>
+              <style
+        
+        dangerouslySetInnerHTML={{
+          __html: `
+            .MakeItNice {
+              font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+              font-size: 13px;
+              font-variant-numeric: tabular-nums;
+              // display: inline-block;
+              // background-color: #070F15;
+              // color: rgba(255, 255, 255, 0.6);
+              padding: 50px 0;
+            }
+
+            // .MakeItNice__side-header {
+            //   margin: 0 0 5px 0;
+            //   font-weight: 700;
+            //   text-align: right;
+            // }
+
+            .MakeItNice__list {
+              // list-style-type: none;
+              padding: 0;
+              margin: 0;
+            }
+
+            .MakeItNice__list-item {
+              cursor: pointer;
+              padding: 2px 50px 2px 20px;
+              display: flex;
+            }
+
+            .MakeItNice__list-item:hover {
+              background: rgb(240, 240, 240);
+            }
+
+            .MakeItNice__price {
+              flex: 0 0 70px;
+              color: var(--row-color);
+              text-align: right;
+              display: inline-block;
+              margin-right: 15px;
+            }
+
+            .MakeItNice__size {
+              flex: 0 0 70px;
+            }
+
+            .MakeItNice__spread {
+              border-width: 1px 0;
+              border-style: solid;
+              border-color: rgba(255, 255, 255, 0.2);
+              padding: 5px 20px;
+              text-align: center;
+              display: flex;
+            }
+
+            .MakeItNice__spread-header {
+              margin: 0 15px 0 0;
+              flex: 0 0 70px;
+              text-align: right;
+            }
+
+            .MakeItNice__spread-value {
+              width: 28px;
+              overflow: hidden;
+            }
+          `,
+        }}
+      />
+
+      <OrderBook
+        // book={{ bids: book.bids, asks: book.asks }}
+        book={{
+          bids: Array.from(orderbook.pass.bids?.deduped.entries()).map(bid => [(bid[0] / 10_000).toFixed(2), bid[1]]),
+          asks: Array.from(orderbook.pass.asks?.deduped.entries()).map(ask => [(ask[0] / 10_000).toFixed(2), ask[1]]),
+        }}
+        fullOpacity
+        interpolateColor={(color) => color}
+        listLength={7}
+        stylePrefix="MakeItNice"
+      />
+              {/* <OrderBook book={{
+                bids: orderbook.pass.bids?.parsed.map(bid => [bid.price, bid.size]),
+                asks: [["2.0404", "40"]],
+              }} /> */}
+              
               <Group gap="0">
                 {orderbook.pass.asks?.parsed.map((ask, index) => (
                   <Grid key={index} w="100%" gutter={0} mih="md">
