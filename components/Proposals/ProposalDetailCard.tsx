@@ -17,7 +17,7 @@ import {
 } from '@mantine/core';
 import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { IconExternalLink, IconRefresh, IconTrash } from '@tabler/icons-react';
+import { IconExternalLink, IconRefresh, IconTrash, Icon3dRotate } from '@tabler/icons-react';
 import numeral from 'numeral';
 import { BN } from '@coral-xyz/anchor';
 import { useProposal } from '@/hooks/useProposal';
@@ -30,7 +30,7 @@ import { useTransactionSender } from '@/hooks/useTransactionSender';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
   const theme = useMantineTheme();
-  const { cancelOrderTransactions } = useOpenbookTwap();
+  const { cancelOrderTransactions, settleFundsTransactions } = useOpenbookTwap();
   const sender = useTransactionSender();
   const wallet = useWallet();
   const { proposal, markets, orders, mintTokens, placeOrder, loading, fetchOrders } = useProposal({
@@ -59,6 +59,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   const [failPrice, setFailPrice] = useState<number>(0);
   const [orderType, setOrderType] = useState<string>('Limit');
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
+  const [isSettling, setIsSettling] = useState<boolean>(false);
 
   const orderbook = useMemo(() => {
     if (!markets) return;
@@ -103,6 +104,27 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
       }
     },
     [proposal, cancelOrderTransactions, fetchOrders, sender],
+  );
+
+  const handleSettleFunds = useCallback(
+    async (order: OpenOrdersAccountWithKey) => {
+      if (!proposal || !markets) return;
+      const txs = await settleFundsTransactions(
+        new BN(order.account.accountNum),
+        proposal.account.openbookPassMarket.equals(order.account.market)
+          ? { publicKey: proposal.account.openbookPassMarket, account: markets.pass }
+          : { publicKey: proposal.account.openbookFailMarket, account: markets.fail },
+      );
+      if (!wallet.publicKey || !txs) return;
+      try {
+        setIsSettling(true);
+        await sender.send(txs);
+        setTimeout(() => fetchOrders(), 3000);
+      } finally {
+        setIsSettling(false);
+      }
+    },
+    [proposal, settleFundsTransactions, fetchOrders, sender],
   );
 
   const handleMint = useCallback(
@@ -541,10 +563,10 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                        <Table.Td>
                          <ActionIcon
                            variant="subtle"
-                           loading={isCanceling}
-                           onClick={() => handleCancel(order)}
+                           loading={isSettling}
+                           onClick={() => handleSettleFunds(order)}
                          >
-                           <IconTrash />
+                           <Icon3dRotate />
                          </ActionIcon>
                        </Table.Td>
                       </Table.Tr>)
