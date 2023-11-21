@@ -6,25 +6,34 @@ export enum Networks {
   Mainnet = 'mainnet-beta',
   Devnet = 'devnet',
   Localnet = 'local',
+  Custom = 'custom',
 }
 
 export function useNetworkConfiguration() {
   const [network, setNetwork] = useLocalStorage<Networks>({
     key: 'meta-dao-network-configuration',
     defaultValue: Networks.Mainnet,
+    getInitialValueInEffect: true,
+  });
+  const [customEndpoint, setCustomEndpoint] = useLocalStorage<string>({
+    key: 'futarchy-custom-endpoint',
+    defaultValue: 'https://sudden-jocelyn-fast-mainnet.helius-rpc.com/',
+    getInitialValueInEffect: true,
   });
   const endpoint = useMemo(() => {
     switch (network) {
       case Networks.Mainnet:
-        return 'https://mainnet.helius-rpc.com/?api-key=d1593552-6d2e-4ef5-b897-856c3d96c316';
+        return 'https://sudden-jocelyn-fast-mainnet.helius-rpc.com/';
       case Networks.Devnet:
-        return 'https://devnet.helius-rpc.com/?api-key=d1593552-6d2e-4ef5-b897-856c3d96c316';
+        return 'https://occupational-rochell-fast-devnet.helius-rpc.com/';
       case Networks.Localnet:
         return 'http://127.0.0.1:8899';
+      case Networks.Custom:
+        return customEndpoint;
       default:
         return clusterApiUrl('mainnet-beta');
     }
-  }, [network]);
+  }, [network, customEndpoint]);
 
-  return { endpoint, network, setNetwork };
+  return { endpoint, network, setNetwork, setCustomEndpoint };
 }

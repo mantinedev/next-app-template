@@ -10,6 +10,7 @@ import {
   Stack,
   Switch,
   Text,
+  TextInput,
   Title,
   rem,
   useMantineColorScheme,
@@ -56,6 +57,7 @@ const networks = [
   { label: 'Mainnet', value: Networks.Mainnet.toString() },
   { label: 'Devnet', value: Networks.Devnet.toString() },
   { label: 'Localnet', value: Networks.Localnet.toString() },
+  { label: 'Custom', value: Networks.Custom.toString() },
 ];
 
 const explorers = [
@@ -68,7 +70,7 @@ const explorers = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const wallet = useWallet();
   const modal = useWalletModal();
-  const { network, setNetwork } = useNetworkConfiguration();
+  const { network, endpoint, setNetwork, setCustomEndpoint } = useNetworkConfiguration();
   const { explorer, setExplorer } = useExplorerConfiguration();
   const [opened, { toggle }] = useDisclosure();
   const theme = useMantineTheme();
@@ -143,6 +145,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             value={network}
             onChange={(e) => setNetwork(e.target.value as Networks)}
           />
+          {network === Networks.Custom ? (
+            <TextInput
+              label="RPC URL"
+              placeholder="Your custom RPC URL"
+              onChange={(e) => setCustomEndpoint(e.target.value)}
+              value={endpoint}
+            />
+          ) : null}
           <NativeSelect
             label="Explorer"
             data={explorers}

@@ -30,7 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <MantineProvider theme={theme}>
       <Notifications />
-      <ConnectionProvider endpoint={endpoint}>
+      <ConnectionProvider endpoint={endpoint!}>
         <WalletProvider wallets={wallets} onError={onError}>
           <WalletModalProvider>
             <AutocratProvider>{children}</AutocratProvider>
