@@ -27,10 +27,12 @@ import { TWAPOracle, OpenOrdersAccountWithKey, LeafNode } from '@/lib/types';
 import { NUMERAL_FORMAT } from '@/lib/constants';
 import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
 import { useTransactionSender } from '@/hooks/useTransactionSender';
+import { useExplorerConfiguration } from '@/hooks/useExplorerConfiguration';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
   const theme = useMantineTheme();
   const { cancelOrderTransactions, settleFundsTransactions } = useOpenbookTwap();
+  const { generateExplorerLink } = useExplorerConfiguration();
   const sender = useTransactionSender();
   const wallet = useWallet();
   const { proposal, markets, orders, mintTokens, placeOrder, loading, fetchOrders } = useProposal({
@@ -516,7 +518,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     ) ? (
                      <Table.Tr key={order.publicKey.toString()}>
                       <Table.Td>
-                        <a href={`https://solana.fm/accounts/${order.publicKey.toString()}`} target="_blank" rel="noreferrer">
+                        <a href={generateExplorerLink(order.publicKey.toString(), 'account')} target="_blank" rel="noreferrer">
                           {order.account.accountNum}
                         </a>
                       </Table.Td>
@@ -564,7 +566,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     : (
                       <Table.Tr key={order.publicKey.toString()}>
                        <Table.Td>
-                         <a href={`https://solana.fm/accounts/${order.publicKey.toString()}`} target="_blank" rel="noreferrer">
+                         <a href={generateExplorerLink(order.publicKey.toString(), 'account')} target="_blank" rel="noreferrer">
                            {order.account.accountNum}
                          </a>
                        </Table.Td>

@@ -1,5 +1,5 @@
 import { useLocalStorage } from '@mantine/hooks';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 export enum Explorers {
   SolanaFM = 'solanafm',
@@ -12,8 +12,10 @@ export function useExplorerConfiguration() {
   const [explorer, setExplorer] = useLocalStorage<Explorers>({
     key: 'meta-dao-explorer-configuration',
     defaultValue: Explorers.SolanaFM,
+    getInitialValueInEffect: true,
   });
-  const endpoint = useMemo(() => {
+
+  const url = useMemo(() => {
     switch (explorer) {
       case Explorers.SolanaFM:
         return 'https://solana.fm/';
@@ -28,5 +30,28 @@ export function useExplorerConfiguration() {
     }
   }, [explorer]);
 
-  return { endpoint, explorer, setExplorer };
+  const matchSuffix = useCallback(
+    (type: string) => {
+      switch (type) {
+        case 'account':
+          // @ts-ignore
+          if ([Explorers.Solscan, Explorers.Solana].includes(explorer)) {
+            return `${url}address/`;
+          }
+          return `${url}account/`;
+        case 'transaction':
+          return `${url}tx/`;
+        default:
+          return url;
+      }
+    },
+    [explorer, url]
+  );
+
+  const generateExplorerLink = useCallback(
+    (element: string, type: string) => matchSuffix(type) + element,
+    [explorer]
+  );
+
+  return { url, explorer, setExplorer, generateExplorerLink };
 }
