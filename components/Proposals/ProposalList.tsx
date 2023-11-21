@@ -3,7 +3,7 @@
 import { Accordion, Badge, Button, Card, Group, Stack, Text } from '@mantine/core';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { IconExternalLink, IconEyeglass } from '@tabler/icons-react';
+import { IconCoin, IconExternalLink } from '@tabler/icons-react';
 import { shortKey } from '../../lib/utils';
 import { MarketCard } from './MarketCard';
 import { useAutocrat } from '../../contexts/AutocratContext';
@@ -62,8 +62,8 @@ export default function ProposalList() {
                   onClick={() => router.push(`/proposal?id=${proposal.account.number}`)}
                 >
                   <Group>
-                    <Text>Details</Text>
-                    <IconEyeglass />
+                    <Text>Trade</Text>
+                    <IconCoin />
                   </Group>
                 </Button>
               </Group>
