@@ -17,7 +17,7 @@ import {
 } from '@mantine/core';
 import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { IconExternalLink, IconRefresh, IconTrash } from '@tabler/icons-react';
+import { IconExternalLink, IconRefresh, IconTrash, Icon3dRotate } from '@tabler/icons-react';
 import numeral from 'numeral';
 import { BN } from '@coral-xyz/anchor';
 import { useProposal } from '@/hooks/useProposal';
@@ -27,10 +27,12 @@ import { TWAPOracle, OpenOrdersAccountWithKey, LeafNode } from '@/lib/types';
 import { NUMERAL_FORMAT } from '@/lib/constants';
 import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
 import { useTransactionSender } from '@/hooks/useTransactionSender';
+import { useExplorerConfiguration } from '@/hooks/useExplorerConfiguration';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
   const theme = useMantineTheme();
-  const { cancelOrderTransactions } = useOpenbookTwap();
+  const { cancelOrderTransactions, settleFundsTransactions } = useOpenbookTwap();
+  const { generateExplorerLink } = useExplorerConfiguration();
   const sender = useTransactionSender();
   const wallet = useWallet();
   const { proposal, markets, orders, mintTokens, placeOrder, loading, fetchOrders } = useProposal({
@@ -59,6 +61,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   const [failPrice, setFailPrice] = useState<number>(0);
   const [orderType, setOrderType] = useState<string>('Limit');
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
+  const [isSettling, setIsSettling] = useState<boolean>(false);
 
   const orderbook = useMemo(() => {
     if (!markets) return;
@@ -106,6 +109,27 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
       }
     },
     [proposal, cancelOrderTransactions, fetchOrders, sender],
+  );
+
+  const handleSettleFunds = useCallback(
+    async (order: OpenOrdersAccountWithKey) => {
+      if (!proposal || !markets) return;
+      const txs = await settleFundsTransactions(
+        new BN(order.account.accountNum),
+        proposal.account.openbookPassMarket.equals(order.account.market)
+          ? { publicKey: proposal.account.openbookPassMarket, account: markets.pass }
+          : { publicKey: proposal.account.openbookFailMarket, account: markets.fail },
+      );
+      if (!wallet.publicKey || !txs) return;
+      try {
+        setIsSettling(true);
+        await sender.send(txs);
+        setTimeout(() => fetchOrders(), 3000);
+      } finally {
+        setIsSettling(false);
+      }
+    },
+    [proposal, settleFundsTransactions, fetchOrders, sender],
   );
 
   const handleMint = useCallback(
@@ -360,17 +384,18 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
         </Group>
         {orderbook ? (
           <Group justify="space-around" align="start">
-            <Stack>
+            <Stack p={0} m={0} gap={0}>
               <Text fw="bolder" size="lg">
                 Pass market orderbook
               </Text>
               <Group gap="0">
                 {orderbook.pass.asks?.parsed.map((ask) => (
                   <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
+                    <Grid.Col span={3} />
+                    <Grid.Col span={1.5} h="sm" p="0">
                       <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
                     </Grid.Col>
-                    <Grid.Col span="auto">
+                    <Grid.Col span={3}>
                       <Progress
                         key={ask.price + ask.size}
                         value={
@@ -386,10 +411,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 ))}
                 {orderbook.pass.bids?.parsed.map((bid) => (
                   <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
-                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span="auto">
+                    <Grid.Col span={3}>
                       <Progress
                         key={bid.price + bid.size}
                         value={
@@ -401,21 +423,26 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                         w="100%"
                       />
                     </Grid.Col>
+                    <Grid.Col span={1.5} h="sm" p="0" ml={2}>
+                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span={3} h="sm" p="0" />
                   </Grid>
                 ))}
               </Group>
             </Stack>
-            <Stack>
+            <Stack p={0} m={0} gap={0}>
               <Text fw="bolder" size="lg">
                 Fail market orderbook
               </Text>
               <Group gap="0">
                 {orderbook.fail.asks?.parsed.map((ask) => (
                   <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
+                    <Grid.Col span={3} h="sm" p="0" />
+                    <Grid.Col span={1.5} h="sm" p="0">
                       <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
                     </Grid.Col>
-                    <Grid.Col span="auto">
+                    <Grid.Col span={3}>
                       <Progress
                         key={ask.price + ask.size}
                         value={
@@ -431,10 +458,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 ))}
                 {orderbook.fail.bids?.parsed.map((bid) => (
                   <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
-                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span="auto">
+                    <Grid.Col span={3}>
                       <Progress
                         key={bid.price + bid.size}
                         value={
@@ -446,6 +470,10 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                         w="100%"
                       />
                     </Grid.Col>
+                    <Grid.Col span={1.5} h="sm" p="0">
+                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
+                    </Grid.Col>
+                    <Grid.Col span={3} h="sm" p="0" />
                   </Grid>
                 ))}
               </Group>
@@ -456,7 +484,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
           <Stack>
             <Group justify="space-between">
               <Text fw="bolder" size="xl">
-                Open orders
+                Orders
               </Text>
               <ActionIcon variant="subtle" onClick={() => fetchOrders()}>
                 <IconRefresh />
@@ -465,11 +493,12 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
             <Table>
               <Table.Thead>
                 <Table.Tr>
+                  <Table.Th>Order ID</Table.Th>
                   <Table.Th>Market</Table.Th>
                   <Table.Th>Side</Table.Th>
                   <Table.Th>Quantity</Table.Th>
                   <Table.Th>Price</Table.Th>
-                  <Table.Th>Order ID</Table.Th>
+                  <Table.Th>Amount</Table.Th>
                   <Table.Th>Actions</Table.Th>
                 </Table.Tr>
               </Table.Thead>
@@ -480,7 +509,15 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     order.account.position.asksBaseLots,
                   );
                   return (
-                    <Table.Tr key={order.publicKey.toString()}>
+                    (
+                      (order.account.openOrders[0].isFree === 0)
+                    ) ? (
+                     <Table.Tr key={order.publicKey.toString()}>
+                      <Table.Td>
+                        <a href={generateExplorerLink(order.publicKey.toString(), 'account')} target="_blank" rel="noreferrer">
+                          {order.account.accountNum}
+                        </a>
+                      </Table.Td>
                       <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
                         {pass ? 'PASS' : 'FAIL'}
                       </Table.Td>
@@ -494,8 +531,24 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                             : order.account.position.asksBaseLots.toString(),
                         ).format(NUMERAL_FORMAT)}
                       </Table.Td>
-                      <Table.Td>???</Table.Td>
-                      <Table.Td>{order.account.accountNum}</Table.Td>
+                      <Table.Td>
+                        ${
+                          (parseFloat(order.account.openOrders[0].lockedPrice.toNumber()) / 10000)
+                        }
+                      </Table.Td>
+                      <Table.Td>
+                        ${ bids ?
+                          (
+                            (order.account.position.bidsBaseLots.toNumber()
+                            * order.account.openOrders[0].lockedPrice.toNumber()) / 10000
+                          )
+                          :
+                          (
+                            (order.account.position.asksBaseLots.toNumber()
+                            * order.account.openOrders[0].lockedPrice.toNumber()) / 10000
+                          )
+                        }
+                      </Table.Td>
                       <Table.Td>
                         <ActionIcon
                           variant="subtle"
@@ -505,7 +558,39 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                           <IconTrash />
                         </ActionIcon>
                       </Table.Td>
-                    </Table.Tr>
+                     </Table.Tr>)
+                    : (
+                      <Table.Tr key={order.publicKey.toString()}>
+                       <Table.Td>
+                         <a href={generateExplorerLink(order.publicKey.toString(), 'account')} target="_blank" rel="noreferrer">
+                           {order.account.accountNum}
+                         </a>
+                       </Table.Td>
+                       <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
+                         {pass ? 'PASS' : 'FAIL'}
+                       </Table.Td>
+                       <Table.Td c={bids ? theme.colors.green[9] : theme.colors.red[9]}>
+                         {bids ? 'BID' : 'ASK'}
+                       </Table.Td>
+                       <Table.Td>
+                        UNKNOWN
+                       </Table.Td>
+                       <Table.Td>
+                        UNKNOWN
+                       </Table.Td>
+                       <Table.Td>
+                        UNKNOWN
+                       </Table.Td>
+                       <Table.Td>
+                         <ActionIcon
+                           variant="subtle"
+                           loading={isSettling}
+                           onClick={() => handleSettleFunds(order)}
+                         >
+                           <Icon3dRotate />
+                         </ActionIcon>
+                       </Table.Td>
+                      </Table.Tr>)
                   );
                 })}
               </Table.Tbody>

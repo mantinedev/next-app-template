@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
 import { SelfTradeBehavior, OrderType, Side } from '@openbook-dex/openbook-v2/dist/cjs/utils/utils';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
@@ -19,6 +19,8 @@ import {
 } from '../lib/openbook';
 
 const OPENBOOK_TWAP_IDL: OpenbookTwap = require('@/lib/idl/openbook_twap.json');
+
+const SYSTEM_PROGRAM: PublicKey = new PublicKey('11111111111111111111111111111111');
 
 export function useOpenbookTwap() {
   const wallet = useWallet();
@@ -115,6 +117,43 @@ export function useOpenbookTwap() {
     [wallet, openbookTwap],
   );
 
+  const settleFundsTransactions = useCallback(
+    async (orderId: BN, market: MarketAccountWithKey) => {
+      if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
+        return;
+      }
+      console.log(market.publicKey.toString());
+      const openOrdersAccount = findOpenOrders(orderId, wallet.publicKey);
+      const userBaseAccount = getAssociatedTokenAddressSync(
+        market.account.marketBaseVault,
+        wallet.publicKey
+      );
+      const userQuoteAccount = getAssociatedTokenAddressSync(
+        market.account.marketQuoteVault,
+        wallet.publicKey
+      );
+      const placeTx = await openbook.methods
+        .settleFunds()
+        .accounts({
+          owner: wallet.publicKey,
+          penaltyPayer: wallet.publicKey,
+          openOrdersAccount,
+          market: market.publicKey,
+          marketAuthority: market.account.marketAuthority,
+          marketBaseVault: market.account.marketBaseVault,
+          marketQuoteVault: market.account.marketQuoteVault,
+          userBaseAccount,
+          userQuoteAccount,
+          referrerAccount: null,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SYSTEM_PROGRAM,
+        })
+        .transaction();
+        return [placeTx];
+    },
+    [wallet, openbook, openbookTwap]
+  );
+
   const cancelOrderTransactions = useCallback(
     async (orderId: BN, market: MarketAccountWithKey) => {
       if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
@@ -147,6 +186,7 @@ export function useOpenbookTwap() {
   return {
     placeOrderTransactions,
     cancelOrderTransactions,
+    settleFundsTransactions,
     program: openbookTwap,
   };
 }
