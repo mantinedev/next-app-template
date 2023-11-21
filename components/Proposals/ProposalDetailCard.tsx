@@ -463,7 +463,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
           <Stack>
             <Group justify="space-between">
               <Text fw="bolder" size="xl">
-                Open orders
+                Orders
               </Text>
               <ActionIcon variant="subtle" onClick={() => fetchOrders()}>
                 <IconRefresh />
