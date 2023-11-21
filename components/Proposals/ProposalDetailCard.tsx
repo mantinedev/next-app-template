@@ -391,7 +391,8 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
               <Group gap="0">
                 {orderbook.pass.asks?.parsed.map((ask) => (
                   <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
+                    <Grid.Col span={3} />
+                    <Grid.Col span={1.5} h="sm" p="0">
                       <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
                     </Grid.Col>
                     <Grid.Col span={3}>
@@ -410,10 +411,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 ))}
                 {orderbook.pass.bids?.parsed.map((bid) => (
                   <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
-                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span="auto">
+                    <Grid.Col span={3}>
                       <Progress
                         key={bid.price + bid.size}
                         value={
@@ -425,7 +423,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                         w="100%"
                       />
                     </Grid.Col>
-                    <Grid.Col span={1} h="sm" p="0">
+                    <Grid.Col span={1.5} h="sm" p="0" ml={2}>
                       <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
                     </Grid.Col>
                     <Grid.Col span={3} h="sm" p="0" />
@@ -440,7 +438,8 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
               <Group gap="0">
                 {orderbook.fail.asks?.parsed.map((ask) => (
                   <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
+                    <Grid.Col span={3} h="sm" p="0" />
+                    <Grid.Col span={1.5} h="sm" p="0">
                       <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
                     </Grid.Col>
                     <Grid.Col span={3}>
@@ -459,10 +458,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                 ))}
                 {orderbook.fail.bids?.parsed.map((bid) => (
                   <Grid w="100%" gutter={0} mih="md">
-                    <Grid.Col span={1} h="sm" p="0">
-                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span="auto">
+                    <Grid.Col span={3}>
                       <Progress
                         key={bid.price + bid.size}
                         value={
@@ -474,7 +470,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                         w="100%"
                       />
                     </Grid.Col>
-                    <Grid.Col span={1} h="sm" p="0">
+                    <Grid.Col span={1.5} h="sm" p="0">
                       <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
                     </Grid.Col>
                     <Grid.Col span={3} h="sm" p="0" />
