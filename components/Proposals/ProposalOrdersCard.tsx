@@ -29,7 +29,7 @@ export function ProposalOrdersCard(
 
   const sender = useTransactionSender();
   const wallet = useWallet();
-  const { fetchOrders } = useProposal({
+  const { fetchOpenOrders } = useProposal({
     fromNumber: proposal.account.number,
   });
   const { cancelOrderTransactions, settleFundsTransactions } = useOpenbookTwap();
@@ -54,12 +54,14 @@ export function ProposalOrdersCard(
       try {
         setIsCanceling(true);
         await sender.send(txs);
-        setTimeout(() => fetchOrders(), 3000);
+        setTimeout(() => fetchOpenOrders(), 3000);
+      } catch (err) {
+        console.error(err);
       } finally {
         setIsCanceling(false);
       }
     },
-    [proposal, cancelOrderTransactions, fetchOrders, sender],
+    [proposal, cancelOrderTransactions, fetchOpenOrders, sender],
   );
 
   const handleSettleFunds = useCallback(
@@ -77,12 +79,14 @@ export function ProposalOrdersCard(
       try {
         setIsSettling(true);
         await sender.send(txs);
-        setTimeout(() => fetchOrders(), 3000);
+        setTimeout(() => fetchOpenOrders(), 3000);
+      } catch (err) {
+        console.error(err);
       } finally {
         setIsSettling(false);
       }
     },
-    [proposal, settleFundsTransactions, fetchOrders, sender],
+    [proposal, settleFundsTransactions, fetchOpenOrders, sender],
   );
 
   return (
@@ -91,7 +95,7 @@ export function ProposalOrdersCard(
         <Text fw="bolder" size="xl">
           Orders
         </Text>
-        <ActionIcon variant="subtle" onClick={() => fetchOrders()}>
+        <ActionIcon variant="subtle" onClick={() => fetchOpenOrders()}>
           <IconRefresh />
         </ActionIcon>
       </Group>
