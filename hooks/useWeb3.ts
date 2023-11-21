@@ -5,16 +5,13 @@ export const useWeb3 = () => {
   const { connection } = useConnection();
   const wallet = useWallet();
 
-  const closeOrderAccount = useCallback(
-    async () => {
-      if (!connection || !wallet.publicKey || !wallet.signAllTransactions) {
-        throw new Error('Bad wallet connection');
-      }
+  const closeOrderAccount = useCallback(async () => {
+    if (!connection || !wallet.publicKey || !wallet.signAllTransactions) {
+      throw new Error('Bad wallet connection');
+    }
 
-      return null;
-    },
-    [wallet.publicKey, connection],
-  );
+    return null;
+  }, [wallet.publicKey, connection]);
 
   return { closeOrderAccount };
 };

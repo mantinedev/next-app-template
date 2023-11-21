@@ -97,7 +97,7 @@ export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; a
         }
 
         .MakeItNice__spread-value {
-          width: 28px;
+          width: 40px;
           overflow: hidden;
         }
       `,
