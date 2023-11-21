@@ -8,13 +8,9 @@ import {
   Group,
   NativeSelect,
   Stack,
-  Switch,
   Text,
   TextInput,
   Title,
-  rem,
-  useMantineColorScheme,
-  useMantineTheme,
 } from '@mantine/core';
 import { useDisclosure, useFavicon } from '@mantine/hooks';
 import '@mantine/notifications/styles.css';
@@ -26,9 +22,7 @@ import {
   IconBrandGithub,
   IconBrandTwitter,
   IconMicroscope,
-  IconMoonStars,
   IconSpeakerphone,
-  IconSun,
 } from '@tabler/icons-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -73,26 +67,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { network, endpoint, setNetwork, setCustomEndpoint } = useNetworkConfiguration();
   const { explorer, setExplorer } = useExplorerConfiguration();
   const [opened, { toggle }] = useDisclosure();
-  const theme = useMantineTheme();
-  const { setColorScheme } = useMantineColorScheme();
 
   useFavicon(_favicon.src);
-
-  const sunIcon = (
-    <IconSun
-      style={{ width: rem(16), height: rem(16) }}
-      stroke={2.5}
-      color={theme.colors.yellow[4]}
-    />
-  );
-
-  const moonIcon = (
-    <IconMoonStars
-      style={{ width: rem(16), height: rem(16) }}
-      stroke={2.5}
-      color={theme.colors.blue[6]}
-    />
-  );
 
   useEffect(() => {
     if (!wallet.connected && wallet.wallet) {
@@ -169,15 +145,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link href="https://twitter.com/MetaDAOProject">
               <IconBrandTwitter />
             </Link>
-          </Group>
-          <Group justify="center">
-            <Switch
-              size="md"
-              color="dark.4"
-              onLabel={sunIcon}
-              offLabel={moonIcon}
-              onChange={(e) => setColorScheme(e.currentTarget.checked ? 'light' : 'dark')}
-            />
           </Group>
         </Stack>
       </AppShell.Navbar>
