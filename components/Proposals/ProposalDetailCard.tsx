@@ -446,11 +446,12 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
             <Table>
               <Table.Thead>
                 <Table.Tr>
+                  <Table.Th>Order ID</Table.Th>
                   <Table.Th>Market</Table.Th>
                   <Table.Th>Side</Table.Th>
                   <Table.Th>Quantity</Table.Th>
                   <Table.Th>Price</Table.Th>
-                  <Table.Th>Order ID</Table.Th>
+                  <Table.Th>Amount</Table.Th>
                   <Table.Th>Actions</Table.Th>
                 </Table.Tr>
               </Table.Thead>
@@ -461,7 +462,15 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                     order.account.position.asksBaseLots,
                   );
                   return (
-                    <Table.Tr key={order.publicKey.toString()}>
+                    (
+                      (order.account.openOrders[0].isFree === 0)
+                    ) ? (
+                     <Table.Tr key={order.publicKey.toString()}>
+                      <Table.Td>
+                        <a href={`https://solana.fm/accounts/${order.publicKey.toString()}`} target="_blank" rel="noreferrer">
+                          {order.account.openOrders[0].clientId.toString()}
+                        </a>
+                      </Table.Td>
                       <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
                         {pass ? 'PASS' : 'FAIL'}
                       </Table.Td>
@@ -476,9 +485,23 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                         ).format(NUMERAL_FORMAT)}
                       </Table.Td>
                       <Table.Td>
-                        {(parseFloat(order.account.openOrders[0].lockedPrice.toString()) / 10000)}
+                        ${
+                          (parseFloat(order.account.openOrders[0].lockedPrice.toNumber()) / 10000)
+                        }
                       </Table.Td>
-                      <Table.Td>{order.account.accountNum}</Table.Td>
+                      <Table.Td>
+                        ${ bids ?
+                          (
+                            (order.account.position.bidsBaseLots.toNumber()
+                            * order.account.openOrders[0].lockedPrice.toNumber()) / 10000
+                          )
+                          :
+                          (
+                            (order.account.position.asksBaseLots.toNumber()
+                            * order.account.openOrders[0].lockedPrice.toNumber()) / 10000
+                          )
+                        }
+                      </Table.Td>
                       <Table.Td>
                         <ActionIcon
                           variant="subtle"
@@ -488,7 +511,39 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                           <IconTrash />
                         </ActionIcon>
                       </Table.Td>
-                    </Table.Tr>
+                     </Table.Tr>)
+                    : (
+                      <Table.Tr key={order.publicKey.toString()}>
+                       <Table.Td>
+                         <a href={`https://solana.fm/accounts/${order.publicKey.toString()}`} target="_blank" rel="noreferrer">
+                           {order.account.openOrders[0].clientId.toString()}
+                         </a>
+                       </Table.Td>
+                       <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
+                         {pass ? 'PASS' : 'FAIL'}
+                       </Table.Td>
+                       <Table.Td c={bids ? theme.colors.green[9] : theme.colors.red[9]}>
+                         {bids ? 'BID' : 'ASK'}
+                       </Table.Td>
+                       <Table.Td>
+                        UNKNOWN
+                       </Table.Td>
+                       <Table.Td>
+                        UNKNOWN
+                       </Table.Td>
+                       <Table.Td>
+                        UNKNOWN
+                       </Table.Td>
+                       <Table.Td>
+                         <ActionIcon
+                           variant="subtle"
+                           loading={isCanceling}
+                           onClick={() => handleCancel(order)}
+                         >
+                           <IconTrash />
+                         </ActionIcon>
+                       </Table.Td>
+                      </Table.Tr>)
                   );
                 })}
               </Table.Tbody>
