@@ -9,13 +9,14 @@ import {
 } from '@mantine/core';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { BN } from '@coral-xyz/anchor';
-import { IconRefresh, IconTrash, Icon3dRotate } from '@tabler/icons-react';
+import { IconRefresh, IconTrash, Icon3dRotate, IconAssemblyOff } from '@tabler/icons-react';
 import numeral from 'numeral';
 import { useExplorerConfiguration } from '@/hooks/useExplorerConfiguration';
 import { OpenOrdersAccountWithKey, ProposalAccountWithKey, Markets } from '@/lib/types';
 import { useProposal } from '@/hooks/useProposal';
 import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
 import { useTransactionSender } from '@/hooks/useTransactionSender';
+import { useWeb3 } from '@/hooks/useWeb3';
 import { NUMERAL_FORMAT } from '@/lib/constants';
 
 export function ProposalOrdersCard(
@@ -34,9 +35,24 @@ export function ProposalOrdersCard(
   });
   const { cancelOrderTransactions, settleFundsTransactions } = useOpenbookTwap();
   const { generateExplorerLink } = useExplorerConfiguration();
+  const { closeOrderAccount } = useWeb3();
 
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
   const [isSettling, setIsSettling] = useState<boolean>(false);
+
+  const filterEmpyOrders = (): OpenOrdersAccountWithKey[] => orders.filter((order) => {
+      if (order.account.openOrders[0].isFree === 1) {
+        return order;
+      }
+      return null;
+  });
+
+  const handleCloseAccount = useCallback(async (order: OpenOrdersAccountWithKey) => {
+    if (!proposal || !markets) return;
+    return order;
+    // TODO: Handle settle funds first.
+    // TODO: Check if account exists, if not create one.
+  }, [proposal, closeOrderAccount, sender]);
 
   const handleCancel = useCallback(
     async (order: OpenOrdersAccountWithKey) => {
@@ -93,7 +109,7 @@ export function ProposalOrdersCard(
     <Stack>
       <Group justify="space-between">
         <Text fw="bolder" size="xl">
-          Orders
+          Open Orders
         </Text>
         <ActionIcon variant="subtle" onClick={() => fetchOpenOrders()}>
           <IconRefresh />
@@ -112,16 +128,13 @@ export function ProposalOrdersCard(
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {orders.map((order) => {
+          { orders.map((order) => {
             const pass = order.account.market.equals(proposal.account.openbookPassMarket);
             const bids = order.account.position.bidsBaseLots.gt(
               order.account.position.asksBaseLots,
             );
-            return (
-              (
-                (order.account.openOrders[0].isFree === 0)
-              ) ? (
-                <Table.Tr key={order.publicKey.toString()}>
+            return ((order.account.openOrders[0].isFree === 0) ? (
+              <Table.Tr key={order.publicKey.toString()}>
                 <Table.Td>
                   <a href={generateExplorerLink(order.publicKey.toString(), 'account')} target="_blank" rel="noreferrer">
                     {order.account.accountNum}
@@ -167,41 +180,66 @@ export function ProposalOrdersCard(
                     <IconTrash />
                   </ActionIcon>
                 </Table.Td>
-                </Table.Tr>)
-              : (
-                <Table.Tr key={order.publicKey.toString()}>
-                  <Table.Td>
-                    <a href={generateExplorerLink(order.publicKey.toString(), 'account')} target="_blank" rel="noreferrer">
-                      {order.account.accountNum}
-                    </a>
-                  </Table.Td>
-                  <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
-                    {pass ? 'PASS' : 'FAIL'}
-                  </Table.Td>
-                  <Table.Td c={bids ? theme.colors.green[9] : theme.colors.red[9]}>
-                    {bids ? 'BID' : 'ASK'}
-                  </Table.Td>
-                  <Table.Td>
-                  UNKNOWN
-                  </Table.Td>
-                  <Table.Td>
-                  UNKNOWN
-                  </Table.Td>
-                  <Table.Td>
-                  UNKNOWN
-                  </Table.Td>
-                  <Table.Td>
-                    <ActionIcon
-                      variant="subtle"
-                      loading={isSettling}
-                      onClick={() => handleSettleFunds(order, pass)}
-                    >
-                      <Icon3dRotate />
-                    </ActionIcon>
-                  </Table.Td>
-                </Table.Tr>)
-            );
+              </Table.Tr>
+            ) : null);
           })}
+        </Table.Tbody>
+      </Table>
+      <Group justify="space-between">
+        <Text fw="bolder" size="xl">
+          Completed Orders
+        </Text>
+      </Group>
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Order ID</Table.Th>
+            <Table.Th>Market</Table.Th>
+            <Table.Th>Side</Table.Th>
+            <Table.Th>Redeem</Table.Th>
+            <Table.Th>Close Account</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+        { filterEmpyOrders().map((order) => {
+          const pass = order.account.market.equals(proposal.account.openbookPassMarket);
+          const bids = order.account.position.bidsBaseLots.gt(
+            order.account.position.asksBaseLots,
+          );
+          return ((order.account.openOrders[0].isFree === 1) ? (
+            <Table.Tr key={order.publicKey.toString()}>
+              <Table.Td>
+                <a href={generateExplorerLink(order.publicKey.toString(), 'account')} target="_blank" rel="noreferrer">
+                  {order.account.accountNum}
+                </a>
+              </Table.Td>
+              <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
+                {pass ? 'PASS' : 'FAIL'}
+              </Table.Td>
+              <Table.Td c={bids ? theme.colors.green[9] : theme.colors.red[9]}>
+                {bids ? 'BID' : 'ASK'}
+              </Table.Td>
+              <Table.Td>
+                <ActionIcon
+                  variant="subtle"
+                  loading={isSettling}
+                  onClick={() => handleSettleFunds(order, pass)}
+                >
+                  <Icon3dRotate />
+                </ActionIcon>
+              </Table.Td>
+              <Table.Td>
+                <ActionIcon
+                  variant="subtle"
+                  loading={isSettling}
+                  onClick={() => handleCloseAccount(order)}
+                >
+                  <IconAssemblyOff />
+                </ActionIcon>
+              </Table.Td>
+            </Table.Tr>
+          ) : null);
+        })}
         </Table.Tbody>
       </Table>
     </Stack>
