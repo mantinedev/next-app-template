@@ -124,6 +124,7 @@ export function useOpenbookTwap() {
       if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
         return;
       }
+      // pass the correct market from TWP get the market of that market.
       let accounts: PublicKey[] = new Array<PublicKey>();
       const eventHeap = await openbook.account.eventHeap.fetch(market.publicKey);
       if (eventHeap != null) {
@@ -160,7 +161,8 @@ export function useOpenbookTwap() {
       const crankIx = await openbook.methods
         .consumeEvents(new BN(7))
         .accounts({
-          consumeEventsAdmin: wallet.publicKey,
+          consumeEventsAdmin: openbook.programId,
+          // TODO: Review the market...
           market: market.publicKey,
           eventHeap: market.account.eventHeap,
         })
@@ -181,7 +183,7 @@ export function useOpenbookTwap() {
         vtx as any,
       )) as unknown as VersionedTransaction;
       const signature = await provider.connection.sendRawTransaction(vtx.serialize(), {
-        skipPreflight: true, // mergedOpts.skipPreflight,
+        skipPreflight: true,
       });
       return signature;
     }, [wallet, openbook, provider]
