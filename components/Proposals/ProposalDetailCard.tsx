@@ -1,18 +1,22 @@
 import { useCallback, useState } from 'react';
-import { Button, Fieldset, Group, Loader, Stack, Text, TextInput } from '@mantine/core';
+import { ActionIcon, Button, Fieldset, Group, Loader, Stack, Text, TextInput } from '@mantine/core';
 import Link from 'next/link';
-import { IconExternalLink } from '@tabler/icons-react';
+import { IconExternalLink, Icon12Hours } from '@tabler/icons-react';
 import { useProposal } from '@/hooks/useProposal';
 import { useTokens } from '@/hooks/useTokens';
 import { useTokenAmount } from '@/hooks/useTokenAmount';
 // import { TWAPOracle, LeafNode } from '@/lib/types';
 import { ProposalOrdersCard } from './ProposalOrdersCard';
 import { ConditionalMarketCard } from '../Markets/ConditionalMarketCard';
+import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
   const { proposal, markets, orders, mintTokens, placeOrder, loading } = useProposal({
     fromNumber: proposalNumber,
   });
+  const { crankMarketTransaction } = useOpenbookTwap();
+  const [isCrankingFail, setIsCrankingFail] = useState<boolean>(false);
+  const [isCrankingPass, setIsCrankingPass] = useState<boolean>(false);
   const [mintBaseAmount, setMintBaseAmount] = useState<number>();
   const [mintQuoteAmount, setMintQuoteAmount] = useState<number>();
   const { amount: baseAmount } = useTokenAmount(markets?.baseVault.underlyingTokenMint);
@@ -53,6 +57,33 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   // const passTwap = markets ? calculateTWAP(markets.passTwap.twapOracle) : null;
   // const failTwap = markets ? calculateTWAP(markets.failTwap.twapOracle) : null;
 
+  const handleCrank = useCallback(
+    async (marketType: string) => {
+      if (!proposal || !markets) return;
+      let marketAccounts = { publicKey: markets.pass.eventHeap, account: markets.pass };
+      if (marketType === 'fail') {
+        marketAccounts = { publicKey: markets.fail.eventHeap, account: markets.fail };
+      }
+      try {
+        if (marketType === 'fail') {
+          setIsCrankingFail(true);
+        } else {
+          setIsCrankingPass(true);
+        }
+        const signature = await crankMarketTransaction(marketAccounts);
+        console.log(signature);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (marketType === 'fail') {
+          setIsCrankingFail(false);
+        } else {
+          setIsCrankingPass(false);
+        }
+      }
+    }, [markets, crankMarketTransaction, proposal]
+  );
+
   return !proposal || !markets ? (
     <Group justify="center">
       <Loader />
@@ -71,7 +102,21 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
       <Stack>
         {markets ? (
           <Group gap="md" justify="space-around" p="sm">
+            <ActionIcon
+              variant="subtle"
+              loading={isCrankingPass}
+              onClick={() => handleCrank('pass')}
+            >
+              <Icon12Hours />
+            </ActionIcon>
             <ConditionalMarketCard isPassMarket markets={markets} placeOrder={placeOrder} />
+            <ActionIcon
+              variant="subtle"
+              loading={isCrankingFail}
+              onClick={() => handleCrank('fail')}
+            >
+              <Icon12Hours />
+            </ActionIcon>
             <ConditionalMarketCard isPassMarket={false} markets={markets} placeOrder={placeOrder} />
           </Group>
         ) : null}

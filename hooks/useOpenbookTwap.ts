@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { AccountMeta, PublicKey, Transaction, TransactionInstruction, VersionedTransaction, MessageV0 } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
@@ -8,7 +8,7 @@ import { SelfTradeBehavior, OrderType, Side } from '@openbook-dex/openbook-v2/di
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
 import { OpenbookTwap } from '@/lib/idl/openbook_twap';
 import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '@/lib/constants';
-import { MarketAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
+import { FillEvent, MarketAccountWithKey, OutEvent, ProposalAccountWithKey } from '@/lib/types';
 import { shortKey } from '@/lib/utils';
 import { useProvider } from '@/hooks/useProvider';
 import {
@@ -119,6 +119,74 @@ export function useOpenbookTwap() {
     [wallet, openbookTwap],
   );
 
+  const crankMarketTransaction = useCallback(
+    async (market: MarketAccountWithKey) => {
+      if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
+        return;
+      }
+      let accounts: PublicKey[] = new Array<PublicKey>();
+      const eventHeap = await openbook.account.eventHeap.fetch(market.publicKey);
+      if (eventHeap != null) {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const node of eventHeap.nodes) {
+          if (node.event.eventType === 0) {
+            const fillEvent: FillEvent = openbook.coder.types.decode(
+              'FillEvent',
+              Buffer.from([0, ...node.event.padding]),
+            );
+            accounts = accounts
+              .filter((a) => a !== fillEvent.maker)
+              .concat([fillEvent.maker]);
+          } else {
+            const outEvent: OutEvent = openbook.coder.types.decode(
+              'OutEvent',
+              Buffer.from([0, ...node.event.padding]),
+            );
+            accounts = accounts
+              .filter((a) => a !== outEvent.owner)
+              .concat([outEvent.owner]);
+          }
+          // Tx would be too big, do not add more accounts
+          if (accounts.length > 19) {
+            break;
+          }
+        }
+      }
+      const accountsMeta: AccountMeta[] = accounts.map((remaining) => ({
+        pubkey: remaining,
+        isSigner: false,
+        isWritable: true,
+      }));
+      const crankIx = await openbook.methods
+        .consumeEvents(new BN(7))
+        .accounts({
+          consumeEventsAdmin: wallet.publicKey,
+          market: market.publicKey,
+          eventHeap: market.account.eventHeap,
+        })
+        .remainingAccounts(accountsMeta)
+        .instruction();
+
+      const latestBlockhash = await provider.connection.getLatestBlockhash();
+
+      const message = MessageV0.compile({
+        payerKey: provider.wallet.publicKey,
+        instructions: [crankIx],
+        recentBlockhash: latestBlockhash.blockhash,
+        addressLookupTableAccounts: undefined,
+      });
+
+      let vtx = new VersionedTransaction(message);
+      vtx = (await wallet.signTransaction(
+        vtx as any,
+      )) as unknown as VersionedTransaction;
+      const signature = await provider.connection.sendRawTransaction(vtx.serialize(), {
+        skipPreflight: true, // mergedOpts.skipPreflight,
+      });
+      return signature;
+    }, [wallet, openbook, provider]
+  );
+
   const settleFundsTransactions = useCallback(
     async (
       orderId: BN,
@@ -212,6 +280,7 @@ export function useOpenbookTwap() {
     placeOrderTransactions,
     cancelOrderTransactions,
     settleFundsTransactions,
+    crankMarketTransaction,
     program: openbookTwap,
   };
 }
