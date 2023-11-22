@@ -23,9 +23,9 @@ export function useNetworkConfiguration() {
   const endpoint = useMemo(() => {
     switch (network) {
       case Networks.Mainnet:
-        return 'https://sudden-jocelyn-fast-mainnet.helius-rpc.com/';
+        return 'https://mainnet.helius-rpc.com/?api-key=3f6d553e-de08-4fb9-9212-5d87bbfd1328';
       case Networks.Devnet:
-        return 'https://occupational-rochell-fast-devnet.helius-rpc.com/';
+        return 'https://devnet.helius-rpc.com/?api-key=3f6d553e-de08-4fb9-9212-5d87bbfd1328';
       case Networks.Localnet:
         return 'http://127.0.0.1:8899';
       case Networks.Custom:
