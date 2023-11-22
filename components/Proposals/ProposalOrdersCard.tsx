@@ -4,6 +4,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { BN } from '@coral-xyz/anchor';
 import { IconRefresh, IconTrash, Icon3dRotate, IconAssemblyOff } from '@tabler/icons-react';
 import numeral from 'numeral';
+import { useTokens } from '@/hooks/useTokens';
 import { useExplorerConfiguration } from '@/hooks/useExplorerConfiguration';
 import { OpenOrdersAccountWithKey, ProposalAccountWithKey, Markets } from '@/lib/types';
 import { useProposal } from '@/hooks/useProposal';
@@ -25,6 +26,7 @@ export function ProposalOrdersCard({
 
   const sender = useTransactionSender();
   const wallet = useWallet();
+  const { tokens } = useTokens();
   const { fetchOpenOrders } = useProposal({
     fromNumber: proposal.account.number,
   });
@@ -268,6 +270,7 @@ export function ProposalOrdersCard({
             <Table.Th>Order ID</Table.Th>
             <Table.Th>Market</Table.Th>
             <Table.Th>Side</Table.Th>
+            <Table.Th>Amount</Table.Th>
             <Table.Th>Settle</Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -294,6 +297,11 @@ export function ProposalOrdersCard({
                   {isBidOrAsk(completedOrder) ? 'BID' : 'ASK'}
                 </Table.Td>
                 <Table.Td>
+                  {isBidOrAsk(completedOrder)
+                  ? completedOrder.account.position.baseFreeNative.toNumber()
+                  : `${(completedOrder.account.position.quoteFreeNative.toNumber() / 1000000)} - ${isPassOrFail(completedOrder) ? 'p' : 'f'}${tokens?.usdc?.symbol}`}
+                </Table.Td>
+                <Table.Td>
                   <ActionIcon
                     variant="subtle"
                     loading={isSettling}
@@ -317,6 +325,8 @@ export function ProposalOrdersCard({
             <Table.Th>Order ID</Table.Th>
             <Table.Th>Market</Table.Th>
             <Table.Th>Side</Table.Th>
+            <Table.Th>Amount{tokens?.meta?.symbol}</Table.Th>
+            <Table.Th>Amount {tokens?.usdc?.symbol}</Table.Th>
             <Table.Th>Settle</Table.Th>
             <Table.Th>Close Account</Table.Th>
           </Table.Tr>
@@ -338,6 +348,12 @@ export function ProposalOrdersCard({
                 </Table.Td>
                 <Table.Td c={isBidOrAsk(order) ? theme.colors.green[9] : theme.colors.red[9]}>
                   {isBidOrAsk(order) ? 'BID' : 'ASK'}
+                </Table.Td>
+                <Table.Td>
+                  {`${order.account.position.baseFreeNative.toNumber() / 1000000000}${isPassOrFail(order) ? 'p' : 'f'}`}
+                </Table.Td>
+                <Table.Td>
+                  {`${(order.account.position.quoteFreeNative.toNumber() / 1000000)}${isPassOrFail(order) ? 'p' : 'f'}`}
                 </Table.Td>
                 <Table.Td>
                   <ActionIcon
