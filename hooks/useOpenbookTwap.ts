@@ -120,16 +120,15 @@ export function useOpenbookTwap() {
   );
 
   const crankMarketTransaction = useCallback(
-    async (market: MarketAccountWithKey) => {
+    async (market: MarketAccountWithKey, eventHeap: PublicKey) => {
       if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
         return;
       }
-      // pass the correct market from TWP get the market of that market.
       let accounts: PublicKey[] = new Array<PublicKey>();
-      const eventHeap = await openbook.account.eventHeap.fetch(market.publicKey);
-      if (eventHeap != null) {
+      const _eventHeap = await openbook.account.eventHeap.fetch(eventHeap);
+      if (_eventHeap != null) {
         // eslint-disable-next-line no-restricted-syntax
-        for (const node of eventHeap.nodes) {
+        for (const node of _eventHeap.nodes) {
           if (node.event.eventType === 0) {
             const fillEvent: FillEvent = openbook.coder.types.decode(
               'FillEvent',
@@ -148,7 +147,7 @@ export function useOpenbookTwap() {
               .concat([outEvent.owner]);
           }
           // Tx would be too big, do not add more accounts
-          if (accounts.length > 19) {
+          if (accounts.length > 20) {
             break;
           }
         }
@@ -159,10 +158,9 @@ export function useOpenbookTwap() {
         isWritable: true,
       }));
       const crankIx = await openbook.methods
-        .consumeEvents(new BN(7))
+        .consumeEvents(new BN(accounts.length))
         .accounts({
           consumeEventsAdmin: openbook.programId,
-          // TODO: Review the market...
           market: market.publicKey,
           eventHeap: market.account.eventHeap,
         })
@@ -179,6 +177,8 @@ export function useOpenbookTwap() {
       });
 
       let vtx = new VersionedTransaction(message);
+      // We check above for status
+      // @ts-ignore
       vtx = (await wallet.signTransaction(
         vtx as any,
       )) as unknown as VersionedTransaction;

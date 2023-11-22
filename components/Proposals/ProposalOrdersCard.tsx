@@ -60,15 +60,19 @@ export function ProposalOrdersCard({
           );
         let _order = null;
         if (failAsksFilter.length > 0) {
+          // eslint-disable-next-line prefer-destructuring
           _order = failAsksFilter[0];
         }
         if (failBidsFilter.length > 0) {
+          // eslint-disable-next-line prefer-destructuring
           _order = failBidsFilter[0];
         }
         if (passAsksFilter.length > 0) {
+          // eslint-disable-next-line prefer-destructuring
           _order = passAsksFilter[0];
         }
         if (passBidsFilter.length > 0) {
+          // eslint-disable-next-line prefer-destructuring
           _order = passBidsFilter[0];
         }
         if (_order !== null) {
@@ -76,6 +80,7 @@ export function ProposalOrdersCard({
         }
         return null;
       }
+      return null;
     });
 
   const filterCompletedOrders = (): OpenOrdersAccountWithKey[] | undefined => {

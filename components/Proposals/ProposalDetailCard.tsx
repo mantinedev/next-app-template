@@ -9,6 +9,7 @@ import { useTokenAmount } from '@/hooks/useTokenAmount';
 import { ProposalOrdersCard } from './ProposalOrdersCard';
 import { ConditionalMarketCard } from '../Markets/ConditionalMarketCard';
 import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
+import { MarketAccountWithKey } from '@/lib/types';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
   const { proposal, markets, orders, mintTokens, placeOrder, loading } = useProposal({
@@ -60,9 +61,14 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   const handleCrank = useCallback(
     async (marketType: string) => {
       if (!proposal || !markets) return;
-      let marketAccounts = { publicKey: markets.pass.eventHeap, account: markets.pass };
+      let marketAccounts: MarketAccountWithKey = {
+        publicKey: markets.passTwap.market,
+        account: markets.pass,
+      };
+      let { eventHeap } = markets.pass;
       if (marketType === 'fail') {
-        marketAccounts = { publicKey: markets.fail.eventHeap, account: markets.fail };
+        marketAccounts = { publicKey: markets.failTwap.market, account: markets.fail };
+        eventHeap = markets.fail.eventHeap;
       }
       try {
         if (marketType === 'fail') {
@@ -70,7 +76,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
         } else {
           setIsCrankingPass(true);
         }
-        const signature = await crankMarketTransaction(marketAccounts);
+        const signature = await crankMarketTransaction(marketAccounts, eventHeap);
         console.log(signature);
       } catch (err) {
         console.error(err);
