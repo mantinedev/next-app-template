@@ -22,7 +22,9 @@ export function useTokenAmount(mint?: PublicKey, owner?: PublicKey) {
       try {
         setAmount((await connection.getTokenAccountBalance(account)).value);
       } catch (err) {
-        console.error(`Error with this account fetch ${account.toString()}, please review issue and solve.`);
+        console.error(
+          `Error with this account fetch ${account.toString()}, please review issue and solve.`,
+        );
         setAmount(defaultAmount);
       }
     }

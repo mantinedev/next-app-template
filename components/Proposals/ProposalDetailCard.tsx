@@ -1,26 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
-import {
-  Button,
-  Fieldset,
-  Grid,
-  GridCol,
-  Group,
-  Loader,
-  Progress,
-  SegmentedControl,
-  Stack,
-  Text,
-  TextInput,
-} from '@mantine/core';
+import { useCallback, useState } from 'react';
+import { Button, Fieldset, Group, Loader, Stack, Text, TextInput } from '@mantine/core';
 import Link from 'next/link';
 import { IconExternalLink } from '@tabler/icons-react';
-import numeral from 'numeral';
 import { useProposal } from '@/hooks/useProposal';
 import { useTokens } from '@/hooks/useTokens';
 import { useTokenAmount } from '@/hooks/useTokenAmount';
-import { TWAPOracle, LeafNode } from '@/lib/types';
-import { NUMERAL_FORMAT } from '@/lib/constants';
+// import { TWAPOracle, LeafNode } from '@/lib/types';
 import { ProposalOrdersCard } from './ProposalOrdersCard';
+import { ConditionalMarketCard } from '../Markets/ConditionalMarketCard';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
   const { proposal, markets, orders, mintTokens, placeOrder, loading } = useProposal({
@@ -43,35 +30,6 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     markets?.quoteVault.conditionalOnRevertTokenMint,
   );
   const { tokens } = useTokens();
-  const [passAmount, setPassAmount] = useState<number>(0);
-  const [failAmount, setFailAmount] = useState<number>(0);
-  const [passPrice, setPassPrice] = useState<number>(0);
-  const [failPrice, setFailPrice] = useState<number>(0);
-  const [orderType, setOrderType] = useState<string>('Limit');
-
-  const orderbook = useMemo(() => {
-    if (!markets) return;
-
-    const getSide = (side: LeafNode[], bids?: boolean) => {
-      if (side.length === 0) {
-        return null;
-      }
-      const parsed = side.map((e) => ({
-        price: e.key.shrn(64).toNumber() * 0.0001,
-        size: e.quantity.toNumber(),
-      }));
-      const total = parsed.reduce((a, b) => ({
-        price: a.price + b.price,
-        size: a.size + b.size,
-      }));
-      return { parsed: bids ? parsed.toReversed() : parsed, total };
-    };
-
-    return {
-      pass: { asks: getSide(markets.passAsks), bids: getSide(markets.passBids, true) },
-      fail: { asks: getSide(markets.failAsks), bids: getSide(markets.failBids, true) },
-    };
-  }, [markets]);
 
   const handleMint = useCallback(
     async (fromBase?: boolean) => {
@@ -86,14 +44,14 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     [mintTokens, mintBaseAmount, mintQuoteAmount],
   );
 
-  const calculateTWAP = (twapOracle: TWAPOracle) => {
-    const slotsPassed = twapOracle.lastUpdatedSlot.sub(twapOracle.initialSlot);
-    const twapValue = twapOracle.observationAggregator.div(slotsPassed);
-    return numeral(twapValue.toString()).divide(10_000).format('0.0000a');
-  };
+  // const calculateTWAP = (twapOracle: TWAPOracle) => {
+  //   const slotsPassed = twapOracle.lastUpdatedSlot.sub(twapOracle.initialSlot);
+  //   const twapValue = twapOracle.observationAggregator.div(slotsPassed);
+  //   return numeral(twapValue.toString()).divide(10_000).format('0.0000a');
+  // };
 
-  const passTwap = markets ? calculateTWAP(markets.passTwap.twapOracle) : null;
-  const failTwap = markets ? calculateTWAP(markets.failTwap.twapOracle) : null;
+  // const passTwap = markets ? calculateTWAP(markets.passTwap.twapOracle) : null;
+  // const failTwap = markets ? calculateTWAP(markets.failTwap.twapOracle) : null;
 
   return !proposal || !markets ? (
     <Group justify="center">
@@ -111,168 +69,12 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
         </Group>
       </Link>
       <Stack>
-        <Group gap="md" justify="space-around" p="sm">
-          <Fieldset>
-            <Stack gap="sm">
-              <Text fw="bold" size="lg">
-                Pass market
-              </Text>
-              <Stack>
-                <Group>
-                  <Text>
-                    Best Bid:{' '}
-                    {numeral(markets.passPrice.bid.toString())
-                      // .divide(10 ** (tokens?.usdc?.decimals || 0))
-                      .format('0.00a')}
-                  </Text>
-                  <Text>
-                    Best Ask:{' '}
-                    {numeral(markets.passPrice.ask.toString())
-                      // .divide(10 ** (tokens?.meta?.decimals || 0))
-                      .format('0.00a')}
-                  </Text>
-                </Group>
-                <Group>
-                  <Text>TWAP: {passTwap}</Text>
-                </Group>
-              </Stack>
-              <SegmentedControl
-                data={['Limit', 'Market']}
-                value={orderType}
-                onChange={(e) => setOrderType(e)}
-                fullWidth
-              />
-              <TextInput
-                type="number"
-                label="Bid price"
-                placeholder="Enter price..."
-                onChange={(e) => setPassPrice(Number(e.target.value))}
-              />
-              <TextInput
-                type="number"
-                label="Bid amount"
-                placeholder="Enter amount..."
-                onChange={(e) => setPassAmount(Number(e.target.value))}
-              />
-              <Grid>
-                <GridCol span={6}>
-                  <Button
-                    color="green"
-                    onClick={() =>
-                      placeOrder(passAmount, passPrice, orderType === 'Limit', false, true)
-                    }
-                    loading={loading}
-                    disabled={!passAmount || !passPrice}
-                    fullWidth
-                  >
-                    Bid
-                  </Button>
-                </GridCol>
-                <GridCol span={6}>
-                  <Button
-                    color="red"
-                    onClick={() =>
-                      placeOrder(passAmount, passPrice, orderType === 'Limit', true, true)
-                    }
-                    loading={loading}
-                    disabled={!passAmount || !passPrice}
-                    fullWidth
-                  >
-                    Ask
-                  </Button>
-                </GridCol>
-              </Grid>
-              <Stack gap="0">
-                <Text fw="lighter" size="sm" c="green">
-                  Balance: {basePassAmount?.uiAmountString || 0} $p{tokens?.meta?.symbol}
-                </Text>
-                <Text fw="lighter" size="sm" c="green">
-                  Balance: {quotePassAmount?.uiAmountString || 0} $p{tokens?.usdc?.symbol}
-                </Text>
-              </Stack>
-            </Stack>
-          </Fieldset>
-          <Fieldset>
-            <Stack gap="sm">
-              <Text fw="bold" size="lg">
-                Fail market
-              </Text>
-              <Stack>
-                <Group>
-                  <Text>
-                    Best Bid:{' '}
-                    {numeral(markets.failPrice.bid.toString())
-                      // .divide(10 ** (tokens?.usdc?.decimals || 0))
-                      .format('0.00a')}
-                  </Text>
-                  <Text>
-                    Best Ask:{' '}
-                    {numeral(markets.failPrice.ask.toString())
-                      // .divide(10 ** (tokens?.meta?.decimals || 0))
-                      .format('0.00a')}
-                  </Text>
-                </Group>
-                <Group>
-                  <Text>TWAP: {failTwap}</Text>
-                </Group>
-              </Stack>
-              <SegmentedControl
-                data={['Limit', 'Market']}
-                value={orderType}
-                onChange={(e) => setOrderType(e)}
-                fullWidth
-              />
-              <TextInput
-                label="Bid price"
-                placeholder="Enter price..."
-                type="number"
-                onChange={(e) => setFailPrice(Number(e.target.value))}
-              />
-              <TextInput
-                label="Bid amount"
-                placeholder="Enter amount..."
-                type="number"
-                onChange={(e) => setFailAmount(Number(e.target.value))}
-              />
-              <Grid>
-                <GridCol span={6}>
-                  <Button
-                    fullWidth
-                    color="green"
-                    onClick={() =>
-                      placeOrder(failAmount, failPrice, orderType === 'Limit', false, false)
-                    }
-                    loading={loading}
-                    disabled={!failAmount || !failPrice}
-                  >
-                    Bid
-                  </Button>
-                </GridCol>
-                <GridCol span={6}>
-                  <Button
-                    fullWidth
-                    color="red"
-                    onClick={() =>
-                      placeOrder(failAmount, failPrice, orderType === 'Limit', true, false)
-                    }
-                    loading={loading}
-                    disabled={!failAmount || !failPrice}
-                  >
-                    Ask
-                  </Button>
-                </GridCol>
-              </Grid>
-              <Stack gap="0">
-                <Text fw="lighter" size="sm" c="red">
-                  Balance: {baseFailAmount?.uiAmountString || 0} $f{tokens?.meta?.symbol}
-                </Text>
-                <Text fw="lighter" size="sm" c="red">
-                  Balance: {quoteFailAmount?.uiAmountString || 0} $f{tokens?.usdc?.symbol}
-                </Text>
-              </Stack>
-            </Stack>
-          </Fieldset>
-        </Group>
+        {markets ? (
+          <Group gap="md" justify="space-around" p="sm">
+            <ConditionalMarketCard isPassMarket markets={markets} placeOrder={placeOrder} />
+            <ConditionalMarketCard isPassMarket={false} markets={markets} placeOrder={placeOrder} />
+          </Group>
+        ) : null}
         <Group justify="space-around">
           <Fieldset legend={`Mint conditional $${tokens?.meta?.symbol}`}>
             <TextInput
@@ -323,110 +125,8 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
             </Button>
           </Fieldset>
         </Group>
-        {orderbook ? (
-          <Group justify="space-around" align="start">
-            <Stack p={0} m={0} gap={0}>
-              <Text fw="bolder" size="lg">
-                Pass market orderbook
-              </Text>
-              <Group gap="0">
-                {orderbook.pass.asks?.parsed.map((ask, index) => (
-                  <Grid key={index} w="100%" gutter={0} mih="md">
-                    <Grid.Col span={3} />
-                    <Grid.Col span={1.5} h="sm" p="0">
-                      <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span={3}>
-                      <Progress
-                        key={ask.price + ask.size}
-                        value={
-                          orderbook.pass.asks
-                            ? Math.ceil((ask.price / orderbook.pass.asks.total.price) * 100)
-                            : 0
-                        }
-                        color="red"
-                        w="100%"
-                      />
-                    </Grid.Col>
-                  </Grid>
-                ))}
-                {orderbook.pass.bids?.parsed.map((bid, index) => (
-                  <Grid key={index} w="100%" gutter={0} mih="md">
-                    <Grid.Col span={3}>
-                      <Progress
-                        key={bid.price + bid.size}
-                        value={
-                          orderbook.pass.bids
-                            ? Math.ceil((bid.price / orderbook.pass.bids.total.price) * 100)
-                            : 0
-                        }
-                        color="green"
-                        w="100%"
-                      />
-                    </Grid.Col>
-                    <Grid.Col span={1.5} h="sm" p="0" ml={2}>
-                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span={3} h="sm" p="0" />
-                  </Grid>
-                ))}
-              </Group>
-            </Stack>
-            <Stack p={0} m={0} gap={0}>
-              <Text fw="bolder" size="lg">
-                Fail market orderbook
-              </Text>
-              <Group gap="0">
-                {orderbook.fail.asks?.parsed.map((ask, index) => (
-                  <Grid key={index} w="100%" gutter={0} mih="md">
-                    <Grid.Col span={3} h="sm" p="0" />
-                    <Grid.Col span={1.5} h="sm" p="0">
-                      <Text size="0.6rem">{numeral(ask.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span={3}>
-                      <Progress
-                        key={ask.price + ask.size}
-                        value={
-                          orderbook.fail.asks
-                            ? Math.ceil((ask.price / orderbook.fail.asks.total.price) * 100)
-                            : 0
-                        }
-                        color="red"
-                        w="100%"
-                      />
-                    </Grid.Col>
-                  </Grid>
-                ))}
-                {orderbook.fail.bids?.parsed.map((bid, index) => (
-                  <Grid key={index} w="100%" gutter={0} mih="md">
-                    <Grid.Col span={3}>
-                      <Progress
-                        key={bid.price + bid.size}
-                        value={
-                          orderbook.fail.bids
-                            ? Math.ceil((bid.price / orderbook.fail.bids.total.price) * 100)
-                            : 0
-                        }
-                        color="green"
-                        w="100%"
-                      />
-                    </Grid.Col>
-                    <Grid.Col span={1.5} h="sm" p="0">
-                      <Text size="0.6rem">{numeral(bid.price).format(NUMERAL_FORMAT)}</Text>
-                    </Grid.Col>
-                    <Grid.Col span={3} h="sm" p="0" />
-                  </Grid>
-                ))}
-              </Group>
-            </Stack>
-          </Group>
-        ) : null}
         {proposal && orders ? (
-          <ProposalOrdersCard
-            markets={markets}
-            proposal={proposal}
-            orders={orders}
-          />
+          <ProposalOrdersCard markets={markets} proposal={proposal} orders={orders} />
         ) : null}
       </Stack>
     </Stack>

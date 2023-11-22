@@ -1,12 +1,5 @@
 import { useCallback, useState } from 'react';
-import {
-  ActionIcon,
-  Group,
-  Stack,
-  Table,
-  Text,
-  useMantineTheme,
-} from '@mantine/core';
+import { ActionIcon, Group, Stack, Table, Text, useMantineTheme } from '@mantine/core';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { BN } from '@coral-xyz/anchor';
 import { IconRefresh, IconTrash, Icon3dRotate, IconAssemblyOff } from '@tabler/icons-react';
@@ -19,13 +12,15 @@ import { useTransactionSender } from '@/hooks/useTransactionSender';
 import { useWeb3 } from '@/hooks/useWeb3';
 import { NUMERAL_FORMAT } from '@/lib/constants';
 
-export function ProposalOrdersCard(
-  { markets, orders, proposal }: {
-    markets: Markets,
-    orders: OpenOrdersAccountWithKey[],
-    proposal: ProposalAccountWithKey
-  }
-) {
+export function ProposalOrdersCard({
+  markets,
+  orders,
+  proposal,
+}: {
+  markets: Markets;
+  orders: OpenOrdersAccountWithKey[];
+  proposal: ProposalAccountWithKey;
+}) {
   const theme = useMantineTheme();
 
   const sender = useTransactionSender();
@@ -136,7 +131,11 @@ export function ProposalOrdersCard(
             return ((order.account.openOrders[0].isFree === 0) ? (
               <Table.Tr key={order.publicKey.toString()}>
                 <Table.Td>
-                  <a href={generateExplorerLink(order.publicKey.toString(), 'account')} target="_blank" rel="noreferrer">
+                  <a
+                    href={generateExplorerLink(order.publicKey.toString(), 'account')}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     {order.account.accountNum}
                   </a>
                 </Table.Td>
@@ -154,22 +153,17 @@ export function ProposalOrdersCard(
                   ).format(NUMERAL_FORMAT)}
                 </Table.Td>
                 <Table.Td>
-                  ${
-                    (parseFloat(order.account.openOrders[0].lockedPrice.toNumber()) / 10000)
-                  }
+                  ${parseFloat(order.account.openOrders[0].lockedPrice.toNumber()) / 10000}
                 </Table.Td>
                 <Table.Td>
-                  ${ bids ?
-                    (
-                      (order.account.position.bidsBaseLots.toNumber()
-                      * order.account.openOrders[0].lockedPrice.toNumber()) / 10000
-                    )
-                    :
-                    (
-                      (order.account.position.asksBaseLots.toNumber()
-                      * order.account.openOrders[0].lockedPrice.toNumber()) / 10000
-                    )
-                  }
+                  $
+                  {bids
+                    ? (order.account.position.bidsBaseLots.toNumber() *
+                        order.account.openOrders[0].lockedPrice.toNumber()) /
+                      10000
+                    : (order.account.position.asksBaseLots.toNumber() *
+                        order.account.openOrders[0].lockedPrice.toNumber()) /
+                      10000}
                 </Table.Td>
                 <Table.Td>
                   <ActionIcon

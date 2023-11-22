@@ -1746,6 +1746,11 @@
     bs58 "^5.0.0"
     uuid "^8.3.2"
 
+"@lab49/react-order-book@^0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@lab49/react-order-book/-/react-order-book-0.1.4.tgz#ed367df36349bfa6000fb8bed83410015d97ef47"
+  integrity sha512-nJP8LYb+ZV4Sh6sG4EIZ02uG+r914cyzwRC/u6GLPZv8R9M+7RYs3o8bmZKnZwOogH/Ca2YOGhYcEywvYlh/AQ==
+
 "@ledgerhq/devices@6.27.1", "@ledgerhq/devices@^6.27.1":
   version "6.27.1"
   resolved "https://registry.yarnpkg.com/@ledgerhq/devices/-/devices-6.27.1.tgz#3b13ab1d1ba8201e9e74a08f390560483978c962"
