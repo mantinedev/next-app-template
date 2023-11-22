@@ -35,19 +35,23 @@ export function ProposalOrdersCard({
   const [isCanceling, setIsCanceling] = useState<boolean>(false);
   const [isSettling, setIsSettling] = useState<boolean>(false);
 
-  const filterEmpyOrders = (): OpenOrdersAccountWithKey[] => orders.filter((order) => {
+  const filterEmpyOrders = (): OpenOrdersAccountWithKey[] =>
+    orders.filter((order) => {
       if (order.account.openOrders[0].isFree === 1) {
         return order;
       }
       return null;
-  });
+    });
 
-  const handleCloseAccount = useCallback(async (order: OpenOrdersAccountWithKey) => {
-    if (!proposal || !markets) return;
-    return order;
-    // TODO: Handle settle funds first.
-    // TODO: Check if account exists, if not create one.
-  }, [proposal, closeOrderAccount, sender]);
+  const handleCloseAccount = useCallback(
+    async (order: OpenOrdersAccountWithKey) => {
+      if (!proposal || !markets) return;
+      return order;
+      // TODO: Handle settle funds first.
+      // TODO: Check if account exists, if not create one.
+    },
+    [proposal, closeOrderAccount, sender],
+  );
 
   const handleCancel = useCallback(
     async (order: OpenOrdersAccountWithKey) => {
@@ -123,12 +127,12 @@ export function ProposalOrdersCard({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          { orders.map((order) => {
+          {orders.map((order) => {
             const pass = order.account.market.equals(proposal.account.openbookPassMarket);
             const bids = order.account.position.bidsBaseLots.gt(
               order.account.position.asksBaseLots,
             );
-            return ((order.account.openOrders[0].isFree === 0) ? (
+            return order.account.openOrders[0].isFree === 0 ? (
               <Table.Tr key={order.publicKey.toString()}>
                 <Table.Td>
                   <a
@@ -175,7 +179,7 @@ export function ProposalOrdersCard({
                   </ActionIcon>
                 </Table.Td>
               </Table.Tr>
-            ) : null);
+            ) : null;
           })}
         </Table.Tbody>
       </Table>
@@ -195,45 +199,49 @@ export function ProposalOrdersCard({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-        { filterEmpyOrders().map((order) => {
-          const pass = order.account.market.equals(proposal.account.openbookPassMarket);
-          const bids = order.account.position.bidsBaseLots.gt(
-            order.account.position.asksBaseLots,
-          );
-          return ((order.account.openOrders[0].isFree === 1) ? (
-            <Table.Tr key={order.publicKey.toString()}>
-              <Table.Td>
-                <a href={generateExplorerLink(order.publicKey.toString(), 'account')} target="_blank" rel="noreferrer">
-                  {order.account.accountNum}
-                </a>
-              </Table.Td>
-              <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
-                {pass ? 'PASS' : 'FAIL'}
-              </Table.Td>
-              <Table.Td c={bids ? theme.colors.green[9] : theme.colors.red[9]}>
-                {bids ? 'BID' : 'ASK'}
-              </Table.Td>
-              <Table.Td>
-                <ActionIcon
-                  variant="subtle"
-                  loading={isSettling}
-                  onClick={() => handleSettleFunds(order, pass)}
-                >
-                  <Icon3dRotate />
-                </ActionIcon>
-              </Table.Td>
-              <Table.Td>
-                <ActionIcon
-                  variant="subtle"
-                  loading={isSettling}
-                  onClick={() => handleCloseAccount(order)}
-                >
-                  <IconAssemblyOff />
-                </ActionIcon>
-              </Table.Td>
-            </Table.Tr>
-          ) : null);
-        })}
+          {filterEmpyOrders().map((order) => {
+            const pass = order.account.market.equals(proposal.account.openbookPassMarket);
+            const bids = order.account.position.bidsBaseLots.gt(
+              order.account.position.asksBaseLots,
+            );
+            return order.account.openOrders[0].isFree === 1 ? (
+              <Table.Tr key={order.publicKey.toString()}>
+                <Table.Td>
+                  <a
+                    href={generateExplorerLink(order.publicKey.toString(), 'account')}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {order.account.accountNum}
+                  </a>
+                </Table.Td>
+                <Table.Td c={pass ? theme.colors.green[9] : theme.colors.red[9]}>
+                  {pass ? 'PASS' : 'FAIL'}
+                </Table.Td>
+                <Table.Td c={bids ? theme.colors.green[9] : theme.colors.red[9]}>
+                  {bids ? 'BID' : 'ASK'}
+                </Table.Td>
+                <Table.Td>
+                  <ActionIcon
+                    variant="subtle"
+                    loading={isSettling}
+                    onClick={() => handleSettleFunds(order, pass)}
+                  >
+                    <Icon3dRotate />
+                  </ActionIcon>
+                </Table.Td>
+                <Table.Td>
+                  <ActionIcon
+                    variant="subtle"
+                    loading={isSettling}
+                    onClick={() => handleCloseAccount(order)}
+                  >
+                    <IconAssemblyOff />
+                  </ActionIcon>
+                </Table.Td>
+              </Table.Tr>
+            ) : null;
+          })}
         </Table.Tbody>
       </Table>
     </Stack>
