@@ -324,7 +324,6 @@ export function ProposalOrdersCard({
           <Table.Tr>
             <Table.Th>Order ID</Table.Th>
             <Table.Th>Market</Table.Th>
-            <Table.Th>Side</Table.Th>
             <Table.Th>Amount{tokens?.meta?.symbol}</Table.Th>
             <Table.Th>Amount {tokens?.usdc?.symbol}</Table.Th>
             <Table.Th>Settle</Table.Th>
@@ -345,9 +344,6 @@ export function ProposalOrdersCard({
                 </Table.Td>
                 <Table.Td c={isPassOrFail(order) ? theme.colors.green[9] : theme.colors.red[9]}>
                   {isPassOrFail(order) ? 'PASS' : 'FAIL'}
-                </Table.Td>
-                <Table.Td c={isBidOrAsk(order) ? theme.colors.green[9] : theme.colors.red[9]}>
-                  {isBidOrAsk(order) ? 'BID' : 'ASK'}
                 </Table.Td>
                 <Table.Td>
                   {`${order.account.position.baseFreeNative.toNumber() / 1000000000}${isPassOrFail(order) ? 'p' : 'f'}`}
