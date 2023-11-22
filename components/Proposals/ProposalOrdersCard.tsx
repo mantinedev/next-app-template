@@ -317,6 +317,7 @@ export function ProposalOrdersCard({
             <Table.Th>Order ID</Table.Th>
             <Table.Th>Market</Table.Th>
             <Table.Th>Side</Table.Th>
+            <Table.Th>Settle</Table.Th>
             <Table.Th>Close Account</Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -337,6 +338,15 @@ export function ProposalOrdersCard({
                 </Table.Td>
                 <Table.Td c={isBidOrAsk(order) ? theme.colors.green[9] : theme.colors.red[9]}>
                   {isBidOrAsk(order) ? 'BID' : 'ASK'}
+                </Table.Td>
+                <Table.Td>
+                  <ActionIcon
+                    variant="subtle"
+                    loading={isSettling}
+                    onClick={() => handleSettleFunds(order, isPassOrFail(order))}
+                  >
+                    <Icon3dRotate />
+                  </ActionIcon>
                 </Table.Td>
                 <Table.Td>
                   <ActionIcon
