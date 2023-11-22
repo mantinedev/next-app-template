@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { AccountMeta, PublicKey, Transaction, TransactionInstruction, VersionedTransaction, MessageV0 } from '@solana/web3.js';
+import { AccountMeta, PublicKey, Transaction, VersionedTransaction, MessageV0 } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
