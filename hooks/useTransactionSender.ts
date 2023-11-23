@@ -25,14 +25,11 @@ export const useTransactionSender = () => {
       // eslint-disable-next-line no-restricted-syntax
       for (const tx of signedTxs) {
         // eslint-disable-next-line no-await-in-loop
-        const txSignature = await connection.sendRawTransaction(
-          tx.serialize(),
-          { skipPreflight: true }
-        );
+        const txSignature = await connection.sendRawTransaction(tx.serialize(), {
+          skipPreflight: true,
+        });
         // eslint-disable-next-line no-await-in-loop
-        await connection.confirmTransaction(
-          txSignature
-        );
+        await connection.confirmTransaction(txSignature);
         signatures.push(txSignature);
       }
       return signatures;

@@ -211,7 +211,7 @@ export function useProposal({
       if (!error) {
         notifications.show({
           title: 'Token Accounts Exist',
-          message: 'You won\'t need to press this button again.',
+          message: "You won't need to press this button again.",
           autoClose: 5000,
         });
         if (fromBase) {
@@ -251,11 +251,13 @@ export function useProposal({
               connection.sendRawTransaction(t.serialize(), { skipPreflight: true }),
             ),
           );
-          results.map((result) => notifications.show({
+          results.map((result) =>
+            notifications.show({
               title: 'Transaction Submitted',
               message: result,
               autoClose: 5000,
-            }));
+            }),
+          );
         } finally {
           setLoading(false);
         }
@@ -307,11 +309,13 @@ export function useProposal({
             connection.sendRawTransaction(t.serialize(), { skipPreflight: true }),
           ),
         );
-        results.map((result) => notifications.show({
-          title: 'Transaction Submitted',
-          message: result,
-          autoClose: 5000,
-        }));
+        results.map((result) =>
+          notifications.show({
+            title: 'Transaction Submitted',
+            message: result,
+            autoClose: 5000,
+          }),
+        );
 
         await fetchMarkets();
       } finally {
@@ -349,21 +353,20 @@ export function useProposal({
         // eslint-disable-next-line no-restricted-syntax
         for (const tx of signedTxs) {
           // eslint-disable-next-line no-await-in-loop
-          const txnSignature = await connection.sendRawTransaction(
-            tx.serialize(),
-            { skipPreflight: true }
-          );
+          const txnSignature = await connection.sendRawTransaction(tx.serialize(), {
+            skipPreflight: true,
+          });
           // eslint-disable-next-line no-await-in-loop
-          await connection.confirmTransaction(
-            txnSignature
-          );
+          await connection.confirmTransaction(txnSignature);
           txSignatures.push(txnSignature);
         }
-        txSignatures?.map((result) => notifications.show({
-          title: 'Transaction Submitted',
-          message: result,
-          autoClose: 5000,
-        }));
+        txSignatures?.map((result) =>
+          notifications.show({
+            title: 'Transaction Submitted',
+            message: result,
+            autoClose: 5000,
+          }),
+        );
         await fetchMarkets();
         await fetchOpenOrders();
       } finally {

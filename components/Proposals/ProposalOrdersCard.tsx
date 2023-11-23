@@ -32,7 +32,8 @@ export function ProposalOrdersCard({
   const { metaDisabled, usdcDisabled, fetchOpenOrders, createTokenAccounts } = useProposal({
     fromNumber: proposal.account.number,
   });
-  const { cancelOrderTransactions, settleFundsTransactions } = useOpenbookTwap();
+  const { cancelOrderTransactions, settleFundsTransactions, closeOpenOrdersAccountTransactions } =
+    useOpenbookTwap();
   const { generateExplorerLink } = useExplorerConfiguration();
   const { closeOrderAccount } = useWeb3();
 
@@ -49,7 +50,7 @@ export function ProposalOrdersCard({
 
   const filterPartiallyFilledOrders = (): OpenOrdersAccountWithKey[] =>
     orders.filter((order) => {
-      if ((order.account.openOrders[0].isFree === 0)) {
+      if (order.account.openOrders[0].isFree === 0) {
         if (order.account.position.baseFreeNative.toNumber() > 0) {
           return order;
         }
@@ -142,9 +143,23 @@ export function ProposalOrdersCard({
   const handleCloseAccount = useCallback(
     async (order: OpenOrdersAccountWithKey) => {
       if (!proposal || !markets) return;
-      return order;
-      // TODO: Handle settle funds first.
-      // TODO: Check if account exists, if not create one.
+
+      const txs = await closeOpenOrdersAccountTransactions(new BN(order.account.accountNum));
+
+      if (!wallet.publicKey || !txs) return;
+
+      try {
+        const txSignatures = await sender.send(txs);
+        txSignatures.map((sig) =>
+          notifications.show({
+            title: 'Transaction Submitted',
+            message: <NotificationLink signature={sig} />,
+            autoClose: 5000,
+          }),
+        );
+      } catch (err) {
+        console.error(err);
+      }
     },
     [proposal, closeOrderAccount, sender],
   );
@@ -165,11 +180,13 @@ export function ProposalOrdersCard({
       try {
         setIsCanceling(true);
         const txSignatures = await sender.send(txs);
-        txSignatures.map((sig) => notifications.show({
+        txSignatures.map((sig) =>
+          notifications.show({
             title: 'Transaction Submitted',
             message: <NotificationLink signature={sig} />,
             autoClose: 5000,
-          }));
+          }),
+        );
         setTimeout(() => fetchOpenOrders(), 3000);
       } catch (err) {
         console.error(err);
@@ -195,11 +212,13 @@ export function ProposalOrdersCard({
       try {
         setIsSettling(true);
         const txSignatures = await sender.send(txs);
-        txSignatures.map((sig) => notifications.show({
+        txSignatures.map((sig) =>
+          notifications.show({
             title: 'Transaction Submitted',
             message: <NotificationLink signature={sig} />,
             autoClose: 5000,
-          }));
+          }),
+        );
         setTimeout(() => fetchOpenOrders(), 3000);
       } catch (err) {
         console.error(err);
@@ -234,53 +253,53 @@ export function ProposalOrdersCard({
         </Table.Thead>
         <Table.Tbody>
           {filterOpenOrders()?.map((order) => (
-              <Table.Tr key={order.publicKey.toString()}>
-                <Table.Td>
-                  <a
-                    href={generateExplorerLink(order.publicKey.toString(), 'account')}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {order.account.accountNum}
-                  </a>
-                </Table.Td>
-                <Table.Td c={isPassOrFail(order) ? theme.colors.green[9] : theme.colors.red[9]}>
-                  {isPassOrFail(order) ? 'PASS' : 'FAIL'}
-                </Table.Td>
-                <Table.Td c={isBidOrAsk(order) ? theme.colors.green[9] : theme.colors.red[9]}>
-                  {isBidOrAsk(order) ? 'BID' : 'ASK'}
-                </Table.Td>
-                <Table.Td>
-                  {numeral(
-                    isBidOrAsk(order)
-                      ? order.account.position.bidsBaseLots.toString()
-                      : order.account.position.asksBaseLots.toString(),
-                  ).format(NUMERAL_FORMAT)}
-                </Table.Td>
-                <Table.Td>
-                  ${parseFloat(order.account.openOrders[0].lockedPrice.toNumber()) / 10000}
-                </Table.Td>
-                <Table.Td>
-                  $
-                  {isBidOrAsk(order)
-                    ? (order.account.position.bidsBaseLots.toNumber() *
-                        order.account.openOrders[0].lockedPrice.toNumber()) /
-                      10000
-                    : (order.account.position.asksBaseLots.toNumber() *
-                        order.account.openOrders[0].lockedPrice.toNumber()) /
-                      10000}
-                </Table.Td>
-                <Table.Td>
-                  <ActionIcon
-                    variant="subtle"
-                    loading={isCanceling}
-                    onClick={() => handleCancel(order)}
-                  >
-                    <IconTrash />
-                  </ActionIcon>
-                </Table.Td>
-              </Table.Tr>
-            ))}
+            <Table.Tr key={order.publicKey.toString()}>
+              <Table.Td>
+                <a
+                  href={generateExplorerLink(order.publicKey.toString(), 'account')}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {order.account.accountNum}
+                </a>
+              </Table.Td>
+              <Table.Td c={isPassOrFail(order) ? theme.colors.green[9] : theme.colors.red[9]}>
+                {isPassOrFail(order) ? 'PASS' : 'FAIL'}
+              </Table.Td>
+              <Table.Td c={isBidOrAsk(order) ? theme.colors.green[9] : theme.colors.red[9]}>
+                {isBidOrAsk(order) ? 'BID' : 'ASK'}
+              </Table.Td>
+              <Table.Td>
+                {numeral(
+                  isBidOrAsk(order)
+                    ? order.account.position.bidsBaseLots.toString()
+                    : order.account.position.asksBaseLots.toString(),
+                ).format(NUMERAL_FORMAT)}
+              </Table.Td>
+              <Table.Td>
+                ${parseFloat(order.account.openOrders[0].lockedPrice.toNumber()) / 10000}
+              </Table.Td>
+              <Table.Td>
+                $
+                {isBidOrAsk(order)
+                  ? (order.account.position.bidsBaseLots.toNumber() *
+                      order.account.openOrders[0].lockedPrice.toNumber()) /
+                    10000
+                  : (order.account.position.asksBaseLots.toNumber() *
+                      order.account.openOrders[0].lockedPrice.toNumber()) /
+                    10000}
+              </Table.Td>
+              <Table.Td>
+                <ActionIcon
+                  variant="subtle"
+                  loading={isCanceling}
+                  onClick={() => handleCancel(order)}
+                >
+                  <IconTrash />
+                </ActionIcon>
+              </Table.Td>
+            </Table.Tr>
+          ))}
         </Table.Tbody>
       </Table>
       <Group justify="space-between">
@@ -288,8 +307,8 @@ export function ProposalOrdersCard({
           Partially Filled Orders
         </Text>
         <Text fw="" size="sm">
-          If you see orders here, you can settle them to redeem the partial fill amount.
-          These exist when there is a balance available within the Open Orders Account.
+          If you see orders here, you can settle them to redeem the partial fill amount. These exist
+          when there is a balance available within the Open Orders Account.
         </Text>
       </Group>
       <Table>
@@ -303,53 +322,56 @@ export function ProposalOrdersCard({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {(filterPartiallyFilledOrders() !== undefined
+          {filterPartiallyFilledOrders() !== undefined &&
           // @ts-ignore
-          && filterPartiallyFilledOrders()?.length > 0) ?
-          filterPartiallyFilledOrders()?.map((order) => (
-            <Table.Tr key={`${order.publicKey.toString()}empty`}>
-              <Table.Td>
-                <a
-                  href={generateExplorerLink(order.publicKey.toString(), 'account')}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {order.account.accountNum}
-                </a>
-              </Table.Td>
-              <Table.Td c={isPassOrFail(order) ? theme.colors.green[9] : theme.colors.red[9]}>
-                {isPassOrFail(order) ? 'PASS' : 'FAIL'}
-              </Table.Td>
-              <Table.Td>
-                {`${order.account.position.baseFreeNative.toNumber() / 1000000000}${isPassOrFail(order) ? 'p' : 'f'}`}
-              </Table.Td>
-              <Table.Td>
-                {`${(order.account.position.quoteFreeNative.toNumber() / 1000000)}${isPassOrFail(order) ? 'p' : 'f'}`}
-              </Table.Td>
-              <Table.Td>
-                <ActionIcon
-                  variant="subtle"
-                  loading={isSettling}
-                  onClick={() => handleSettleFunds(order, isPassOrFail(order))}
-                >
-                  <Icon3dRotate />
-                </ActionIcon>
-              </Table.Td>
-              <Table.Td>
-                <ActionIcon
-                  variant="subtle"
-                  loading={isSettling}
-                  onClick={() => handleCloseAccount(order)}
-                >
-                  <IconAssemblyOff />
-                </ActionIcon>
-              </Table.Td>
-            </Table.Tr>
-          )) : (
+          filterPartiallyFilledOrders()?.length > 0 ? (
+            filterPartiallyFilledOrders()?.map((order) => (
+              <Table.Tr key={`${order.publicKey.toString()}empty`}>
+                <Table.Td>
+                  <a
+                    href={generateExplorerLink(order.publicKey.toString(), 'account')}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {order.account.accountNum}
+                  </a>
+                </Table.Td>
+                <Table.Td c={isPassOrFail(order) ? theme.colors.green[9] : theme.colors.red[9]}>
+                  {isPassOrFail(order) ? 'PASS' : 'FAIL'}
+                </Table.Td>
+                <Table.Td>
+                  {`${order.account.position.baseFreeNative.toNumber() / 1000000000}${
+                    isPassOrFail(order) ? 'p' : 'f'
+                  }`}
+                </Table.Td>
+                <Table.Td>
+                  {`${order.account.position.quoteFreeNative.toNumber() / 1000000}${
+                    isPassOrFail(order) ? 'p' : 'f'
+                  }`}
+                </Table.Td>
+                <Table.Td>
+                  <ActionIcon
+                    variant="subtle"
+                    loading={isSettling}
+                    onClick={() => handleSettleFunds(order, isPassOrFail(order))}
+                  >
+                    <Icon3dRotate />
+                  </ActionIcon>
+                </Table.Td>
+                <Table.Td>
+                  <ActionIcon
+                    variant="subtle"
+                    loading={isSettling}
+                    onClick={() => handleCloseAccount(order)}
+                  >
+                    <IconAssemblyOff />
+                  </ActionIcon>
+                </Table.Td>
+              </Table.Tr>
+            ))
+          ) : (
             <Table.Tr>
-              <Table.Td>
-                No Partially Filled Orders
-              </Table.Td>
+              <Table.Td>No Partially Filled Orders</Table.Td>
             </Table.Tr>
           )}
         </Table.Tbody>
@@ -395,9 +417,12 @@ export function ProposalOrdersCard({
                   {isPassOrFail(completedOrder) ? 'PASS' : 'FAIL'}
                 </Table.Td>
                 <Table.Td>
-
-                  {`${completedOrder.account.position.baseFreeNative.toNumber() / 1000000000}${isPassOrFail(completedOrder) ? 'p' : 'f'}${tokens?.meta?.symbol}`}
-                  {`${(completedOrder.account.position.quoteFreeNative.toNumber() / 1000000)}${isPassOrFail(completedOrder) ? 'p' : 'f'}${tokens?.usdc?.symbol}`}
+                  {`${completedOrder.account.position.baseFreeNative.toNumber() / 1000000000}${
+                    isPassOrFail(completedOrder) ? 'p' : 'f'
+                  }${tokens?.meta?.symbol}`}
+                  {`${completedOrder.account.position.quoteFreeNative.toNumber() / 1000000}${
+                    isPassOrFail(completedOrder) ? 'p' : 'f'
+                  }${tokens?.usdc?.symbol}`}
                 </Table.Td>
                 <Table.Td>
                   <ActionIcon
@@ -441,18 +466,12 @@ export function ProposalOrdersCard({
           accounts.
         </Text>
         <Group>
-        <Button
-          disabled={metaDisabled}
-          onClick={() => createTokenAccounts(true)}
-        >
-          Conditional META
-        </Button>
-        <Button
-          disabled={usdcDisabled}
-          onClick={() => createTokenAccounts(false)}
-        >
-          Conditional USDC
-        </Button>
+          <Button disabled={metaDisabled} onClick={() => createTokenAccounts(true)}>
+            Conditional META
+          </Button>
+          <Button disabled={usdcDisabled} onClick={() => createTokenAccounts(false)}>
+            Conditional USDC
+          </Button>
         </Group>
       </Group>
       <Table>
@@ -502,6 +521,12 @@ export function ProposalOrdersCard({
               </Table.Td>
               <Table.Td>
                 <ActionIcon
+                  disabled={
+                    order.account.position.asksBaseLots > 0 ||
+                    order.account.position.bidsBaseLots > 0 ||
+                    order.account.position.baseFreeNative > 0 ||
+                    order.account.position.quoteFreeNative > 0
+                  }
                   variant="subtle"
                   loading={isSettling}
                   onClick={() => handleCloseAccount(order)}

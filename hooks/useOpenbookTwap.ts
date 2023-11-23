@@ -250,6 +250,29 @@ export function useOpenbookTwap() {
     [wallet, openbook, openbookTwap],
   );
 
+  const closeOpenOrdersAccountTransactions = useCallback(
+    async (orderId: BN) => {
+      if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
+        return;
+      }
+
+      const openOrdersIndexer = findOpenOrdersIndexer(wallet.publicKey);
+      const openOrdersAccount = findOpenOrders(orderId, wallet.publicKey);
+      const closeTx = await openbook.methods
+        .closeOpenOrdersAccount()
+        .accounts({
+          owner: wallet.publicKey,
+          openOrdersIndexer,
+          openOrdersAccount,
+          solDestination: wallet.publicKey,
+        })
+        .transaction();
+
+      return [closeTx];
+    },
+    [wallet, openbook],
+  );
+
   const cancelOrderTransactions = useCallback(
     async (orderId: BN, market: MarketAccountWithKey) => {
       if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
@@ -282,6 +305,7 @@ export function useOpenbookTwap() {
   return {
     placeOrderTransactions,
     cancelOrderTransactions,
+    closeOpenOrdersAccountTransactions,
     settleFundsTransactions,
     crankMarketTransaction,
     program: openbookTwap,

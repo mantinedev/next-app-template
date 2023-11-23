@@ -41,35 +41,33 @@ export function ConditionalMarketCard({
   const { crankMarketTransaction } = useOpenbookTwap();
   const [isCranking, setIsCranking] = useState<boolean>(false);
 
-  const handleCrank = useCallback(
-    async () => {
-      if (!proposal || !markets) return;
-      let marketAccounts: MarketAccountWithKey = {
-        publicKey: markets.passTwap.market,
-        account: markets.pass,
-      };
-      let { eventHeap } = markets.pass;
-      if (!isPassMarket) {
-        marketAccounts = { publicKey: markets.failTwap.market, account: markets.fail };
-        eventHeap = markets.fail.eventHeap;
+  const handleCrank = useCallback(async () => {
+    if (!proposal || !markets) return;
+    let marketAccounts: MarketAccountWithKey = {
+      publicKey: markets.passTwap.market,
+      account: markets.pass,
+    };
+    let { eventHeap } = markets.pass;
+    if (!isPassMarket) {
+      marketAccounts = { publicKey: markets.failTwap.market, account: markets.fail };
+      eventHeap = markets.fail.eventHeap;
+    }
+    try {
+      setIsCranking(true);
+      const signature = await crankMarketTransaction(marketAccounts, eventHeap);
+      if (signature) {
+        notifications.show({
+          title: 'Transaction Submitted',
+          message: <NotificationLink signature={signature} />,
+          autoClose: 5000,
+        });
       }
-      try {
-        setIsCranking(true);
-        const signature = await crankMarketTransaction(marketAccounts, eventHeap);
-        if (signature) {
-          notifications.show({
-            title: 'Transaction Submitted',
-            message: <NotificationLink signature={signature} />,
-            autoClose: 5000,
-          });
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsCranking(false);
-      }
-    }, [markets, crankMarketTransaction, proposal]
-  );
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCranking(false);
+    }
+  }, [markets, crankMarketTransaction, proposal]);
 
   return (
     <Stack p={0} m={0} gap={0}>
