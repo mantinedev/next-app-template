@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { Transaction } from '@solana/web3.js';
+import { PublicKey, Transaction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import {
   getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
 import { OPENBOOK_PROGRAM_ID } from '@/lib/constants';
@@ -210,17 +211,30 @@ export function useProposal({
         return;
       }
       let error = false;
+      let metaBalance = null;
+      const metaMint = new PublicKey('METADDFL6wWMWEoKTFJwcThTbUmtarRJZjRpzUvkxhr');
+      const quoteVault = await getVaultMint(proposal.account.quoteVault);
+      const baseVault = await getVaultMint(proposal.account.baseVault);
+      const userBasePass = getAssociatedTokenAddressSync(
+        baseVault.conditionalOnFinalizeTokenMint,
+        wallet.publicKey,
+      );
+      const userQuotePass = getAssociatedTokenAddressSync(
+        quoteVault.conditionalOnFinalizeTokenMint,
+        wallet.publicKey,
+      );
+      const metaTokenAccount = getAssociatedTokenAddressSync(
+        metaMint,
+        wallet.publicKey,
+        false
+      );
+
       try {
-        const quoteVault = await getVaultMint(proposal.account.quoteVault);
-        const baseVault = await getVaultMint(proposal.account.baseVault);
-        const userBasePass = getAssociatedTokenAddressSync(
-          baseVault.conditionalOnFinalizeTokenMint,
-          wallet.publicKey,
-        );
-        const userQuotePass = getAssociatedTokenAddressSync(
-          quoteVault.conditionalOnFinalizeTokenMint,
-          wallet.publicKey,
-        );
+        metaBalance = await connection.getTokenAccountBalance(metaTokenAccount);
+      } catch (err) {
+        console.log('unable to fetch balance for META token account');
+      }
+      try {
         if (fromBase) {
           await connection.getTokenAccountBalance(userBasePass);
         } else {
@@ -232,6 +246,18 @@ export function useProposal({
       }
 
       if (error) {
+        if (metaBalance === null) {
+          const tx = new Transaction();
+          tx.add(
+            createAssociatedTokenAccountInstruction(
+              wallet.publicKey, // payer
+              metaTokenAccount, // ata
+              wallet.publicKey, // owner
+              metaMint // mint
+            )
+          );
+          txs.unshift(tx);
+        }
         setLoading(true);
 
         try {
