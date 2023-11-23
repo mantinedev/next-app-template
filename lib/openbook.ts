@@ -12,6 +12,11 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { AnyNode, BookSideAccount, LeafNode, OracleConfigParams } from './types';
 import { OPENBOOK_PROGRAM_ID } from './constants';
 
+export type Order = {
+  price: number;
+  size: number;
+};
+
 const BooksideSpace = 90944 + 8;
 const EventHeapSpace = 91280 + 8;
 
@@ -177,4 +182,32 @@ export function getLeafNodes(bookside: BookSideAccount, program: Program<Openboo
   return leafNodesData.map((e) =>
     program.coder.types.decode('LeafNode', Buffer.from([0, ...e.data])),
   );
+}
+
+export function getParsedOrders(side: LeafNode[], isBidSide: boolean): Order[] {
+  if (side.length === 0) {
+    return [];
+  }
+
+  const parsed = side
+    .map((e) => ({
+      price: e.key.shrn(64).toNumber(),
+      size: e.quantity.toNumber(),
+    }))
+    .sort((a, b) => a.price - b.price);
+
+  const sorted = isBidSide
+    ? parsed.sort((a, b) => b.price - a.price)
+    : parsed.sort((a, b) => a.price - b.price);
+
+  // const deduped = new Map();
+  // sorted.forEach((order) => {
+  //   if (deduped.get(order.price) === undefined) {
+  //     deduped.set(order.price, order.size);
+  //   } else {
+  //     deduped.set(order.price, deduped.get(order.price) + order.size);
+  //   }
+  // });
+
+  return sorted;
 }

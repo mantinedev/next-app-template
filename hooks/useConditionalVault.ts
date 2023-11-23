@@ -81,49 +81,44 @@ export function useConditionalVault() {
   );
 
   const createConditionalTokensAccounts = useCallback(
-    async (
-      proposal: ProposalAccount,
-      vault: VaultAccount,
-      fromBaseVault?: boolean,
-    ) => ({
-        ixs: [
-          createAssociatedTokenAccountIdempotentInstruction(
-            provider.publicKey,
-            getAssociatedTokenAddressSync(vault.conditionalOnFinalizeTokenMint, provider.publicKey),
-            provider.publicKey,
-            vault.conditionalOnFinalizeTokenMint,
-          ),
-          createAssociatedTokenAccountIdempotentInstruction(
-            provider.publicKey,
-            getAssociatedTokenAddressSync(vault.conditionalOnRevertTokenMint, provider.publicKey),
-            provider.publicKey,
-            vault.conditionalOnRevertTokenMint,
-          ),
-          await program.methods
-            .mintConditionalTokens(
-              new BN(0),
-            )
-            .accounts({
-              vault: fromBaseVault ? proposal.baseVault : proposal.quoteVault,
-              userConditionalOnFinalizeTokenAccount: getAssociatedTokenAddressSync(
-                vault.conditionalOnFinalizeTokenMint,
-                provider.publicKey,
-              ),
-              userConditionalOnRevertTokenAccount: getAssociatedTokenAddressSync(
-                vault.conditionalOnRevertTokenMint,
-                provider.publicKey,
-              ),
-              userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
-                vault.underlyingTokenMint,
-                provider.publicKey,
-              ),
-              vaultUnderlyingTokenAccount: vault.underlyingTokenAccount,
-              conditionalOnFinalizeTokenMint: vault.conditionalOnFinalizeTokenMint,
-              conditionalOnRevertTokenMint: vault.conditionalOnRevertTokenMint,
-            })
-            .instruction(),
-        ],
-      }), [program],
+    async (proposal: ProposalAccount, vault: VaultAccount, fromBaseVault?: boolean) => ({
+      ixs: [
+        createAssociatedTokenAccountIdempotentInstruction(
+          provider.publicKey,
+          getAssociatedTokenAddressSync(vault.conditionalOnFinalizeTokenMint, provider.publicKey),
+          provider.publicKey,
+          vault.conditionalOnFinalizeTokenMint,
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          provider.publicKey,
+          getAssociatedTokenAddressSync(vault.conditionalOnRevertTokenMint, provider.publicKey),
+          provider.publicKey,
+          vault.conditionalOnRevertTokenMint,
+        ),
+        await program.methods
+          .mintConditionalTokens(new BN(0))
+          .accounts({
+            vault: fromBaseVault ? proposal.baseVault : proposal.quoteVault,
+            userConditionalOnFinalizeTokenAccount: getAssociatedTokenAddressSync(
+              vault.conditionalOnFinalizeTokenMint,
+              provider.publicKey,
+            ),
+            userConditionalOnRevertTokenAccount: getAssociatedTokenAddressSync(
+              vault.conditionalOnRevertTokenMint,
+              provider.publicKey,
+            ),
+            userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+              vault.underlyingTokenMint,
+              provider.publicKey,
+            ),
+            vaultUnderlyingTokenAccount: vault.underlyingTokenAccount,
+            conditionalOnFinalizeTokenMint: vault.conditionalOnFinalizeTokenMint,
+            conditionalOnRevertTokenMint: vault.conditionalOnRevertTokenMint,
+          })
+          .instruction(),
+      ],
+    }),
+    [program],
   );
 
   const mintConditionalTokens = useCallback(
