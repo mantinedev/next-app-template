@@ -1,6 +1,8 @@
-# Meta-dao frontend
+# Meta-DAO Frontend
 
-A [Meta-DAO](https://github.com/metaDAOproject/meta-dao) app built with [Next.js](https://nextjs.org/) and [Mantine](https://mantine.dev/).
+![License MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+
+The most popular frontend for the Meta-DAO. 
 
 ## npm scripts
 
