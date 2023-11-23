@@ -68,22 +68,12 @@ export function AutocratProvider({ children }: { children: ReactNode }) {
     setProposals(props);
   }, [program]);
 
-  useEffect(() => {
-    if (!daoState) {
-      fetchState();
-    }
-  }, [daoState, fetchState]);
-
-  useEffect(() => {
-    if (!proposals) {
-      fetchProposals();
-    }
-  }, [proposals, fetchProposals]);
-
   // Reset on network change
   useEffect(() => {
-    setDaoState(undefined);
     setProposals(undefined);
+    setDaoState(undefined);
+    fetchProposals();
+    fetchState();
   }, [network]);
 
   return (

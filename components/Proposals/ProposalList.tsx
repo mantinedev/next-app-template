@@ -1,6 +1,6 @@
 'use client';
 
-import { Accordion, Badge, Button, Card, Group, Stack, Text } from '@mantine/core';
+import { Accordion, Badge, Button, Card, Group, Loader, Stack, Text } from '@mantine/core';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { IconCoin, IconExternalLink } from '@tabler/icons-react';
@@ -12,7 +12,15 @@ export default function ProposalList() {
   const router = useRouter();
   const { proposals } = useAutocrat();
 
-  return proposals && proposals.length > 0 ? (
+  if (proposals === undefined) {
+    return (
+      <Group justify="center">
+        <Loader />
+      </Group>
+    );
+  }
+
+  return proposals.length > 0 ? (
     <Stack>
       {proposals.map((proposal) => (
         <Card key={proposal.publicKey.toString()} shadow="sm" radius="md" withBorder m="0" p="0">
