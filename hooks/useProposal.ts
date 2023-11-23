@@ -132,32 +132,6 @@ export function useProposal({
       openbook,
     );
 
-    const prices: BN[] = [];
-    try {
-      prices.push(
-        ...(await openbookTwap.views.getBestBidAndAsk({
-          accounts: {
-            market: proposal.account.openbookPassMarket,
-            bids: pass.bids,
-            asks: pass.asks,
-          },
-        })),
-      );
-      prices.push(
-        ...(await openbookTwap.views.getBestBidAndAsk({
-          accounts: {
-            market: proposal.account.openbookFailMarket,
-            bids: fail.bids,
-            asks: fail.asks,
-          },
-        })),
-      );
-    } catch (err) {
-      /// Get mid prices failed, do not update prices yet
-      return;
-    }
-
-    const [passBid, passAsk, failBid, failAsk] = prices;
     const quoteLot = 0.0001;
     setMarkets({
       pass,
@@ -168,14 +142,6 @@ export function useProposal({
       failBids,
       passTwap,
       failTwap,
-      passPrice: {
-        bid: passBid.toNumber() * quoteLot,
-        ask: passAsk.toNumber() * quoteLot,
-      },
-      failPrice: {
-        bid: failBid.toNumber() * quoteLot,
-        ask: failAsk.toNumber() * quoteLot,
-      },
       baseVault,
       quoteVault,
     });
