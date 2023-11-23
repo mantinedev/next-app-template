@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ActionIcon, Group, Stack, Table, Text, useMantineTheme } from '@mantine/core';
+import { ActionIcon, Button, Group, Stack, Table, Text, useMantineTheme } from '@mantine/core';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { BN } from '@coral-xyz/anchor';
 import { IconRefresh, IconTrash, Icon3dRotate, IconAssemblyOff } from '@tabler/icons-react';
@@ -27,7 +27,7 @@ export function ProposalOrdersCard({
   const sender = useTransactionSender();
   const wallet = useWallet();
   const { tokens } = useTokens();
-  const { fetchOpenOrders } = useProposal({
+  const { fetchOpenOrders, createTokenAccounts } = useProposal({
     fromNumber: proposal.account.number,
   });
   const { cancelOrderTransactions, settleFundsTransactions } = useOpenbookTwap();
@@ -261,7 +261,15 @@ export function ProposalOrdersCard({
       </Table>
       <Group justify="space-between">
         <Text fw="bolder" size="xl">
-          Completed Orders
+          Uncranked, Completed Orders
+        </Text>
+        <Text
+          fw=""
+          size="sm"
+        >
+          If you see orders here, you can use the cycle icon with the 12 on it next
+          to the respective market which will crank it and push the orders into the
+          Unsettled, Open Accounts below.
         </Text>
       </Group>
       <Table>
@@ -275,7 +283,10 @@ export function ProposalOrdersCard({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {filterCompletedOrders()?.map((completedOrder) => (
+          {(filterCompletedOrders() !== undefined
+          // @ts-ignore
+          && filterCompletedOrders()?.length > 0) ?
+            filterCompletedOrders()?.map((completedOrder) => (
               <Table.Tr key={`${completedOrder.publicKey.toString()}completed`}>
                 <Table.Td>
                   <a
@@ -311,20 +322,60 @@ export function ProposalOrdersCard({
                   </ActionIcon>
                 </Table.Td>
               </Table.Tr>
-          ))}
+          )) : (
+            <Table.Tr>
+              <Table.Td>
+                No Uncranked Orders
+              </Table.Td>
+            </Table.Tr>
+            )}
         </Table.Tbody>
       </Table>
       <Group justify="space-between">
         <Text fw="bolder" size="xl">
-          Open Accounts
+          Unsettled, Open Accounts
         </Text>
+        <Text
+          fw=""
+          size="sm"
+        >
+          These are your Order Accounts (OpenBook uses a&nbsp;
+          <a
+            href="https://twitter.com/openbookdex/status/1727309884159299929?s=61&t=Wv1hCdAly84RMB_iLO0iIQ"
+            target="_blank"
+            rel="noreferrer"
+          >
+            crank
+          </a> and to do that when you place
+          an order you create an account for that order). If you see a balance here you can
+          settle the balance (to have it returned to your wallet for futher use while the proposal)
+          is active. Eventually you will be able to close these accounts so they no longer show up.
+        </Text>
+        <Text
+          size="sm"
+        >
+          If you&apos;re unable to settle your account, you may not have a token account for the
+          respective pass / fail tokens.
+        </Text>
+        <Group>
+        <Button
+          onClick={() => createTokenAccounts(true)}
+        >
+          Conditional META
+        </Button>
+        <Button
+          onClick={() => createTokenAccounts(false)}
+        >
+          Conditional USDC
+        </Button>
+        </Group>
       </Group>
       <Table>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Order ID</Table.Th>
             <Table.Th>Market</Table.Th>
-            <Table.Th>Amount{tokens?.meta?.symbol}</Table.Th>
+            <Table.Th>Amount {tokens?.meta?.symbol}</Table.Th>
             <Table.Th>Amount {tokens?.usdc?.symbol}</Table.Th>
             <Table.Th>Settle</Table.Th>
             <Table.Th>Close Account</Table.Th>
