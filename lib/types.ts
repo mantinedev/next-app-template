@@ -25,8 +25,6 @@ export type Markets = {
   failTwap: TwapMarketAccount;
   baseVault: VaultAccount;
   quoteVault: VaultAccount;
-  passPrice: { bid: number; ask: number };
-  failPrice: { bid: number; ask: number };
 };
 
 /// Avoid importing Openbook because it uses a NodeWallet

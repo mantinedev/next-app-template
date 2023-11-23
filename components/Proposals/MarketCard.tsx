@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActionIcon,
   Button,
@@ -24,6 +24,7 @@ import { ProposalAccountWithKey } from '../../lib/types';
 import { useTokenMint } from '../../hooks/useTokenMint';
 import { useTransactionSender } from '../../hooks/useTransactionSender';
 import { useAutocrat } from '../../contexts/AutocratContext';
+import { getParsedOrders } from '@/lib/openbook';
 
 export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccountWithKey }) {
   const { daoTreasury } = useAutocrat();
@@ -60,14 +61,26 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
     numeral(totalSupply)
       .subtract(treasuryBalance?.uiAmount || 0)
       .value() || 0;
-  const circulatingMarketPassValue =
-    (circulatingSupply * ((markets?.passPrice.ask || 0) + (markets?.passPrice.bid || 0))) / 2;
-  const circulatingMarketFailValue =
-    (circulatingSupply * ((markets?.failPrice.ask || 0) + (markets?.failPrice.bid || 0))) / 2;
-  const totalMarketPassValue =
-    (totalSupply * ((markets?.passPrice.ask || 0) + (markets?.passPrice.bid || 0))) / 2;
-  const totalMarketFailValue =
-    (totalSupply * ((markets?.failPrice.ask || 0) + (markets?.failPrice.bid || 0))) / 2;
+
+  const [marketPassPrice, marketFailPrice] = useMemo(() => {
+    const passBids = getParsedOrders(markets?.passBids || [], true);
+    const passAsks = getParsedOrders(markets?.passAsks || [], false);
+    const failBids = getParsedOrders(markets?.failBids || [], true);
+    const failAsks = getParsedOrders(markets?.failAsks || [], false);
+
+    const pPrice =
+      passBids.length > 0 && passAsks.length > 0 ? (passAsks[0].price + passBids[0].price) / 2 : 0;
+    const fPrice =
+      failBids.length > 0 && failAsks.length > 0 ? (failAsks[0].price + failBids[0].price) / 2 : 0;
+
+    // handle usdc rounding
+    return [pPrice / 10_000, fPrice / 10_000];
+  }, [markets]);
+
+  const circulatingMarketPassValue = circulatingSupply * marketPassPrice;
+  const circulatingMarketFailValue = circulatingSupply * marketFailPrice;
+  const totalMarketPassValue = totalSupply * marketPassPrice;
+  const totalMarketFailValue = totalSupply * marketFailPrice;
   const circulatingBeliefPassValue = passPrice * circulatingSupply;
   const circulatingBeliefFailValue = failPrice * circulatingSupply;
   const totalBeliefPassValue = passPrice * totalSupply;

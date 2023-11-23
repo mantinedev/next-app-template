@@ -1,6 +1,12 @@
 import { useCallback, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { AccountMeta, PublicKey, Transaction, VersionedTransaction, MessageV0 } from '@solana/web3.js';
+import {
+  AccountMeta,
+  PublicKey,
+  Transaction,
+  VersionedTransaction,
+  MessageV0,
+} from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
@@ -134,17 +140,13 @@ export function useOpenbookTwap() {
               'FillEvent',
               Buffer.from([0, ...node.event.padding]),
             );
-            accounts = accounts
-              .filter((a) => a !== fillEvent.maker)
-              .concat([fillEvent.maker]);
+            accounts = accounts.filter((a) => a !== fillEvent.maker).concat([fillEvent.maker]);
           } else {
             const outEvent: OutEvent = openbook.coder.types.decode(
               'OutEvent',
               Buffer.from([0, ...node.event.padding]),
             );
-            accounts = accounts
-              .filter((a) => a !== outEvent.owner)
-              .concat([outEvent.owner]);
+            accounts = accounts.filter((a) => a !== outEvent.owner).concat([outEvent.owner]);
           }
           // Tx would be too big, do not add more accounts
           if (accounts.length > 20) {
@@ -179,14 +181,13 @@ export function useOpenbookTwap() {
       let vtx = new VersionedTransaction(message);
       // We check above for status
       // @ts-ignore
-      vtx = (await wallet.signTransaction(
-        vtx as any,
-      )) as unknown as VersionedTransaction;
+      vtx = (await wallet.signTransaction(vtx as any)) as unknown as VersionedTransaction;
       const signature = await provider.connection.sendRawTransaction(vtx.serialize(), {
         skipPreflight: true,
       });
       return signature;
-    }, [wallet, openbook, provider]
+    },
+    [wallet, openbook, provider],
   );
 
   const settleFundsTransactions = useCallback(
