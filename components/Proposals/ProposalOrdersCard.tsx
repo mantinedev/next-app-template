@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ActionIcon, Group, Stack, Table, Text, useMantineTheme } from '@mantine/core';
+import { ActionIcon, Button, Group, Stack, Table, Text, useMantineTheme } from '@mantine/core';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { BN } from '@coral-xyz/anchor';
 import { IconRefresh, IconTrash, Icon3dRotate, IconAssemblyOff } from '@tabler/icons-react';
@@ -27,7 +27,7 @@ export function ProposalOrdersCard({
   const sender = useTransactionSender();
   const wallet = useWallet();
   const { tokens } = useTokens();
-  const { fetchOpenOrders } = useProposal({
+  const { fetchOpenOrders, createTokenAccounts } = useProposal({
     fromNumber: proposal.account.number,
   });
   const { cancelOrderTransactions, settleFundsTransactions } = useOpenbookTwap();
@@ -335,6 +335,40 @@ export function ProposalOrdersCard({
         <Text fw="bolder" size="xl">
           Unsettled, Open Accounts
         </Text>
+        <Text
+          fw=""
+          size="sm"
+        >
+          These are your Order Accounts (OpenBook uses a&nbsp;
+          <a
+            href="https://twitter.com/openbookdex/status/1727309884159299929?s=61&t=Wv1hCdAly84RMB_iLO0iIQ"
+            target="_blank"
+            rel="noreferrer"
+          >
+            crank
+          </a> and to do that when you place
+          an order you create an account for that order). If you see a balance here you can
+          settle the balance (to have it returned to your wallet for futher use while the proposal)
+          is active. Eventually you will be able to close these accounts so they no longer show up.
+        </Text>
+        <Text
+          size="sm"
+        >
+          If you&apos;re unable to settle your account, you may not have a token account for the
+          respective pass / fail tokens.
+        </Text>
+        <Group>
+        <Button
+          onClick={() => createTokenAccounts(true)}
+        >
+          Conditional META
+        </Button>
+        <Button
+          onClick={() => createTokenAccounts(false)}
+        >
+          Conditional USDC
+        </Button>
+        </Group>
       </Group>
       <Table>
         <Table.Thead>

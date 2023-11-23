@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { Transaction } from '@solana/web3.js';
 import { BN, Program } from '@coral-xyz/anchor';
+import {
+  getAssociatedTokenAddressSync,
+} from '@solana/spl-token';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
 import { OPENBOOK_PROGRAM_ID } from '@/lib/constants';
 import { Markets, OpenOrdersAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
@@ -29,7 +32,12 @@ export function useProposal({
     return new Program<OpenbookV2>(OPENBOOK_IDL, OPENBOOK_PROGRAM_ID, provider);
   }, [provider]);
   const { placeOrderTransactions, program: openbookTwap } = useOpenbookTwap();
-  const { program: vaultProgram, mintConditionalTokens } = useConditionalVault();
+  const {
+    program: vaultProgram,
+    mintConditionalTokens,
+    getVaultMint,
+    createConditionalTokensAccounts,
+  } = useConditionalVault();
   const [markets, setMarkets] = useState<Markets>();
   const [orders, setOrders] = useState<OpenOrdersAccountWithKey[]>();
   const [loading, setLoading] = useState(false);
@@ -178,6 +186,77 @@ export function useProposal({
     }
   }, [markets, fetchMarkets]);
 
+  const createTokenAccountsTransactions = useCallback(
+    async (fromBase?: boolean) => {
+      if (!proposal || !markets) {
+        return;
+      }
+      const createAccounts = await createConditionalTokensAccounts(
+        proposal.account,
+        fromBase ? markets.baseVault : markets.quoteVault,
+        fromBase,
+      );
+      const tx = new Transaction().add(...(createAccounts?.ixs ?? []));
+
+      return [tx];
+    }, [proposal, markets]
+
+  );
+
+  const createTokenAccounts = useCallback(
+    async (fromBase?: boolean) => {
+      const txs = await createTokenAccountsTransactions(fromBase);
+      if (!txs || !proposal || !wallet.publicKey || !wallet.signAllTransactions) {
+        return;
+      }
+      let error = false;
+      try {
+        const quoteVault = await getVaultMint(proposal.account.quoteVault);
+        const baseVault = await getVaultMint(proposal.account.baseVault);
+        const userBasePass = getAssociatedTokenAddressSync(
+          baseVault.conditionalOnFinalizeTokenMint,
+          wallet.publicKey,
+        );
+        const userQuotePass = getAssociatedTokenAddressSync(
+          quoteVault.conditionalOnFinalizeTokenMint,
+          wallet.publicKey,
+        );
+        if (fromBase) {
+          await connection.getTokenAccountBalance(userBasePass);
+        } else {
+          await connection.getTokenAccountBalance(userQuotePass);
+        }
+      } catch (err) {
+        error = true;
+        console.log('turns out the account doesn\'t exist we can create it');
+      }
+
+      if (error) {
+        setLoading(true);
+
+        try {
+          const { blockhash } = await connection.getLatestBlockhash();
+          const signedTxs = await wallet.signAllTransactions(
+            txs.map((t) => {
+              const tx = t;
+              tx.recentBlockhash = blockhash;
+              tx.feePayer = wallet.publicKey!;
+              return tx;
+            }),
+          );
+          await Promise.all(
+            signedTxs.map((t) =>
+              connection.sendRawTransaction(t.serialize(), { skipPreflight: true }),
+            ),
+          );
+        } finally {
+          setLoading(false);
+        }
+      }
+    },
+    [wallet, connection, createTokenAccountsTransactions],
+  );
+
   const mintTokensTransactions = useCallback(
     async (amount: number, fromBase?: boolean) => {
       if (!proposal || !markets) {
@@ -279,6 +358,8 @@ export function useProposal({
     loading,
     fetchOpenOrders,
     fetchMarkets,
+    createTokenAccounts,
+    createTokenAccountsTransactions,
     mintTokensTransactions,
     mintTokens,
     placeOrderTransactions,
