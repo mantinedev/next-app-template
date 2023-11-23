@@ -15,7 +15,14 @@ import { createOpenbookMarket } from '../lib/openbook';
 export function useInitializeProposal() {
   const { connection } = useConnection();
   const { initializeVault } = useConditionalVault();
-  const { program, dao, daoTreasury, daoState, fetchState, fetchProposals } = useAutocrat();
+  const {
+    autocratProgram: program,
+    dao,
+    daoTreasury,
+    daoState,
+    fetchState,
+    fetchProposals,
+  } = useAutocrat();
   const wallet = useWallet();
   const provider = useProvider();
   const openbook = new Program<OpenbookV2>(OPENBOOK_IDL, OPENBOOK_PROGRAM_ID, provider);

@@ -26,6 +26,7 @@ export type Markets = {
   baseVault: VaultAccount;
   quoteVault: VaultAccount;
 };
+export type MarketsInfo = { [proposalKey: string]: Markets | undefined };
 
 /// Avoid importing Openbook because it uses a NodeWallet
 export type PlaceOrderArgs = IdlTypes<OpenbookV2>['PlaceOrderArgs'];
