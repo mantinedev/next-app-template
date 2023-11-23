@@ -6,6 +6,7 @@ import {
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
+import { notifications } from '@mantine/notifications';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
 import { OPENBOOK_PROGRAM_ID } from '@/lib/constants';
 import { Markets, OpenOrdersAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
@@ -42,6 +43,8 @@ export function useProposal({
   const [markets, setMarkets] = useState<Markets>();
   const [orders, setOrders] = useState<OpenOrdersAccountWithKey[]>();
   const [loading, setLoading] = useState(false);
+  const [metaDisabled, setMetaDisabled] = useState(false);
+  const [usdcDisabled, setUsdcDisabled] = useState(false);
   const proposal = useMemo<ProposalAccountWithKey | undefined>(
     () =>
       proposals?.filter(
@@ -205,6 +208,18 @@ export function useProposal({
         error = true;
         console.log("turns out the account doesn't exist we can create it");
       }
+      if (!error) {
+        notifications.show({
+          title: 'Token Accounts Exist',
+          message: 'You won\'t need to press this button again.',
+          autoClose: 5000,
+        });
+        if (fromBase) {
+          setMetaDisabled(true);
+        } else {
+          setUsdcDisabled(true);
+        }
+      }
 
       if (error) {
         if (metaBalance === null) {
@@ -231,11 +246,16 @@ export function useProposal({
               return tx;
             }),
           );
-          await Promise.all(
+          const results = await Promise.all(
             signedTxs.map((t) =>
               connection.sendRawTransaction(t.serialize(), { skipPreflight: true }),
             ),
           );
+          results.map((result) => notifications.show({
+              title: 'Transaction Submitted',
+              message: result,
+              autoClose: 5000,
+            }));
         } finally {
           setLoading(false);
         }
@@ -282,11 +302,16 @@ export function useProposal({
             return tx;
           }),
         );
-        await Promise.all(
+        const results = await Promise.all(
           signedTxs.map((t) =>
             connection.sendRawTransaction(t.serialize(), { skipPreflight: true }),
           ),
         );
+        results.map((result) => notifications.show({
+          title: 'Transaction Submitted',
+          message: result,
+          autoClose: 5000,
+        }));
 
         await fetchMarkets();
       } finally {
@@ -318,17 +343,27 @@ export function useProposal({
           tx.feePayer = wallet.publicKey!;
           return tx;
         });
+        const txSignatures = [];
         const signedTxs = await wallet.signAllTransactions(txs);
         // Using loops here to make sure transaction are executed in the correct order
         // eslint-disable-next-line no-restricted-syntax
         for (const tx of signedTxs) {
           // eslint-disable-next-line no-await-in-loop
-          await connection.confirmTransaction(
-            // eslint-disable-next-line no-await-in-loop
-            await connection.sendRawTransaction(tx.serialize(), { skipPreflight: true }),
+          const txnSignature = await connection.sendRawTransaction(
+            tx.serialize(),
+            { skipPreflight: true }
           );
+          // eslint-disable-next-line no-await-in-loop
+          await connection.confirmTransaction(
+            txnSignature
+          );
+          txSignatures.push(txnSignature);
         }
-
+        txSignatures?.map((result) => notifications.show({
+          title: 'Transaction Submitted',
+          message: result,
+          autoClose: 5000,
+        }));
         await fetchMarkets();
         await fetchOpenOrders();
       } finally {
@@ -343,6 +378,8 @@ export function useProposal({
     markets,
     orders,
     loading,
+    metaDisabled,
+    usdcDisabled,
     fetchOpenOrders,
     fetchMarkets,
     createTokenAccounts,
