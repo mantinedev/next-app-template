@@ -422,7 +422,7 @@ export function ProposalOrdersCard({
           Unsettled, Open Accounts
         </Text>
         <Text fw="" size="sm">
-          These are your Order Accounts (OpenBook uses a&nbsp;
+          These are your Order Accounts (OpenBook uses a{' '}
           <a
             href="https://twitter.com/openbookdex/status/1727309884159299929?s=61&t=Wv1hCdAly84RMB_iLO0iIQ"
             target="_blank"
@@ -432,7 +432,7 @@ export function ProposalOrdersCard({
           </a>{' '}
           and to do that when you place an order you create an account for that order). If you see a
           balance here you can settle the balance (to have it returned to your wallet for futher use
-          while the proposal) is active. Eventually you will be able to close these accounts so they
+          while the proposal is active). Eventually you will be able to close these accounts so they
           no longer show up.
         </Text>
         <Text size="sm">
