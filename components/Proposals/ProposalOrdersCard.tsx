@@ -261,7 +261,15 @@ export function ProposalOrdersCard({
       </Table>
       <Group justify="space-between">
         <Text fw="bolder" size="xl">
-          Completed Orders
+          Uncranked, Completed Orders
+        </Text>
+        <Text
+          fw=""
+          size="sm"
+        >
+          If you see orders here, you can use the cycle icon with the 12 on it next
+          to the respective market which will crank it and push the orders into the
+          Unsettled, Open Accounts below.
         </Text>
       </Group>
       <Table>
@@ -275,7 +283,10 @@ export function ProposalOrdersCard({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {filterCompletedOrders()?.map((completedOrder) => (
+          {(filterCompletedOrders() !== undefined
+          // @ts-ignore
+          && filterCompletedOrders()?.length > 0) ?
+            filterCompletedOrders()?.map((completedOrder) => (
               <Table.Tr key={`${completedOrder.publicKey.toString()}completed`}>
                 <Table.Td>
                   <a
@@ -311,12 +322,18 @@ export function ProposalOrdersCard({
                   </ActionIcon>
                 </Table.Td>
               </Table.Tr>
-          ))}
+          )) : (
+            <Table.Tr>
+              <Table.Td>
+                No Uncranked Orders
+              </Table.Td>
+            </Table.Tr>
+            )}
         </Table.Tbody>
       </Table>
       <Group justify="space-between">
         <Text fw="bolder" size="xl">
-          Open Accounts
+          Unsettled, Open Accounts
         </Text>
       </Group>
       <Table>
@@ -324,7 +341,7 @@ export function ProposalOrdersCard({
           <Table.Tr>
             <Table.Th>Order ID</Table.Th>
             <Table.Th>Market</Table.Th>
-            <Table.Th>Amount{tokens?.meta?.symbol}</Table.Th>
+            <Table.Th>Amount {tokens?.meta?.symbol}</Table.Th>
             <Table.Th>Amount {tokens?.usdc?.symbol}</Table.Th>
             <Table.Th>Settle</Table.Th>
             <Table.Th>Close Account</Table.Th>
