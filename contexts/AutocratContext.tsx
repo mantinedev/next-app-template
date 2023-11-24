@@ -13,12 +13,13 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { AutocratV0 } from '../lib/idl/autocrat_v0';
 import { useProvider } from '@/hooks/useProvider';
 import { AUTOCRAT_PROGRAM_ID, OPENBOOK_PROGRAM_ID } from '@/lib/constants';
-import { DaoState, MarketsInfo, ProposalAccountWithKey } from '../lib/types';
+import { AllMarketsInfo, AllOrders, DaoState, ProposalAccountWithKey } from '../lib/types';
 import { useNetworkConfiguration } from '../hooks/useNetworkConfiguration';
 import { useConditionalVault } from '../hooks/useConditionalVault';
 import { useOpenbookTwap } from '../hooks/useOpenbookTwap';
 import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
 import { getLeafNodes } from '../lib/openbook';
+import { debounce } from '../lib/utils';
 
 const AUTOCRAT_IDL: AutocratV0 = require('@/lib/idl/autocrat_v0.json');
 
@@ -27,17 +28,21 @@ export interface AutocratContext {
   daoTreasury?: PublicKey;
   daoState?: DaoState;
   proposals?: ProposalAccountWithKey[];
-  allMarketsInfo: MarketsInfo;
+  allMarketsInfo: AllMarketsInfo;
+  allOrders: AllOrders;
   autocratProgram?: Program<AutocratV0>;
   fetchState: () => Promise<void>;
   fetchProposals: () => Promise<void>;
   fetchMarketsInfo: (proposal: ProposalAccountWithKey) => Promise<void>;
+  fetchOpenOrders: (proposal: ProposalAccountWithKey, owner: PublicKey) => Promise<void>;
 }
 export const contextAutocrat = createContext<AutocratContext>({
   allMarketsInfo: {},
+  allOrders: {},
   fetchState: () => new Promise(() => {}),
   fetchProposals: () => new Promise(() => {}),
   fetchMarketsInfo: () => new Promise(() => {}),
+  fetchOpenOrders: () => new Promise(() => {}),
 });
 export const useAutocrat = () => {
   const context = useContext<AutocratContext>(contextAutocrat);
@@ -74,7 +79,8 @@ export function AutocratProvider({ children }: { children: ReactNode }) {
   const { program: vaultProgram } = useConditionalVault();
   const [daoState, setDaoState] = useState<DaoState>();
   const [proposals, setProposals] = useState<ProposalAccountWithKey[]>();
-  const [allMarketsInfo, setAllMarketsInfo] = useState<MarketsInfo>({});
+  const [allMarketsInfo, setAllMarketsInfo] = useState<AllMarketsInfo>({});
+  const [allOrders, setAllOrders] = useState<AllOrders>({});
 
   const fetchState = useCallback(async () => {
     setDaoState(await autocratProgram.account.dao.fetch(dao));
@@ -87,79 +93,107 @@ export function AutocratProvider({ children }: { children: ReactNode }) {
     setProposals(props);
   }, [autocratProgram]);
 
-  const fetchMarketsInfo = useCallback(
-    async (proposal: ProposalAccountWithKey) => {
-      if (!proposal || !openbook || !openbookTwap || !openbookTwap.views || !connection) {
-        return;
-      }
-      const accountInfos = await connection.getMultipleAccountsInfo([
-        proposal.account.openbookPassMarket,
-        proposal.account.openbookFailMarket,
-        proposal.account.openbookTwapPassMarket,
-        proposal.account.openbookTwapFailMarket,
-        proposal.account.baseVault,
-        proposal.account.quoteVault,
-      ]);
-      if (!accountInfos || accountInfos.indexOf(null) >= 0) return;
+  const fetchMarketsInfo = debounce(
+    useCallback(
+      async (proposal: ProposalAccountWithKey) => {
+        if (!proposal || !openbook || !openbookTwap || !openbookTwap.views || !connection) {
+          return;
+        }
+        const accountInfos = await connection.getMultipleAccountsInfo([
+          proposal.account.openbookPassMarket,
+          proposal.account.openbookFailMarket,
+          proposal.account.openbookTwapPassMarket,
+          proposal.account.openbookTwapFailMarket,
+          proposal.account.baseVault,
+          proposal.account.quoteVault,
+        ]);
+        if (!accountInfos || accountInfos.indexOf(null) >= 0) return;
 
-      const pass = await openbook.coder.accounts.decode('market', accountInfos[0]!.data);
-      const fail = await openbook.coder.accounts.decode('market', accountInfos[1]!.data);
-      const passTwap = await openbookTwap.coder.accounts.decodeUnchecked(
-        'TWAPMarket',
-        accountInfos[2]!.data,
-      );
-      const failTwap = await openbookTwap.coder.accounts.decodeUnchecked(
-        'TWAPMarket',
-        accountInfos[3]!.data,
-      );
-      const baseVault = await vaultProgram.coder.accounts.decode(
-        'conditionalVault',
-        accountInfos[4]!.data,
-      );
-      const quoteVault = await vaultProgram.coder.accounts.decode(
-        'conditionalVault',
-        accountInfos[5]!.data,
-      );
+        const pass = await openbook.coder.accounts.decode('market', accountInfos[0]!.data);
+        const fail = await openbook.coder.accounts.decode('market', accountInfos[1]!.data);
+        const passTwap = await openbookTwap.coder.accounts.decodeUnchecked(
+          'TWAPMarket',
+          accountInfos[2]!.data,
+        );
+        const failTwap = await openbookTwap.coder.accounts.decodeUnchecked(
+          'TWAPMarket',
+          accountInfos[3]!.data,
+        );
+        const baseVault = await vaultProgram.coder.accounts.decode(
+          'conditionalVault',
+          accountInfos[4]!.data,
+        );
+        const quoteVault = await vaultProgram.coder.accounts.decode(
+          'conditionalVault',
+          accountInfos[5]!.data,
+        );
 
-      const bookAccountInfos = await connection.getMultipleAccountsInfo([
-        pass.asks,
-        pass.bids,
-        fail.asks,
-        fail.bids,
-      ]);
-      const passAsks = getLeafNodes(
-        await openbook.coder.accounts.decode('bookSide', bookAccountInfos[0]!.data),
-        openbook,
-      );
-      const passBids = getLeafNodes(
-        await openbook.coder.accounts.decode('bookSide', bookAccountInfos[1]!.data),
-        openbook,
-      );
-      const failAsks = getLeafNodes(
-        await openbook.coder.accounts.decode('bookSide', bookAccountInfos[2]!.data),
-        openbook,
-      );
-      const failBids = getLeafNodes(
-        await openbook.coder.accounts.decode('bookSide', bookAccountInfos[3]!.data),
-        openbook,
-      );
+        const bookAccountInfos = await connection.getMultipleAccountsInfo([
+          pass.asks,
+          pass.bids,
+          fail.asks,
+          fail.bids,
+        ]);
+        const passAsks = getLeafNodes(
+          await openbook.coder.accounts.decode('bookSide', bookAccountInfos[0]!.data),
+          openbook,
+        );
+        const passBids = getLeafNodes(
+          await openbook.coder.accounts.decode('bookSide', bookAccountInfos[1]!.data),
+          openbook,
+        );
+        const failAsks = getLeafNodes(
+          await openbook.coder.accounts.decode('bookSide', bookAccountInfos[2]!.data),
+          openbook,
+        );
+        const failBids = getLeafNodes(
+          await openbook.coder.accounts.decode('bookSide', bookAccountInfos[3]!.data),
+          openbook,
+        );
 
-      setAllMarketsInfo({
-        [proposal.publicKey.toString()]: {
-          pass,
-          passAsks,
-          passBids,
-          fail,
-          failAsks,
-          failBids,
-          passTwap,
-          failTwap,
-          baseVault,
-          quoteVault,
-        },
-      });
-    },
-    [vaultProgram, openbook, openbookTwap],
+        setAllMarketsInfo({
+          [proposal.publicKey.toString()]: {
+            pass,
+            passAsks,
+            passBids,
+            fail,
+            failAsks,
+            failBids,
+            passTwap,
+            failTwap,
+            baseVault,
+            quoteVault,
+          },
+        });
+      },
+      [vaultProgram, openbook, openbookTwap],
+    ),
+    1000,
+  );
+
+  const fetchOpenOrders = debounce<[ProposalAccountWithKey, PublicKey]>(
+    useCallback(
+      async (proposal: ProposalAccountWithKey, owner: PublicKey) => {
+        if (!openbook) {
+          return;
+        }
+        const passOrders = await openbook.account.openOrdersAccount.all([
+          { memcmp: { offset: 8, bytes: owner.toBase58() } },
+          { memcmp: { offset: 40, bytes: proposal.account.openbookPassMarket.toBase58() } },
+        ]);
+        const failOrders = await openbook.account.openOrdersAccount.all([
+          { memcmp: { offset: 8, bytes: owner.toBase58() } },
+          { memcmp: { offset: 40, bytes: proposal.account.openbookFailMarket.toBase58() } },
+        ]);
+        setAllOrders({
+          [proposal.publicKey.toString()]: passOrders
+            .concat(failOrders)
+            .sort((a, b) => (a.account.accountNum < b.account.accountNum ? 1 : -1)),
+        });
+      },
+      [openbook],
+    ),
+    1000,
   );
 
   // Reset on network change
@@ -178,10 +212,12 @@ export function AutocratProvider({ children }: { children: ReactNode }) {
         daoState,
         proposals,
         allMarketsInfo,
+        allOrders,
         autocratProgram,
         fetchState,
         fetchProposals,
         fetchMarketsInfo,
+        fetchOpenOrders,
       }}
     >
       {children}

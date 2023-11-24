@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { Program } from '@coral-xyz/anchor';
 import {
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
 import { notifications } from '@mantine/notifications';
-import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
-import { OPENBOOK_PROGRAM_ID } from '@/lib/constants';
-import { OpenOrdersAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
+import { ProposalAccountWithKey } from '@/lib/types';
 import { useAutocrat } from '@/contexts/AutocratContext';
-import { useProvider } from '@/hooks/useProvider';
 import { useConditionalVault } from '@/hooks/useConditionalVault';
 import { useOpenbookTwap } from './useOpenbookTwap';
 
@@ -22,20 +18,12 @@ export function useProposal({
   fromNumber?: number | undefined;
   fromProposal?: ProposalAccountWithKey;
 }) {
-  const { proposals, allMarketsInfo, fetchMarketsInfo } = useAutocrat();
+  const { proposals, allMarketsInfo, allOrders, fetchMarketsInfo, fetchOpenOrders } = useAutocrat();
   const { connection } = useConnection();
   const wallet = useWallet();
-  const provider = useProvider();
-  const openbook = useMemo(() => {
-    if (!provider) {
-      return;
-    }
-    return new Program<OpenbookV2>(OPENBOOK_IDL, OPENBOOK_PROGRAM_ID, provider);
-  }, [provider]);
   const { placeOrderTransactions } = useOpenbookTwap();
   const { mintConditionalTokens, getVaultMint, createConditionalTokensAccounts } =
     useConditionalVault();
-  const [orders, setOrders] = useState<OpenOrdersAccountWithKey[]>();
   const [loading, setLoading] = useState(false);
   const [metaDisabled, setMetaDisabled] = useState(false);
   const [usdcDisabled, setUsdcDisabled] = useState(false);
@@ -49,29 +37,11 @@ export function useProposal({
     [proposals, fromProposal],
   );
   const markets = proposal ? allMarketsInfo[proposal.publicKey.toString()] : undefined;
-
-  const fetchOpenOrders = useCallback(async () => {
-    if (!proposal || !openbook || !wallet.publicKey) {
-      return;
-    }
-    const passOrders = await openbook.account.openOrdersAccount.all([
-      { memcmp: { offset: 8, bytes: wallet.publicKey.toBase58() } },
-      { memcmp: { offset: 40, bytes: proposal.account.openbookPassMarket.toBase58() } },
-    ]);
-    const failOrders = await openbook.account.openOrdersAccount.all([
-      { memcmp: { offset: 8, bytes: wallet.publicKey.toBase58() } },
-      { memcmp: { offset: 40, bytes: proposal.account.openbookFailMarket.toBase58() } },
-    ]);
-    setOrders(
-      passOrders
-        .concat(failOrders)
-        .sort((a, b) => (a.account.accountNum < b.account.accountNum ? 1 : -1)),
-    );
-  }, [openbook, proposal]);
+  const orders = proposal ? allOrders[proposal.publicKey.toString()] : undefined;
 
   useEffect(() => {
-    if (!orders) {
-      fetchOpenOrders();
+    if (!orders && proposal && wallet.publicKey) {
+      fetchOpenOrders(proposal, wallet.publicKey);
     }
   }, [orders, markets, fetchOpenOrders]);
 
@@ -294,12 +264,20 @@ export function useProposal({
           }),
         );
         await fetchMarketsInfo(proposal);
-        await fetchOpenOrders();
+        await fetchOpenOrders(proposal, wallet.publicKey);
       } finally {
         setLoading(false);
       }
     },
-    [wallet, proposal, markets, connection, placeOrderTransactions],
+    [
+      wallet,
+      proposal,
+      markets,
+      connection,
+      placeOrderTransactions,
+      fetchMarketsInfo,
+      fetchOpenOrders,
+    ],
   );
 
   return {

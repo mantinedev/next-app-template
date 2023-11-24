@@ -8,7 +8,7 @@ export function useAutocratDebug() {
   const wallet = useWallet();
   const { connection } = useConnection();
   const { tokens } = useTokens();
-  const { dao, daoState, daoTreasury, program, fetchState } = useAutocrat();
+  const { dao, daoState, daoTreasury, autocratProgram: program, fetchState } = useAutocrat();
 
   const initializeDao = useCallback(async () => {
     if (
