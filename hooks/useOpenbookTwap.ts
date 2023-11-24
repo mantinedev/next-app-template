@@ -11,9 +11,8 @@ import { BN, Program } from '@coral-xyz/anchor';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
 import { SelfTradeBehavior, OrderType, Side } from '@openbook-dex/openbook-v2/dist/cjs/utils/utils';
-import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
 import { OpenbookTwap } from '@/lib/idl/openbook_twap';
-import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '@/lib/constants';
+import { OPENBOOK_TWAP_PROGRAM_ID } from '@/lib/constants';
 import { FillEvent, MarketAccountWithKey, OutEvent, ProposalAccountWithKey } from '@/lib/types';
 import { shortKey } from '@/lib/utils';
 import { useProvider } from '@/hooks/useProvider';
@@ -24,6 +23,7 @@ import {
   findOpenOrdersIndexer,
 } from '../lib/openbook';
 import { useConditionalVault } from './useConditionalVault';
+import { useOpenbook } from './useOpenbook';
 
 const OPENBOOK_TWAP_IDL: OpenbookTwap = require('@/lib/idl/openbook_twap.json');
 
@@ -33,12 +33,7 @@ export function useOpenbookTwap() {
   const wallet = useWallet();
   const provider = useProvider();
   const { getVaultMint } = useConditionalVault();
-  const openbook = useMemo(() => {
-    if (!provider) {
-      return;
-    }
-    return new Program<OpenbookV2>(OPENBOOK_IDL, OPENBOOK_PROGRAM_ID, provider);
-  }, [provider]);
+  const openbook = useOpenbook();
   const openbookTwap = useMemo(() => {
     if (!provider) {
       return;
@@ -65,19 +60,23 @@ export function useOpenbookTwap() {
       const openOrdersIndexer = findOpenOrdersIndexer(wallet.publicKey);
       let accountIndex = new BN(1);
       try {
-        const indexer = await openbook.account.openOrdersIndexer.fetch(openOrdersIndexer);
+        const indexer = await openbook.program.account.openOrdersIndexer.fetch(openOrdersIndexer);
         accountIndex = new BN((indexer?.createdCounter || 0) + 1 + (indexOffset || 0));
       } catch {
         if (!indexOffset) {
           openTx.add(
-            await createOpenOrdersIndexerInstruction(openbook, openOrdersIndexer, wallet.publicKey),
+            await createOpenOrdersIndexerInstruction(
+              openbook.program,
+              openOrdersIndexer,
+              wallet.publicKey,
+            ),
           );
         } else {
           accountIndex = new BN(1 + (indexOffset || 0));
         }
       }
       const [ixs, openOrdersAccount] = await createOpenOrdersInstruction(
-        openbook,
+        openbook.program,
         market.publicKey,
         accountIndex,
         `${shortKey(wallet.publicKey)}-${accountIndex.toString()}`,
@@ -131,18 +130,18 @@ export function useOpenbookTwap() {
         return;
       }
       let accounts: PublicKey[] = new Array<PublicKey>();
-      const _eventHeap = await openbook.account.eventHeap.fetch(eventHeap);
+      const _eventHeap = await openbook.program.account.eventHeap.fetch(eventHeap);
       if (_eventHeap != null) {
         // eslint-disable-next-line no-restricted-syntax
         for (const node of _eventHeap.nodes) {
           if (node.event.eventType === 0) {
-            const fillEvent: FillEvent = openbook.coder.types.decode(
+            const fillEvent: FillEvent = openbook.program.coder.types.decode(
               'FillEvent',
               Buffer.from([0, ...node.event.padding]),
             );
             accounts = accounts.filter((a) => a !== fillEvent.maker).concat([fillEvent.maker]);
           } else {
-            const outEvent: OutEvent = openbook.coder.types.decode(
+            const outEvent: OutEvent = openbook.program.coder.types.decode(
               'OutEvent',
               Buffer.from([0, ...node.event.padding]),
             );
@@ -159,7 +158,7 @@ export function useOpenbookTwap() {
         isSigner: false,
         isWritable: true,
       }));
-      const crankIx = await openbook.methods
+      const crankIx = await openbook.program.methods
         .consumeEvents(new BN(accounts.length))
         .accounts({
           consumeEventsAdmin: openbook.programId,
@@ -200,7 +199,6 @@ export function useOpenbookTwap() {
       if (!wallet.publicKey || !wallet.signAllTransactions || !openbook || !openbookTwap) {
         return;
       }
-      console.log(market.publicKey.toString());
       const quoteVault = await getVaultMint(proposal.account.quoteVault);
       const baseVault = await getVaultMint(proposal.account.baseVault);
       const openOrdersAccount = findOpenOrders(orderId, wallet.publicKey);
@@ -228,7 +226,7 @@ export function useOpenbookTwap() {
         userQuoteAccount = userQuotePass;
       }
       // TODO: 2x Txns for each side..
-      const placeTx = await openbook.methods
+      const placeTx = await openbook.program.methods
         .settleFunds()
         .accounts({
           owner: wallet.publicKey,
@@ -258,7 +256,7 @@ export function useOpenbookTwap() {
 
       const openOrdersIndexer = findOpenOrdersIndexer(wallet.publicKey);
       const openOrdersAccount = findOpenOrders(orderId, wallet.publicKey);
-      const closeTx = await openbook.methods
+      const closeTx = await openbook.program.methods
         .closeOpenOrdersAccount()
         .accounts({
           owner: wallet.publicKey,
@@ -279,8 +277,6 @@ export function useOpenbookTwap() {
         return;
       }
 
-      // const baseLot = 1;
-      console.log(orderId.toString());
       const openOrdersAccount = findOpenOrders(orderId, wallet.publicKey);
       const placeTx = await openbookTwap.methods
         .cancelOrderByClientId(orderId)

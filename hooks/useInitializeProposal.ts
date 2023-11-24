@@ -1,29 +1,22 @@
 import { useCallback } from 'react';
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
-import { Program, BN, utils } from '@coral-xyz/anchor';
+import { BN, utils } from '@coral-xyz/anchor';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useAutocrat } from '@/contexts/AutocratContext';
 import { useTokens } from './useTokens';
-import { OPENBOOK_PROGRAM_ID, OPENBOOK_TWAP_PROGRAM_ID } from '../lib/constants';
 import { useConditionalVault } from './useConditionalVault';
-import { OpenbookTwap, IDL as OPENBOOK_TWAP_IDL } from '../lib/idl/openbook_twap';
-import { IDL as OPENBOOK_IDL, OpenbookV2 } from '../lib/idl/openbook_v2';
-import { useProvider } from './useProvider';
 import { ProposalInstruction } from '../lib/types';
 import { createOpenbookMarket } from '../lib/openbook';
+import { useOpenbook } from './useOpenbook';
+import { useOpenbookTwap } from './useOpenbookTwap';
 
 export function useInitializeProposal() {
   const { connection } = useConnection();
   const { initializeVault } = useConditionalVault();
   const { program, dao, daoTreasury, daoState, fetchState, fetchProposals } = useAutocrat();
   const wallet = useWallet();
-  const provider = useProvider();
-  const openbook = new Program<OpenbookV2>(OPENBOOK_IDL, OPENBOOK_PROGRAM_ID, provider);
-  const openbookTwap = new Program<OpenbookTwap>(
-    OPENBOOK_TWAP_IDL,
-    OPENBOOK_TWAP_PROGRAM_ID,
-    provider,
-  );
+  const openbook = useOpenbook();
+  const { program: openbookTwap } = useOpenbookTwap();
   const { tokens } = useTokens();
   const baseNonce: BN = new BN(daoState?.proposalCount || 0);
 
@@ -35,7 +28,8 @@ export function useInitializeProposal() {
         !tokens?.meta ||
         !tokens?.usdc ||
         !daoTreasury ||
-        !program
+        !program ||
+        !openbookTwap
       ) {
         return;
       }
@@ -66,7 +60,7 @@ export function useInitializeProposal() {
       );
 
       const openbookPassMarket = await createOpenbookMarket(
-        openbook,
+        openbook.program,
         wallet.publicKey,
         baseVault.finalizeMint,
         quoteVault.finalizeMint,
@@ -86,7 +80,7 @@ export function useInitializeProposal() {
       );
 
       const openbookFailMarket = await createOpenbookMarket(
-        openbook,
+        openbook.program,
         wallet.publicKey,
         baseVault.revertMint,
         quoteVault.revertMint,
