@@ -23,6 +23,8 @@ export function ConditionalMarketCard({
   markets,
   proposal,
   placeOrder,
+  quoteBalance,
+  baseBalance,
 }: {
   isPassMarket: boolean;
   markets: Markets;
@@ -34,6 +36,8 @@ export function ConditionalMarketCard({
     ask?: boolean,
     pass?: boolean,
   ) => void;
+  quoteBalance: string | undefined,
+  baseBalance: string | undefined
 }) {
   const [orderType, setOrderType] = useState<string>('Limit');
   const [amount, setAmount] = useState<number>(0);
@@ -131,6 +135,17 @@ export function ConditionalMarketCard({
               >
                 Ask
               </Button>
+            </GridCol>
+          </Grid>
+          <Grid>
+            <GridCol span={12}>
+              Balance
+            </GridCol>
+            <GridCol span={6}>
+              {isPassMarket ? 'p' : 'f'}META {baseBalance || null}
+            </GridCol>
+            <GridCol span={6}>
+              {isPassMarket ? 'p' : 'f'}USDC ${quoteBalance || null}
             </GridCol>
           </Grid>
         </Stack>
