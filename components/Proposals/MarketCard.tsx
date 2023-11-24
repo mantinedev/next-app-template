@@ -27,11 +27,10 @@ import { useAutocrat } from '../../contexts/AutocratContext';
 import { getParsedOrders } from '@/lib/openbook';
 
 export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccountWithKey }) {
-  const { daoTreasury } = useAutocrat();
-  const { proposal, markets, mintTokensTransactions, placeOrderTransactions, fetchMarkets } =
-    useProposal({
-      fromProposal,
-    });
+  const { daoTreasury, fetchMarketsInfo } = useAutocrat();
+  const { proposal, markets, mintTokensTransactions, placeOrderTransactions } = useProposal({
+    fromProposal,
+  });
   const { amount: baseBalance } = useTokenAmount(markets?.baseVault.underlyingTokenMint);
   const { amount: quoteBalance } = useTokenAmount(markets?.quoteVault.underlyingTokenMint);
   const { tokens } = useTokens();
@@ -116,7 +115,7 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
       setIsBetting(false);
     }
 
-    setTimeout(() => fetchMarkets(), 1000);
+    setTimeout(() => fetchMarketsInfo(proposal), 1000);
   }, [
     amount,
     passPrice,
@@ -124,7 +123,7 @@ export function MarketCard({ proposal: fromProposal }: { proposal: ProposalAccou
     mintTokensTransactions,
     placeOrderTransactions,
     sender,
-    fetchMarkets,
+    fetchMarketsInfo,
   ]);
 
   return !proposal || !markets ? (

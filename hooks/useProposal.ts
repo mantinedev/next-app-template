@@ -1,20 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { Program } from '@coral-xyz/anchor';
 import {
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
 import { notifications } from '@mantine/notifications';
-import { IDL as OPENBOOK_IDL, OpenbookV2 } from '@/lib/idl/openbook_v2';
-import { OPENBOOK_PROGRAM_ID } from '@/lib/constants';
-import { Markets, OpenOrdersAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
+import { ProposalAccountWithKey } from '@/lib/types';
 import { useAutocrat } from '@/contexts/AutocratContext';
-import { useProvider } from '@/hooks/useProvider';
 import { useConditionalVault } from '@/hooks/useConditionalVault';
 import { useOpenbookTwap } from './useOpenbookTwap';
-import { getLeafNodes } from '../lib/openbook';
 
 export function useProposal({
   fromNumber,
@@ -23,25 +18,12 @@ export function useProposal({
   fromNumber?: number | undefined;
   fromProposal?: ProposalAccountWithKey;
 }) {
-  const { proposals } = useAutocrat();
+  const { proposals, allMarketsInfo, allOrders, fetchMarketsInfo, fetchOpenOrders } = useAutocrat();
   const { connection } = useConnection();
   const wallet = useWallet();
-  const provider = useProvider();
-  const openbook = useMemo(() => {
-    if (!provider) {
-      return;
-    }
-    return new Program<OpenbookV2>(OPENBOOK_IDL, OPENBOOK_PROGRAM_ID, provider);
-  }, [provider]);
-  const { placeOrderTransactions, program: openbookTwap } = useOpenbookTwap();
-  const {
-    program: vaultProgram,
-    mintConditionalTokens,
-    getVaultMint,
-    createConditionalTokensAccounts,
-  } = useConditionalVault();
-  const [markets, setMarkets] = useState<Markets>();
-  const [orders, setOrders] = useState<OpenOrdersAccountWithKey[]>();
+  const { placeOrderTransactions } = useOpenbookTwap();
+  const { mintConditionalTokens, getVaultMint, createConditionalTokensAccounts } =
+    useConditionalVault();
   const [loading, setLoading] = useState(false);
   const [metaDisabled, setMetaDisabled] = useState(false);
   const [usdcDisabled, setUsdcDisabled] = useState(false);
@@ -54,106 +36,20 @@ export function useProposal({
       )[0],
     [proposals, fromProposal],
   );
-
-  const fetchOpenOrders = useCallback(async () => {
-    if (!proposal || !openbook || !wallet.publicKey) {
-      return;
-    }
-    const passOrders = await openbook.account.openOrdersAccount.all([
-      { memcmp: { offset: 8, bytes: wallet.publicKey.toBase58() } },
-      { memcmp: { offset: 40, bytes: proposal.account.openbookPassMarket.toBase58() } },
-    ]);
-    const failOrders = await openbook.account.openOrdersAccount.all([
-      { memcmp: { offset: 8, bytes: wallet.publicKey.toBase58() } },
-      { memcmp: { offset: 40, bytes: proposal.account.openbookFailMarket.toBase58() } },
-    ]);
-    setOrders(
-      passOrders
-        .concat(failOrders)
-        .sort((a, b) => (a.account.accountNum < b.account.accountNum ? 1 : -1)),
-    );
-  }, [openbook, proposal]);
+  const markets = proposal ? allMarketsInfo[proposal.publicKey.toString()] : undefined;
+  const orders = proposal ? allOrders[proposal.publicKey.toString()] : undefined;
 
   useEffect(() => {
-    if (!orders) {
-      fetchOpenOrders();
+    if (!orders && proposal && wallet.publicKey) {
+      fetchOpenOrders(proposal, wallet.publicKey);
     }
   }, [orders, markets, fetchOpenOrders]);
 
-  const fetchMarkets = useCallback(async () => {
-    if (!wallet.publicKey || !proposal || !openbook || !openbookTwap || !openbookTwap.views) return;
-
-    const accountInfos = await connection.getMultipleAccountsInfo([
-      proposal.account.openbookPassMarket,
-      proposal.account.openbookFailMarket,
-      proposal.account.openbookTwapPassMarket,
-      proposal.account.openbookTwapFailMarket,
-      proposal.account.baseVault,
-      proposal.account.quoteVault,
-    ]);
-    if (!accountInfos || accountInfos.indexOf(null) >= 0) return;
-
-    const pass = await openbook.coder.accounts.decode('market', accountInfos[0]!.data);
-    const fail = await openbook.coder.accounts.decode('market', accountInfos[1]!.data);
-    const passTwap = await openbookTwap.coder.accounts.decodeUnchecked(
-      'TWAPMarket',
-      accountInfos[2]!.data,
-    );
-    const failTwap = await openbookTwap.coder.accounts.decodeUnchecked(
-      'TWAPMarket',
-      accountInfos[3]!.data,
-    );
-    const baseVault = await vaultProgram.coder.accounts.decode(
-      'conditionalVault',
-      accountInfos[4]!.data,
-    );
-    const quoteVault = await vaultProgram.coder.accounts.decode(
-      'conditionalVault',
-      accountInfos[5]!.data,
-    );
-
-    const bookAccountInfos = await connection.getMultipleAccountsInfo([
-      pass.asks,
-      pass.bids,
-      fail.asks,
-      fail.bids,
-    ]);
-    const passAsks = getLeafNodes(
-      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[0]!.data),
-      openbook,
-    );
-    const passBids = getLeafNodes(
-      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[1]!.data),
-      openbook,
-    );
-    const failAsks = getLeafNodes(
-      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[2]!.data),
-      openbook,
-    );
-    const failBids = getLeafNodes(
-      await openbook.coder.accounts.decode('bookSide', bookAccountInfos[3]!.data),
-      openbook,
-    );
-
-    setMarkets({
-      pass,
-      passAsks,
-      passBids,
-      fail,
-      failAsks,
-      failBids,
-      passTwap,
-      failTwap,
-      baseVault,
-      quoteVault,
-    });
-  }, [vaultProgram, openbook, openbookTwap]);
-
   useEffect(() => {
-    if (!markets) {
-      fetchMarkets();
+    if (!markets && proposal) {
+      fetchMarketsInfo(proposal);
     }
-  }, [markets, fetchMarkets]);
+  }, [markets, fetchMarketsInfo]);
 
   const createTokenAccountsTransactions = useCallback(
     async (fromBase?: boolean) => {
@@ -317,7 +213,7 @@ export function useProposal({
           }),
         );
 
-        await fetchMarkets();
+        await fetchMarketsInfo(proposal);
       } finally {
         setLoading(false);
       }
@@ -367,13 +263,21 @@ export function useProposal({
             autoClose: 5000,
           }),
         );
-        await fetchMarkets();
-        await fetchOpenOrders();
+        await fetchMarketsInfo(proposal);
+        await fetchOpenOrders(proposal, wallet.publicKey);
       } finally {
         setLoading(false);
       }
     },
-    [wallet, proposal, markets, connection, placeOrderTransactions],
+    [
+      wallet,
+      proposal,
+      markets,
+      connection,
+      placeOrderTransactions,
+      fetchMarketsInfo,
+      fetchOpenOrders,
+    ],
   );
 
   return {
@@ -384,7 +288,6 @@ export function useProposal({
     metaDisabled,
     usdcDisabled,
     fetchOpenOrders,
-    fetchMarkets,
     createTokenAccounts,
     createTokenAccountsTransactions,
     mintTokensTransactions,
