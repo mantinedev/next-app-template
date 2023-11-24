@@ -105,18 +105,18 @@ export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; a
       />
       <OrderBook
         book={{
-          bids: orderbook.bids
-            ? Array.from(orderbook.bids.deduped.entries()).map((bid) => [
-                (bid[0] / 10_000).toFixed(2),
+          bids: orderbook?.bids
+            ? Array.from(orderbook?.bids?.deduped.entries()).map((bid) => [
+                (bid[0] / 10_000).toFixed(4),
                 bid[1],
               ])
-            : [],
-          asks: orderbook.asks
-            ? Array.from(orderbook.asks.deduped.entries()).map((ask) => [
-                (ask[0] / 10_000).toFixed(2),
+            : [[0, 0]],
+          asks: orderbook?.asks
+            ? Array.from(orderbook?.asks?.deduped.entries()).map((ask) => [
+                (ask[0] / 10_000).toFixed(4),
                 ask[1],
               ])
-            : [],
+            : [[Number.MAX_SAFE_INTEGER, 0]],
         }}
         fullOpacity
         interpolateColor={(color) => color}

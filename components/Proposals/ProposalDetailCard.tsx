@@ -47,7 +47,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   // const calculateTWAP = (twapOracle: TWAPOracle) => {
   //   const slotsPassed = twapOracle.lastUpdatedSlot.sub(twapOracle.initialSlot);
   //   const twapValue = twapOracle.observationAggregator.div(slotsPassed);
-  //   return numeral(twapValue.toString()).divide(10_000).format('0.0000a');
+  //   return (twapValue.toString();
   // };
 
   // const passTwap = markets ? calculateTWAP(markets.passTwap.twapOracle) : null;
@@ -60,7 +60,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   ) : (
     <Stack gap="0">
       <Text fw="bolder" size="xl">
-        Proposal #{proposal.account.number + 1}
+        Proposal #{proposal.account.number}
       </Text>
       <Link href={proposal.account.descriptionUrl}>
         <Group gap="sm">

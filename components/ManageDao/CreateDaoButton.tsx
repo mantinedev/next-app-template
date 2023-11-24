@@ -8,7 +8,7 @@ import { useAutocratDebug } from '../../hooks/useAutocratDebug';
 
 export default function CreateDaoButton() {
   const { tokens } = useTokens();
-  const { program: autocratProgram } = useAutocrat();
+  const { autocratProgram } = useAutocrat();
   const { initializeDao } = useAutocratDebug();
 
   const handleCreateDao = useCallback(async () => {
