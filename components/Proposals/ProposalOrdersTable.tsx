@@ -15,6 +15,8 @@ import { NUMERAL_FORMAT } from '@/lib/constants';
 import { useProposal } from '@/hooks/useProposal';
 import { useWeb3 } from '@/hooks/useWeb3';
 
+const BN_0 = new BN(0);
+
 export function ProposalOrdersTable({
   heading,
   description,
@@ -189,6 +191,14 @@ export function ProposalOrdersTable({
     return totalValueLocked.toFixed(0);
   };
 
+  const isPartiallyFilled = (order: OpenOrdersAccountWithKey): boolean => {
+    const orderPosition = order.account.position;
+    if (orderPosition.baseFreeNative > BN_0 || orderPosition.quoteFreeNative > BN_0) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <>
       <Group justify="space-between">
@@ -246,10 +256,8 @@ export function ProposalOrdersTable({
                     <Table.Td>
                       {orderStatus === 'uncranked'
                         ? 'Pending Crank'
-                        : order.account.position.baseFreeNative.toNumber() > 0 ||
-                          order.account.position.baseFreeNative.toNumber() > 0
-                        ? 'Partially Filled'
-                        : 'Open'}
+                        : isPartiallyFilled(order)
+                        ? 'Partial Fill' : 'Open'}
                     </Table.Td>
                     <Table.Td c={isBidOrAsk(order) ? theme.colors.green[9] : theme.colors.red[9]}>
                       {isBidOrAsk(order) ? 'BID' : 'ASK'}
@@ -282,8 +290,7 @@ export function ProposalOrdersTable({
                       >
                         <IconTrash />
                       </ActionIcon>
-                      {order.account.position.baseFreeNative.toNumber() > 0 ||
-                      order.account.position.baseFreeNative.toNumber() > 0 ? (
+                      {isPartiallyFilled(order) ? (
                         <ActionIcon
                           variant="subtle"
                           loading={isSettling}
