@@ -12,7 +12,7 @@ import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-tok
 import { PlaceOrderArgs } from '@openbook-dex/openbook-v2/dist/types/client';
 import { SelfTradeBehavior, OrderType, Side } from '@openbook-dex/openbook-v2/dist/cjs/utils/utils';
 import { OpenbookTwap } from '@/lib/idl/openbook_twap';
-import { OPENBOOK_TWAP_PROGRAM_ID } from '@/lib/constants';
+import { OPENBOOK_TWAP_PROGRAM_ID, QUOTE_LOTS } from '@/lib/constants';
 import { FillEvent, MarketAccountWithKey, OutEvent, ProposalAccountWithKey } from '@/lib/types';
 import { shortKey } from '@/lib/utils';
 import { useProvider } from '@/hooks/useProvider';
@@ -86,8 +86,7 @@ export function useOpenbookTwap() {
       openTx.add(...ixs);
 
       // const baseLot = 1;
-      const quoteLot = 0.0001;
-      const priceLots = new BN(Math.floor(price / quoteLot));
+      const priceLots = new BN(Math.floor(price / QUOTE_LOTS));
       const maxBaseLots = new BN(Math.floor(amount));
       const args: PlaceOrderArgs = {
         side: ask ? Side.Ask : Side.Bid,
