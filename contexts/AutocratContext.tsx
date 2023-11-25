@@ -93,86 +93,82 @@ export function AutocratProvider({ children }: { children: ReactNode }) {
     setProposals(props);
   }, [autocratProgram]);
 
-  const fetchMarketsInfo = debounce(
-    useCallback(
-      async (proposal: ProposalAccountWithKey) => {
-        if (!proposal || !openbook || !openbookTwap || !openbookTwap.views || !connection) {
-          return;
-        }
-        const accountInfos = await connection.getMultipleAccountsInfo([
-          proposal.account.openbookPassMarket,
-          proposal.account.openbookFailMarket,
-          proposal.account.openbookTwapPassMarket,
-          proposal.account.openbookTwapFailMarket,
-          proposal.account.baseVault,
-          proposal.account.quoteVault,
-        ]);
-        if (!accountInfos || accountInfos.indexOf(null) >= 0) return;
+  const fetchMarketsInfo = useCallback(
+    debounce(async (proposal: ProposalAccountWithKey) => {
+      if (!proposal || !openbook || !openbookTwap || !openbookTwap.views || !connection) {
+        return;
+      }
+      const accountInfos = await connection.getMultipleAccountsInfo([
+        proposal.account.openbookPassMarket,
+        proposal.account.openbookFailMarket,
+        proposal.account.openbookTwapPassMarket,
+        proposal.account.openbookTwapFailMarket,
+        proposal.account.baseVault,
+        proposal.account.quoteVault,
+      ]);
+      if (!accountInfos || accountInfos.indexOf(null) >= 0) return;
 
-        const pass = await openbook.coder.accounts.decode('market', accountInfos[0]!.data);
-        const fail = await openbook.coder.accounts.decode('market', accountInfos[1]!.data);
-        const passTwap = await openbookTwap.coder.accounts.decodeUnchecked(
-          'TWAPMarket',
-          accountInfos[2]!.data,
-        );
-        const failTwap = await openbookTwap.coder.accounts.decodeUnchecked(
-          'TWAPMarket',
-          accountInfos[3]!.data,
-        );
-        const baseVault = await vaultProgram.coder.accounts.decode(
-          'conditionalVault',
-          accountInfos[4]!.data,
-        );
-        const quoteVault = await vaultProgram.coder.accounts.decode(
-          'conditionalVault',
-          accountInfos[5]!.data,
-        );
+      const pass = await openbook.coder.accounts.decode('market', accountInfos[0]!.data);
+      const fail = await openbook.coder.accounts.decode('market', accountInfos[1]!.data);
+      const passTwap = await openbookTwap.coder.accounts.decodeUnchecked(
+        'TWAPMarket',
+        accountInfos[2]!.data,
+      );
+      const failTwap = await openbookTwap.coder.accounts.decodeUnchecked(
+        'TWAPMarket',
+        accountInfos[3]!.data,
+      );
+      const baseVault = await vaultProgram.coder.accounts.decode(
+        'conditionalVault',
+        accountInfos[4]!.data,
+      );
+      const quoteVault = await vaultProgram.coder.accounts.decode(
+        'conditionalVault',
+        accountInfos[5]!.data,
+      );
 
-        const bookAccountInfos = await connection.getMultipleAccountsInfo([
-          pass.asks,
-          pass.bids,
-          fail.asks,
-          fail.bids,
-        ]);
-        const passAsks = getLeafNodes(
-          await openbook.coder.accounts.decode('bookSide', bookAccountInfos[0]!.data),
-          openbook,
-        );
-        const passBids = getLeafNodes(
-          await openbook.coder.accounts.decode('bookSide', bookAccountInfos[1]!.data),
-          openbook,
-        );
-        const failAsks = getLeafNodes(
-          await openbook.coder.accounts.decode('bookSide', bookAccountInfos[2]!.data),
-          openbook,
-        );
-        const failBids = getLeafNodes(
-          await openbook.coder.accounts.decode('bookSide', bookAccountInfos[3]!.data),
-          openbook,
-        );
+      const bookAccountInfos = await connection.getMultipleAccountsInfo([
+        pass.asks,
+        pass.bids,
+        fail.asks,
+        fail.bids,
+      ]);
+      const passAsks = getLeafNodes(
+        await openbook.coder.accounts.decode('bookSide', bookAccountInfos[0]!.data),
+        openbook,
+      );
+      const passBids = getLeafNodes(
+        await openbook.coder.accounts.decode('bookSide', bookAccountInfos[1]!.data),
+        openbook,
+      );
+      const failAsks = getLeafNodes(
+        await openbook.coder.accounts.decode('bookSide', bookAccountInfos[2]!.data),
+        openbook,
+      );
+      const failBids = getLeafNodes(
+        await openbook.coder.accounts.decode('bookSide', bookAccountInfos[3]!.data),
+        openbook,
+      );
 
-        setAllMarketsInfo({
-          [proposal.publicKey.toString()]: {
-            pass,
-            passAsks,
-            passBids,
-            fail,
-            failAsks,
-            failBids,
-            passTwap,
-            failTwap,
-            baseVault,
-            quoteVault,
-          },
-        });
-      },
-      [vaultProgram, openbook, openbookTwap],
-    ),
-    1000,
+      setAllMarketsInfo({
+        [proposal.publicKey.toString()]: {
+          pass,
+          passAsks,
+          passBids,
+          fail,
+          failAsks,
+          failBids,
+          passTwap,
+          failTwap,
+          baseVault,
+          quoteVault,
+        },
+      });
+    }, 1000),
+    [vaultProgram, openbook, openbookTwap],
   );
-
-  const fetchOpenOrders = debounce<[ProposalAccountWithKey, PublicKey]>(
-    useCallback(
+  const fetchOpenOrders = useCallback(
+    debounce<[ProposalAccountWithKey, PublicKey]>(
       async (proposal: ProposalAccountWithKey, owner: PublicKey) => {
         if (!openbook) {
           return;
@@ -185,15 +181,16 @@ export function AutocratProvider({ children }: { children: ReactNode }) {
           { memcmp: { offset: 8, bytes: owner.toBase58() } },
           { memcmp: { offset: 40, bytes: proposal.account.openbookFailMarket.toBase58() } },
         ]);
+        console.log(passOrders, failOrders);
         setAllOrders({
           [proposal.publicKey.toString()]: passOrders
             .concat(failOrders)
             .sort((a, b) => (a.account.accountNum < b.account.accountNum ? 1 : -1)),
         });
       },
-      [openbook],
+      1000,
     ),
-    1000,
+    [openbook],
   );
 
   // Reset on network change
