@@ -1,12 +1,13 @@
 'use client';
 
-import { Accordion, Badge, Button, Card, Group, Loader, Stack, Text } from '@mantine/core';
+import { Accordion, Button, Card, Group, Loader, Stack, Text } from '@mantine/core';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { IconCoin, IconExternalLink } from '@tabler/icons-react';
 import { shortKey } from '../../lib/utils';
 import { MarketCard } from './MarketCard';
 import { useAutocrat } from '../../contexts/AutocratContext';
+import { StateBadge } from './StateBadge';
 
 export default function ProposalList() {
   const router = useRouter();
@@ -32,19 +33,7 @@ export default function ProposalList() {
                     <Text size="xl" fw={500}>
                       Proposal #{proposal.account.number + 1}
                     </Text>
-                    {proposal.account.state.failed ? (
-                      <Badge color="red" variant="light">
-                        Failed
-                      </Badge>
-                    ) : proposal.account.state.passed ? (
-                      <Badge color="green" variant="light">
-                        Passed
-                      </Badge>
-                    ) : (
-                      <Badge color="yellow" variant="light">
-                        Pending
-                      </Badge>
-                    )}
+                    <StateBadge proposal={proposal} />
                   </Group>
                   <Group justify="space-between">
                     <Link href={proposal.account.descriptionUrl}>
