@@ -35,9 +35,35 @@ export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; a
       return { parsed, total, deduped };
     };
 
+    const orderBookSide = (orderBookForSide: LeafNode[], isBidSide?: boolean) => {
+      if (orderBookForSide) {
+        const _orderBookSide = getSide(orderBookForSide, isBidSide);
+        if (_orderBookSide) {
+          return Array.from(_orderBookSide.deduped?.entries()).map((side) => [
+            (side[0] / 10_000).toFixed(4),
+            side[1],
+          ]);
+        }
+      }
+      if (isBidSide) {
+        return [[0, 0]];
+      }
+        return [[Number.MAX_SAFE_INTEGER, 0]];
+    };
+    const _bids = orderBookSide(bids, true);
+    const _asks = orderBookSide(asks);
+
+    const tobAsk: number = Number(_asks[0][0]);
+    const tobBid: number = Number(_bids[0][0]);
+    const spread: number = (tobAsk - tobBid);
+    const spreadPercent: string = ((spread / tobAsk) * 100).toFixed(2);
+
+    const spreadString = `${spread.toFixed(2).toString()} (${spreadPercent}%)`;
+
     return {
       bids: getSide(bids, true),
       asks: getSide(asks),
+      spreadString,
     };
   }, [bids, asks]);
 
@@ -97,7 +123,8 @@ export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; a
         }
 
         .MakeItNice__spread-value {
-          width: 40px;
+          width: 100%;
+          text-align: left;
           overflow: hidden;
         }
       `,
@@ -119,6 +146,7 @@ export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; a
             : [[Number.MAX_SAFE_INTEGER, 0]],
         }}
         fullOpacity
+        spread={orderbook.spreadString}
         interpolateColor={(color) => color}
         listLength={5}
         stylePrefix="MakeItNice"
