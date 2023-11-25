@@ -14,8 +14,11 @@ import {
   Tooltip,
   NativeSelect,
   Pill,
+  HoverCard,
+  Group,
 } from '@mantine/core';
-import { Icon12Hours } from '@tabler/icons-react';
+import numeral from 'numeral';
+import { Icon12Hours, IconQuestionMark } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { ConditionalMarketOrderBook } from './ConditionalMarketOrderBook';
@@ -23,6 +26,8 @@ import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
 import { Markets, MarketAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
 import { NotificationLink } from '../Layout/NotificationLink';
 import { useAutocrat } from '../../contexts/AutocratContext';
+import { calculateTWAP } from '../../lib/openbookTwap';
+import { NUMERAL_FORMAT } from '../../lib/constants';
 
 export function ConditionalMarketCard({
   isPassMarket,
@@ -46,7 +51,7 @@ export function ConditionalMarketCard({
   baseBalance: string | undefined;
 }) {
   const wallet = useWallet();
-  const { fetchOpenOrders } = useAutocrat();
+  const { daoState, fetchOpenOrders } = useAutocrat();
   const [orderType, setOrderType] = useState<string>('Limit');
   const [orderSide, setOrderSide] = useState<string>('Buy');
   const [amount, setAmount] = useState<number>(0);
@@ -83,13 +88,49 @@ export function ConditionalMarketCard({
     }
   }, [markets, proposal, wallet.publicKey, crankMarketTransaction, fetchOpenOrders]);
 
+  const passTwap = calculateTWAP(markets.passTwap.twapOracle);
+  const failTwap = calculateTWAP(markets.failTwap.twapOracle);
+  const twap = isPassMarket ? passTwap : failTwap;
+
   return (
     <Stack p={0} m={0} gap={0}>
       <Card withBorder radius="md" style={{ width: '22rem' }}>
         <Flex justify="space-between" align="flex-start" direction="row" wrap="wrap">
-          <Text fw="bolder" size="lg" style={{ paddingBottom: '1rem' }}>
-            {isPassMarket ? 'Pass' : 'Fail'} market
-          </Text>
+          <Group align="center">
+            <Text fw="bolder" size="lg" pb="1rem">
+              {isPassMarket ? 'Pass' : 'Fail'} market{' '}
+            </Text>
+            {twap ? (
+              <HoverCard>
+                <HoverCard.Target>
+                  <Group justify="center" align="flex-start">
+                    <Text size="lg" pb="1rem">
+                      TWAP@${numeral(twap).format(NUMERAL_FORMAT)}
+                    </Text>
+                    <ActionIcon variant="transparent">
+                      <IconQuestionMark />
+                    </ActionIcon>
+                  </Group>
+                </HoverCard.Target>
+                <HoverCard.Dropdown w="22rem">
+                  <Text>
+                    The Time Weighted Average Price (TWAP) is the measure used to decide if the
+                    proposal passses: if the TWAP of the pass market is{' '}
+                    {daoState
+                      ? `${numeral(daoState.passThresholdBps / 100).format(NUMERAL_FORMAT)}%`
+                      : '???'}{' '}
+                    above the fail market{' '}
+                    {daoState && failTwap
+                      ? `(> ${numeral(
+                          (failTwap * (10000 + daoState.passThresholdBps)) / 10000,
+                        ).format(NUMERAL_FORMAT)})`
+                      : null}
+                    , the proposal will pass once the countdown ends.
+                  </Text>
+                </HoverCard.Dropdown>
+              </HoverCard>
+            ) : null}
+          </Group>
           <Tooltip label="Crank the market">
             <ActionIcon variant="subtle" loading={isCranking} onClick={() => handleCrank()}>
               <Icon12Hours />
@@ -132,19 +173,13 @@ export function ConditionalMarketCard({
             rightSectionWidth={100}
             rightSection={
               <>
-              {orderSide === 'Sell' ?
-                (
+                {orderSide === 'Sell' ? (
                   Number(baseBalance) > 0 ? (
                     <Pill>{baseBalance}</Pill>
                   ) : null
-                ) : (
-                  quoteBalance && price ? (
-                    <Pill>
-                      {(Number(quoteBalance) / price).toFixed(0)}
-                    </Pill>
-                  ) : null
-                )
-              }
+                ) : quoteBalance && price ? (
+                  <Pill>{(Number(quoteBalance) / price).toFixed(0)}</Pill>
+                ) : null}
               </>
             }
             onChange={(e) => setAmount(Number(e.target.value))}
@@ -154,13 +189,15 @@ export function ConditionalMarketCard({
               <Button
                 fullWidth
                 color={orderSide === 'Sell' ? 'red' : 'green'}
-                onClick={() => placeOrder(
-                  amount,
-                  price,
-                  orderType === 'Limit',
-                  orderSide === 'Sell',
-                  isPassMarket
-                  )}
+                onClick={() =>
+                  placeOrder(
+                    amount,
+                    price,
+                    orderType === 'Limit',
+                    orderSide === 'Sell',
+                    isPassMarket,
+                  )
+                }
                 disabled={!amount || (orderType !== 'Market' ? !price : false)}
               >
                 {orderSide} {isPassMarket ? 'p' : 'f'}META

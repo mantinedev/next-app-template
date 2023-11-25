@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Accordion,
+  ActionIcon,
   Button,
   Divider,
   Fieldset,
   Flex,
   Group,
+  HoverCard,
   Loader,
   Space,
   Stack,
@@ -14,7 +16,7 @@ import {
 } from '@mantine/core';
 import Link from 'next/link';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { IconExternalLink } from '@tabler/icons-react';
+import { IconExternalLink, IconQuestionMark } from '@tabler/icons-react';
 import { useProposal } from '@/hooks/useProposal';
 import { useTokens } from '@/hooks/useTokens';
 import { useTokenAmount } from '@/hooks/useTokenAmount';
@@ -93,15 +95,6 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
     },
     [mintTokens, mintBaseAmount, mintQuoteAmount],
   );
-
-  // const calculateTWAP = (twapOracle: TWAPOracle) => {
-  //   const slotsPassed = twapOracle.lastUpdatedSlot.sub(twapOracle.initialSlot);
-  //   const twapValue = twapOracle.observationAggregator.div(slotsPassed);
-  //   return (twapValue.toString();
-  // };
-
-  // const passTwap = markets ? calculateTWAP(markets.passTwap.twapOracle) : null;
-  // const failTwap = markets ? calculateTWAP(markets.failTwap.twapOracle) : null;
 
   useEffect(() => {
     if (lastSlot) return;
@@ -220,7 +213,32 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
           </Accordion.Item>
         </Accordion>
         <Space w="md" />
-        <Group align="center" justify="center" m="auto">
+        <Group align="center" justify="center" m="auto" pos="relative" w="100%">
+          <HoverCard>
+            <HoverCard.Target>
+              <Group pos="absolute" top="0" left="0" justify="center" align="flex-start">
+                <ActionIcon variant="transparent" pos="absolute" top="0" left="0">
+                  <IconQuestionMark />
+                </ActionIcon>
+              </Group>
+            </HoverCard.Target>
+            <HoverCard.Dropdown w="22rem">
+              <Text>
+                Conditional tokens are the tokens used to trade on conditional markets. You can mint
+                some by depositing $META or $USDC. These tokens will be locked up until the proposal
+                is finalized.
+                <br />
+                <Text span fw="bold">
+                  Pass tokens (pTokens)
+                </Text>{' '}
+                are used to trade on the Pass Market, while{' '}
+                <Text span fw="bold">
+                  Fail tokens (fTokens)
+                </Text>{' '}
+                are used to trade on the Fail Market.
+              </Text>
+            </HoverCard.Dropdown>
+          </HoverCard>
           <Fieldset legend={`Mint conditional $${tokens?.meta?.symbol}`}>
             <TextInput
               label="Amount"

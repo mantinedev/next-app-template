@@ -11,7 +11,7 @@ import { Markets, OpenOrdersAccountWithKey, ProposalAccountWithKey } from '@/lib
 import { useExplorerConfiguration } from '@/hooks/useExplorerConfiguration';
 import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
 import { useTransactionSender } from '@/hooks/useTransactionSender';
-import { NUMERAL_FORMAT } from '@/lib/constants';
+import { NUMERAL_FORMAT, QUOTE_LOTS } from '@/lib/constants';
 import { useProposal } from '@/hooks/useProposal';
 import { useWeb3 } from '@/hooks/useWeb3';
 
@@ -257,7 +257,8 @@ export function ProposalOrdersTable({
                       {orderStatus === 'uncranked'
                         ? 'Pending Crank'
                         : isPartiallyFilled(order)
-                        ? 'Partial Fill' : 'Open'}
+                        ? 'Partial Fill'
+                        : 'Open'}
                     </Table.Td>
                     <Table.Td c={isBidOrAsk(order) ? theme.colors.green[9] : theme.colors.red[9]}>
                       {isBidOrAsk(order) ? 'BID' : 'ASK'}
@@ -270,17 +271,17 @@ export function ProposalOrdersTable({
                       ).format(NUMERAL_FORMAT)}
                     </Table.Td>
                     <Table.Td>
-                      ${parseFloat(order.account.openOrders[0].lockedPrice.toNumber()) / 10000}
+                      ${parseFloat(order.account.openOrders[0].lockedPrice.toNumber()) * QUOTE_LOTS}
                     </Table.Td>
                     <Table.Td>
                       $
                       {isBidOrAsk(order)
-                        ? (order.account.position.bidsBaseLots.toNumber() *
-                            order.account.openOrders[0].lockedPrice.toNumber()) /
-                          10000
-                        : (order.account.position.asksBaseLots.toNumber() *
-                            order.account.openOrders[0].lockedPrice.toNumber()) /
-                          10000}
+                        ? order.account.position.bidsBaseLots.toNumber() *
+                          order.account.openOrders[0].lockedPrice.toNumber() *
+                          QUOTE_LOTS
+                        : order.account.position.asksBaseLots.toNumber() *
+                          order.account.openOrders[0].lockedPrice.toNumber() *
+                          QUOTE_LOTS}
                     </Table.Td>
                     <Table.Td>
                       <ActionIcon
