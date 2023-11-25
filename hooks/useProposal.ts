@@ -164,7 +164,7 @@ export function useProposal({
 
   const mintTokensTransactions = useCallback(
     async (amount: number, fromBase?: boolean) => {
-      if (!proposal || !markets) {
+      if (!proposal || !markets || !wallet.publicKey) {
         return;
       }
 
@@ -183,6 +183,9 @@ export function useProposal({
 
   const mintTokens = useCallback(
     async (amount: number, fromBase?: boolean) => {
+      if (!wallet.publicKey) {
+        return;
+      }
       const txs = await mintTokensTransactions(amount, fromBase);
       if (!txs || !proposal || !wallet.publicKey || !wallet.signAllTransactions) {
         return;
