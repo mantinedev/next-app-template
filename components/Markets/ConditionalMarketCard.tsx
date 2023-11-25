@@ -131,7 +131,7 @@ export function ConditionalMarketCard({
               </HoverCard>
             ) : null}
           </Group>
-          <Tooltip label="Crank the market">
+          <Tooltip label="Crank the market 🐷">
             <ActionIcon variant="subtle" loading={isCranking} onClick={() => handleCrank()}>
               <Icon12Hours />
             </ActionIcon>
