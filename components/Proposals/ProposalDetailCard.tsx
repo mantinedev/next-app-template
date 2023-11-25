@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Accordion,
   Button,
@@ -13,6 +13,7 @@ import {
   TextInput,
 } from '@mantine/core';
 import Link from 'next/link';
+import { useConnection } from '@solana/wallet-adapter-react';
 import { IconExternalLink } from '@tabler/icons-react';
 import { useProposal } from '@/hooks/useProposal';
 import { useTokens } from '@/hooks/useTokens';
@@ -23,8 +24,10 @@ import { ConditionalMarketCard } from '../Markets/ConditionalMarketCard';
 import { useExplorerConfiguration } from '@/hooks/useExplorerConfiguration';
 import { shortKey } from '@/lib/utils';
 import { StateBadge } from './StateBadge';
+import { SLOTS_PER_10_SECS, TEN_DAYS_IN_SLOTS } from '../../lib/constants';
 
 export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number }) {
+  const { connection } = useConnection();
   const { proposal, markets, orders, mintTokens, placeOrder, loading } = useProposal({
     fromNumber: proposalNumber,
   });
@@ -46,6 +49,37 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   );
   const { tokens } = useTokens();
   const { generateExplorerLink } = useExplorerConfiguration();
+  const [lastSlot, setLastSlot] = useState<number>();
+  const [secondsLeft, setSecondsLeft] = useState<number>(0);
+  const remainingSlots = useMemo(() => {
+    if (!proposal) return;
+
+    const endSlot = proposal.account.slotEnqueued.toNumber() + TEN_DAYS_IN_SLOTS;
+    return endSlot - (lastSlot || endSlot);
+  }, [proposal, lastSlot]);
+
+  useEffect(() => {
+    setSecondsLeft(((remainingSlots || 0) / SLOTS_PER_10_SECS) * 10);
+  }, [remainingSlots]);
+  useEffect(() => {
+    const interval = setInterval(
+      () => (secondsLeft && secondsLeft > 0 ? setSecondsLeft((old) => old - 1) : 0),
+      1000,
+    );
+
+    return () => clearInterval(interval);
+  });
+  const timeLeft = useMemo(() => {
+    const seconds = secondsLeft;
+    const days = Math.floor(seconds / (60 * 60 * 24));
+    const hours = Math.floor((seconds % (60 * 60 * 24)) / (60 * 60));
+    const minutes = Math.floor((seconds % (60 * 60)) / 60);
+    const secLeft = Math.floor(seconds % 60);
+
+    return `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(
+      minutes,
+    ).padStart(2, '0')}:${String(secLeft).padStart(2, '0')}`;
+  }, [secondsLeft]);
 
   const handleMint = useCallback(
     async (fromBase?: boolean) => {
@@ -69,6 +103,15 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
   // const passTwap = markets ? calculateTWAP(markets.passTwap.twapOracle) : null;
   // const failTwap = markets ? calculateTWAP(markets.failTwap.twapOracle) : null;
 
+  useEffect(() => {
+    if (lastSlot) return;
+    async function fetchSlot() {
+      setLastSlot(await connection.getSlot());
+    }
+
+    fetchSlot();
+  }, [connection, lastSlot]);
+
   return !proposal || !markets ? (
     <Group justify="center">
       <Loader />
@@ -84,6 +127,7 @@ export function ProposalDetailCard({ proposalNumber }: { proposalNumber: number 
                   <Text size="xl" fw={500}>
                     Proposal #{proposal.account.number + 1}
                   </Text>
+                  <Text fw="bold">Ends in {timeLeft}</Text>
                   <StateBadge proposal={proposal} />
                 </Group>
               </Stack>

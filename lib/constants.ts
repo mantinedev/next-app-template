@@ -7,3 +7,5 @@ export const OPENBOOK_TWAP_PROGRAM_ID = new PublicKey(
 export const AUTOCRAT_PROGRAM_ID = new PublicKey('meta3cxKzFBmWYgCVozmvCQAS3y9b3fGxrG9HkHL7Wi');
 
 export const NUMERAL_FORMAT = '0.0a';
+export const SLOTS_PER_10_SECS: number = 25;
+export const TEN_DAYS_IN_SLOTS: number = 10 * 24 * 60 * 6 * SLOTS_PER_10_SECS;
