@@ -6,7 +6,6 @@ import { IconTrash, Icon3dRotate, IconAssemblyOff } from '@tabler/icons-react';
 import { Transaction } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 import { notifications } from '@mantine/notifications';
-import { OpenOrdersAccount } from '@openbook-dex/openbook-v2';
 import { NotificationLink } from '../Layout/NotificationLink';
 import { Markets, OpenOrdersAccountWithKey, ProposalAccountWithKey } from '@/lib/types';
 import { useExplorerConfiguration } from '@/hooks/useExplorerConfiguration';
