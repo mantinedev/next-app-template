@@ -214,6 +214,8 @@ export function useProposal({
         );
 
         await fetchMarketsInfo(proposal);
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }

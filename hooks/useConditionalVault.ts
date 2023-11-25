@@ -128,7 +128,7 @@ export function useConditionalVault() {
       vault: VaultAccount,
       fromBaseVault?: boolean,
     ) => {
-      if (!tokens) {
+      if (!tokens || !provider) {
         return;
       }
       const token = Object.values(tokens).find(
