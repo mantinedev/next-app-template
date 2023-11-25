@@ -39,7 +39,7 @@ export function ConditionalMarketOrderBook({ bids, asks }: { bids: LeafNode[]; a
       bids: getSide(bids, true),
       asks: getSide(asks),
     };
-  }, []);
+  }, [bids, asks]);
 
   return (
     <>
