@@ -306,12 +306,12 @@ export function ProposalOrdersTable({
                 ) : (
                   <>
                     <Table.Td>
-                      {`${order.account.position.baseFreeNative.toNumber() / 1000000000}${
+                      {`${order.account.position.baseFreeNative.toNumber() / 1_000_000_000}${
                         isPassOrFail(order) ? 'p' : 'f'
                       }`}
                     </Table.Td>
                     <Table.Td>
-                      {`${order.account.position.quoteFreeNative * QUOTE_LOTS}${
+                      {`${order.account.position.quoteFreeNative * 1_000_000}${
                         isPassOrFail(order) ? 'p' : 'f'
                       }`}
                     </Table.Td>
