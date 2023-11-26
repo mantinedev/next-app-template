@@ -2,7 +2,7 @@ import { ReactNode, useCallback, useState } from 'react';
 import { ActionIcon, Group, Flex, Table, Text, useMantineTheme } from '@mantine/core';
 import { useWallet } from '@solana/wallet-adapter-react';
 import numeral from 'numeral';
-import { IconTrash, Icon3dRotate, IconAssemblyOff } from '@tabler/icons-react';
+import { IconPig, Icon3dRotate, IconAssemblyOff } from '@tabler/icons-react';
 import { Transaction } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 import { notifications } from '@mantine/notifications';
@@ -290,7 +290,7 @@ export function ProposalOrdersTable({
                         loading={isCanceling}
                         onClick={() => handleCancel([order])}
                       >
-                        <IconTrash />
+                        <IconPig />
                       </ActionIcon>
                       {isPartiallyFilled(order) ? (
                         <ActionIcon
