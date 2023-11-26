@@ -210,17 +210,19 @@ export function ConditionalMarketCard({
                 <InputLabel>
                   Amount of META
                 </InputLabel>
+                {baseBalance || quoteBalance ? (
                 <Group>
                   <Text size="xs" pl={0}>
                   <IconWallet height={12} />
                   {
                     orderSide === 'Sell' ?
-                      (`${isPassMarket ? 'p' : 'f'}META ${baseBalance || null}`)
+                      (`${isPassMarket ? 'p' : 'f'}META ${baseBalance || ''}`)
                      :
-                      (`${isPassMarket ? 'p' : 'f'}USDC $${quoteBalance || null}`)
+                      (`${isPassMarket ? 'p' : 'f'}USDC $${quoteBalance || ''}`)
                   }
                   </Text>
                 </Group>
+                ) : null}
               </Flex>
               </>
             }
