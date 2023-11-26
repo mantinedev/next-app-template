@@ -11,11 +11,9 @@ import { Markets, OpenOrdersAccountWithKey, ProposalAccountWithKey } from '@/lib
 import { useExplorerConfiguration } from '@/hooks/useExplorerConfiguration';
 import { useOpenbookTwap } from '@/hooks/useOpenbookTwap';
 import { useTransactionSender } from '@/hooks/useTransactionSender';
-import { NUMERAL_FORMAT, QUOTE_LOTS } from '@/lib/constants';
+import { NUMERAL_FORMAT, BASE_FORMAT, QUOTE_LOTS, BN_0 } from '@/lib/constants';
 import { useProposal } from '@/hooks/useProposal';
 import { useWeb3 } from '@/hooks/useWeb3';
-
-const BN_0 = new BN(0);
 
 export function ProposalOrdersTable({
   heading,
@@ -156,7 +154,7 @@ export function ProposalOrdersTable({
         order.account.openOrders[0].lockedPrice.toNumber(),
     );
     const totalValueLocked = sumOrders.reduce((partialSum, amount) => partialSum + amount, 0);
-    return totalValueLocked.toFixed(4);
+    return numeral(totalValueLocked).format(NUMERAL_FORMAT);
   };
 
   const totalUsdcInOrder = () => {
@@ -172,7 +170,7 @@ export function ProposalOrdersTable({
     });
 
     const totalValueLocked = sumOrders.reduce((partialSum, amount) => partialSum + amount, 0);
-    return totalValueLocked.toFixed(0);
+    return numeral(totalValueLocked).format(NUMERAL_FORMAT);
   };
 
   const totalMetaInOrder = () => {
@@ -188,7 +186,7 @@ export function ProposalOrdersTable({
     });
 
     const totalValueLocked = sumOrders.reduce((partialSum, amount) => partialSum + amount, 0);
-    return totalValueLocked.toFixed(0);
+    return numeral(totalValueLocked).format(BASE_FORMAT);
   };
 
   const isPartiallyFilled = (order: OpenOrdersAccountWithKey): boolean => {
@@ -266,22 +264,25 @@ export function ProposalOrdersTable({
                     <Table.Td>
                       {numeral(
                         isBidOrAsk(order)
-                          ? order.account.position.bidsBaseLots.toString()
-                          : order.account.position.asksBaseLots.toString(),
-                      ).format(NUMERAL_FORMAT)}
+                          ? order.account.position.bidsBaseLots
+                          : order.account.position.asksBaseLots,
+                      ).format(BASE_FORMAT)}
                     </Table.Td>
                     <Table.Td>
-                      ${parseFloat(order.account.openOrders[0].lockedPrice.toNumber()) * QUOTE_LOTS}
+                      ${numeral(
+                        order.account.openOrders[0].lockedPrice * QUOTE_LOTS
+                        ).format(NUMERAL_FORMAT)}
                     </Table.Td>
                     <Table.Td>
                       $
-                      {isBidOrAsk(order)
-                        ? order.account.position.bidsBaseLots.toNumber() *
-                          order.account.openOrders[0].lockedPrice.toNumber() *
+                      {numeral(
+                        (isBidOrAsk(order)
+                        ? order.account.position.bidsBaseLots *
+                          order.account.openOrders[0].lockedPrice *
                           QUOTE_LOTS
-                        : order.account.position.asksBaseLots.toNumber() *
-                          order.account.openOrders[0].lockedPrice.toNumber() *
-                          QUOTE_LOTS}
+                        : order.account.position.asksBaseLots *
+                          order.account.openOrders[0].lockedPrice *
+                          QUOTE_LOTS)).format(NUMERAL_FORMAT)}
                     </Table.Td>
                     <Table.Td>
                       <ActionIcon
@@ -310,7 +311,7 @@ export function ProposalOrdersTable({
                       }`}
                     </Table.Td>
                     <Table.Td>
-                      {`${order.account.position.quoteFreeNative.toNumber() / 1000000}${
+                      {`${order.account.position.quoteFreeNative * QUOTE_LOTS}${
                         isPassOrFail(order) ? 'p' : 'f'
                       }`}
                     </Table.Td>
@@ -326,10 +327,10 @@ export function ProposalOrdersTable({
                     <Table.Td>
                       <ActionIcon
                         disabled={
-                          order.account.position.asksBaseLots > 0 ||
-                          order.account.position.bidsBaseLots > 0 ||
-                          order.account.position.baseFreeNative > 0 ||
-                          order.account.position.quoteFreeNative > 0
+                          order.account.position.asksBaseLots > BN_0 ||
+                          order.account.position.bidsBaseLots > BN_0 ||
+                          order.account.position.baseFreeNative > BN_0 ||
+                          order.account.position.quoteFreeNative > BN_0
                         }
                         variant="subtle"
                         loading={isSettling}

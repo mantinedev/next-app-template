@@ -16,9 +16,10 @@ import {
   Pill,
   HoverCard,
   Group,
+  InputLabel,
 } from '@mantine/core';
 import numeral from 'numeral';
-import { Icon12Hours, IconQuestionMark } from '@tabler/icons-react';
+import { Icon12Hours, IconQuestionMark, IconWallet } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { ConditionalMarketOrderBook } from './ConditionalMarketOrderBook';
@@ -55,7 +56,9 @@ export function ConditionalMarketCard({
   const [orderType, setOrderType] = useState<string>('Limit');
   const [orderSide, setOrderSide] = useState<string>('Buy');
   const [amount, setAmount] = useState<number>(0);
-  const [price, setPrice] = useState<number>(0);
+  const [price, setPrice] = useState<string>('');
+  const [priceError, setPriceError] = useState<string | null>(null);
+  const [amountError, setAmountError] = useState<string | null>(null);
   const { crankMarketTransaction } = useOpenbookTwap();
   const [isCranking, setIsCranking] = useState<boolean>(false);
 
@@ -91,6 +94,36 @@ export function ConditionalMarketCard({
   const passTwap = calculateTWAP(markets.passTwap.twapOracle);
   const failTwap = calculateTWAP(markets.failTwap.twapOracle);
   const twap = isPassMarket ? passTwap : failTwap;
+  const _orderPrice = () => {
+    if (orderType === 'Limit') {
+      if (Number(price) > 0) {
+        return Number(price);
+      }
+      return 0;
+    }
+      if (orderSide === 'Sell') {
+        return 0;
+      }
+        return Number.MAX_SAFE_INTEGER;
+  };
+
+  const priceValidator = (value: string) => {
+    if (orderType === 'Limit') {
+      if (Number(value) > 0) {
+        setPriceError(null);
+      } else {
+        setPriceError('Enter a value greater than 0');
+      }
+    }
+  };
+
+  const amountValidator = (value: number) => {
+    if (value > 0) {
+      setAmountError(null);
+    } else {
+      setAmountError('You must enter a whole number');
+    }
+  };
 
   return (
     <Stack p={0} m={0} gap={0}>
@@ -162,27 +195,59 @@ export function ConditionalMarketCard({
             label="Price"
             placeholder="Enter price..."
             type="number"
-            onChange={(e) => setPrice(Number(e.target.value))}
+            value={orderType === 'Market' ? '' : price}
             disabled={orderType === 'Market'}
+            error={priceError}
+            onChange={(e) => {
+              setPrice(e.target.value);
+              priceValidator(e.target.value);
+            }}
           />
-          <InputBase
-            label="Amount of META"
+          <TextInput
+            label={
+              <>
+              <Flex justify="space-between" align="flex-start" direction="row" wrap="wrap">
+                <InputLabel>
+                  Amount of META
+                </InputLabel>
+                <Group>
+                  <Text size="xs" pl={0}>
+                  <IconWallet height={12} />
+                  {
+                    orderSide === 'Sell' ?
+                      (`${isPassMarket ? 'p' : 'f'}META ${baseBalance || null}`)
+                     :
+                      (`${isPassMarket ? 'p' : 'f'}USDC $${quoteBalance || null}`)
+                  }
+                  </Text>
+                </Group>
+              </Flex>
+              </>
+            }
             placeholder="Enter amount..."
             type="number"
             rightSectionPointerEvents="none"
             rightSectionWidth={100}
             rightSection={
               <>
-                {orderSide === 'Sell' ? (
-                  Number(baseBalance) > 0 ? (
-                    <Pill>{baseBalance}</Pill>
-                  ) : null
-                ) : quoteBalance && price ? (
-                  <Pill>{(Number(quoteBalance) / price).toFixed(0)}</Pill>
-                ) : null}
+                <Pill style={{ verticalAlign: 'center' }}>
+                  Max{' '}{
+                    orderSide === 'Sell' ? (
+                      Number(baseBalance) > 0 ? (
+                       baseBalance
+                      ) : null
+                    ) : quoteBalance && price ? (
+                      (Number(quoteBalance) / Number(price)).toFixed(0)
+                    ) : null
+                  }
+                </Pill>
               </>
             }
-            onChange={(e) => setAmount(Number(e.target.value))}
+            error={amountError}
+            onChange={(e) => {
+              setAmount(Number(e.target.value));
+              amountValidator(Number(e.target.value));
+            }}
           />
           <Grid>
             <GridCol span={12}>
@@ -192,25 +257,17 @@ export function ConditionalMarketCard({
                 onClick={() =>
                   placeOrder(
                     amount,
-                    price,
+                    _orderPrice(),
                     orderType === 'Limit',
                     orderSide === 'Sell',
                     isPassMarket,
                   )
                 }
+                variant="light"
                 disabled={!amount || (orderType !== 'Market' ? !price : false)}
               >
                 {orderSide} {isPassMarket ? 'p' : 'f'}META
               </Button>
-            </GridCol>
-          </Grid>
-          <Grid>
-            <GridCol span={12}>Balance</GridCol>
-            <GridCol span={6}>
-              {isPassMarket ? 'p' : 'f'}META {baseBalance || null}
-            </GridCol>
-            <GridCol span={6}>
-              {isPassMarket ? 'p' : 'f'}USDC ${quoteBalance || null}
             </GridCol>
           </Grid>
         </Stack>
