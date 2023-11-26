@@ -6,7 +6,6 @@ import {
   Text,
   SegmentedControl,
   TextInput,
-  InputBase,
   Grid,
   GridCol,
   Flex,
