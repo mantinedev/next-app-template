@@ -10,9 +10,10 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: any }) {
   return (
-    <html lang="en">
-      <head>
-        <ColorSchemeScript />
+    <html lang="en" suppressHydrationWarning>
+      <head suppressHydrationWarning>
+        {/* TODO: still get hydration mismatch... */}
+        <ColorSchemeScript suppressHydrationWarning />
         <link rel="shortcut icon" href="/favicon.svg" />
         <meta
           name="viewport"
