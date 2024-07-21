@@ -19,10 +19,12 @@
     "storybook:build": "storybook build"
   },
   "dependencies": {
-    "@mantine/core": "7.11.2",
-    "@mantine/hooks": "7.11.2",
+    "@mantine/core": "^7.11.2",
+    "@mantine/hooks": "^7.11.2",
+    "@mantinex/mantine-logo": "^1.0.1",
     "@next/bundle-analyzer": "^14.2.4",
     "@tabler/icons-react": "^3.6.0",
+    "feather-icons": "^4.29.2",
     "next": "14.2.4",
     "react": "18.3.1",
     "react-dom": "18.3.1"

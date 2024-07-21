@@ -1,0 +1,34 @@
+.header {
+    height: rem(60px);
+    padding-left: var(--mantine-spacing-md);
+    padding-right: var(--mantine-spacing-md);
+  }
+  
+  .link {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding-left: var(--mantine-spacing-md);
+    padding-right: var(--mantine-spacing-md);
+    text-decoration: none;
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+    font-weight: 500;
+    font-size: var(--mantine-font-size-sm);
+    @mixin hover {
+      background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+    }
+  }
+  
+  .subLink {
+    width: 100%;
+    border-radius: var(--mantine-radius-md);
+  
+    @mixin hover {
+      background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-7));
+    }
+  }
+  
+  .dropdownFooter {
+    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-7));
+    border-top: rem(1px) solid light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
+  }
