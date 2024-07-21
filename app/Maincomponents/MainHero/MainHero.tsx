@@ -5,7 +5,7 @@ import image from '../../../assets/watch.png';
 export function MainHero() {
   return (
     <div className={classes.wrapper}>
-      <Container size="lg" className={classes.inner}>
+     
         <Group>
           <div className={classes.content}>
 
@@ -36,7 +36,6 @@ export function MainHero() {
             </div>
           </div>
         </Group>
-      </Container>
     </div>
   );
 }
