@@ -1,0 +1,13 @@
+.loginlogo {
+              display: flex;
+              align-items: center;
+              height: 100%;
+             
+              text-decoration: none;
+              color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+              font-weight: 500;
+              font-size: var(--mantine-font-size-sm);
+              @mixin hover {
+                background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+              }
+            }

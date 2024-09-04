@@ -1,0 +1,36 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+// npx prisma migrate dev --name init --BU KOMUT VERİTABANI OLUŞTURMAMIZI SAĞLADI TABİ SQLLİTE İLE
+// npx prisma migrate dev --name add-description-to-post buda veritabanına yeni sütun ekleme mesela burada descrip ekledik
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id      String   @id @default(cuid())
+  name    String
+  price   Float
+  descrip String?
+  image String
+}
+
+
+
+model User {
+  id      String   @id @default(cuid())
+  name    String
+  email   String
+  password String
+  companyId String
+}

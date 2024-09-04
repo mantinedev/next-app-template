@@ -1,0 +1,34 @@
+.wrapper {
+  padding-top: calc(var(--mantine-spacing-xl) * 4);
+  padding-bottom: calc(var(--mantine-spacing-xl) * 4);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.title {
+  font-family:
+    Greycliff CF,
+    var(--mantine-font-family);
+  font-weight: 900;
+  margin-bottom: var(--mantine-spacing-md);
+  text-align: center;
+
+  @media (max-width: $mantine-breakpoint-sm) {
+    font-size: rem(28px);
+    text-align: left;
+  }
+}
+
+.description {
+  text-align: center;
+
+  @media (max-width: $mantine-breakpoint-sm) {
+    text-align: left;
+  }
+}
+.descriptionPlace {
+  border: 0.5px solid transparent;
+  box-shadow:
+    rgba(0, 0, 0, 0.12) 0px 1px 3px,
+    rgba(0, 0, 0, 0.24) 0px 1px 2px;
+}
