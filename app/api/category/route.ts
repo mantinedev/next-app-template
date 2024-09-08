@@ -1,33 +1,32 @@
 import { PrismaClient } from '@prisma/client';
-import { getTokenFromHeader } from '../getTokenHeader/getTokenHeader';
 const prisma = new PrismaClient();
-const jwt = require('jsonwebtoken');
+import { cookies } from 'next/headers';
+import { getTokenFromHeader } from '../getTokenHeader/getTokenHeader';
 const secretKey = process.env.SECRET_KEY;
+const jwt = require('jsonwebtoken');
 
 export async function GET() {
-  let res = await prisma.product.findMany();
+  let res = await prisma.category.findMany();
   return new Response(JSON.stringify(res));
 }
 
+
+
 export async function POST(req: any) {
   try {
-    const post = await req.json();
+    const category = await req.json();
+
     try {
-      const token = getTokenFromHeader(req);
+      const token = getTokenFromHeader(req); // Token'ı header'dan al
       const decoded = jwt.verify(token, secretKey);
+
       if (decoded) {
-        const NewProduct = await prisma.product.create({
+        const NewCategory = await prisma.category.create({
           data: {
-            name: post.name,
-            price: post.price,
-            descrip: post.descrip,
-            image1: post.image,
-            image2: post.image2,
-            image3: post.image3,
-            categoryId: post.categoryId,
+            name: category.name,
           },
         });
-        return new Response(JSON.stringify({ message: 'Başarı İle Kayıt Edildi', NewProduct }), {
+        return new Response(JSON.stringify({ message: 'Başarı İle Kayıt Edildi', NewCategory }), {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -53,7 +52,7 @@ export async function POST(req: any) {
       });
     }
   } catch (error: any) {
-    return new Response(JSON.stringify({ message: 'Hata Sebebi', error: error.message }), {
+    return new Response(JSON.stringify({ message: 'Hata', error: error.message }), {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -64,17 +63,19 @@ export async function POST(req: any) {
   }
 }
 
-//DELETE İŞLEMİ
+// DELETE İŞLEMİ
 export async function DELETE(req: any) {
   try {
-    const token = getTokenFromHeader(req);
+    const { id } = await req.json();
+
+    const token = getTokenFromHeader(req); // Token'ı header'dan al
     const decoded = jwt.verify(token, secretKey);
+
     if (decoded) {
-      const { id } = await req.json();
-      const deletepost = await prisma.product.delete({
+      const deletecategory = await prisma.category.delete({
         where: { id: id },
       });
-      return new Response(JSON.stringify({ message: 'Başarı İle Silindi', deletepost }), {
+      return new Response(JSON.stringify({ message: 'Başarı İle Silindi', deletecategory }), {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -82,7 +83,7 @@ export async function DELETE(req: any) {
       });
     } else {
       return new Response(
-        JSON.stringify({ error: 'Kayıt Hatası', details: 'Yetkiniz bulunmuyor' }),
+        JSON.stringify({ error: 'Silme Hatası', details: 'Yetkiniz bulunmuyor' }),
         {
           headers: {
             'Content-Type': 'application/json',
@@ -91,8 +92,8 @@ export async function DELETE(req: any) {
         }
       );
     }
-  } catch (error) {
-    return new Response(JSON.stringify({ error }), {
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: 'Silme Hatası', details: error.message }), {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -103,26 +104,22 @@ export async function DELETE(req: any) {
   }
 }
 
-//UPDATE İŞLEMİ
+// UPDATE İŞLEMİ
 export async function PUT(req: any) {
   try {
-    const token = getTokenFromHeader(req);
+    const { id, name } = await req.json();
+
+    const token = getTokenFromHeader(req); // Token'ı header'dan al
     const decoded = jwt.verify(token, secretKey);
+
     if (decoded) {
-      const post = await req.json();
-      const updatedPost = await prisma.product.update({
-        where: { id: post.id },
+      const updatedCategory = await prisma.category.update({
+        where: { id: id },
         data: {
-          name: post.name,
-          price: post.price,
-          descrip: post.descrip,
-          image1: post.image,
-          image2: post.image2,
-          image3: post.image3,
-          categoryId: post.categoryId,
+          name: name,
         },
       });
-      return new Response(JSON.stringify({ message: 'Başarı İle Güncellendi', updatedPost }), {
+      return new Response(JSON.stringify({ message: 'Başarı İle Güncellendi', updatedCategory }), {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -130,7 +127,7 @@ export async function PUT(req: any) {
       });
     } else {
       return new Response(
-        JSON.stringify({ error: 'Kayıt Hatası', details: 'Yetkiniz bulunmuyor' }),
+        JSON.stringify({ error: 'Güncelleme Hatası', details: 'Yetkiniz bulunmuyor' }),
         {
           headers: {
             'Content-Type': 'application/json',
@@ -139,8 +136,8 @@ export async function PUT(req: any) {
         }
       );
     }
-  } catch (error) {
-    return new Response(JSON.stringify({ error }), {
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: 'Güncelleme Hatası', details: error.message }), {
       headers: {
         'Content-Type': 'application/json',
       },

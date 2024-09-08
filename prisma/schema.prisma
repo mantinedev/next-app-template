@@ -18,12 +18,22 @@ datasource db {
 }
 
 model Product {
-  id      String   @id @default(cuid())
-  name    String
-  price   Float
-  descrip String?
-  image String
+  id         String   @id @default(cuid())
+  categoryId String
+
+  name       String
+  price      Float
+  descrip    String?
+  image1     String?
+  image2     String?
+  image3     String?
 }
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String
+}
+
 
 
 

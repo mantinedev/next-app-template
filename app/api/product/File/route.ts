@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 cloudinary.config({
   cloud_name: "dj9sknitc", 
@@ -11,7 +13,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-
+    const id= formData.get('id')
     if (!file) {
       return NextResponse.json({ success: false, error: 'No file uploaded' }, { status: 400 });
     }
@@ -36,6 +38,15 @@ export async function POST(request: Request): Promise<Response> {
       // Buffer'ı stream'e yaz ve işlemi bitir
       uploadStream.end(buffer);
     });
+    await prisma.product.update({
+      where: { id: `${id}` },
+      data: { image: uploadResult.secure_url },
+    });
+
+
+
+
+
 
     // Yüklenen dosyanın URL'sini dön
     return NextResponse.json({ success: true, url: uploadResult.secure_url }, { status: 200 });

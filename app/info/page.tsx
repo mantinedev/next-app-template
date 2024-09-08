@@ -1,7 +1,7 @@
-import React from 'react';
-import { FeaturesGrid } from './components/FeatureGrid';
 import { Container } from '@mantine/core';
-import UploadImage from '../product/[...id]/uploadimage';
+import React from 'react';
+import UploadImage from '../admin/components/uploadimage';
+import { FeaturesGrid } from './components/FeatureGrid';
 
 const Page: React.FC = () => {
   return (
