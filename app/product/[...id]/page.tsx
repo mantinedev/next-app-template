@@ -2,6 +2,7 @@
 import { useSearchParams } from 'next/navigation';
 import React from 'react';
 import { Box, Container, Grid,Group,Skeleton, Text, Title, rem } from '@mantine/core';
+import { ProductCard } from '@/app/Maincomponents/Productions/ProductCard';
 
 const Page: React.FC = () => {
   const searchParams = useSearchParams();
@@ -49,6 +50,12 @@ const Page: React.FC = () => {
             </Grid>
           </Grid.Col>
         </Grid>
+        <Box m={20}  mb='md'>
+          <Title mb={10}>
+            Benzer Ürünler
+          </Title>
+          <ProductCard/>
+        </Box>
       </Container>
     </>
   );

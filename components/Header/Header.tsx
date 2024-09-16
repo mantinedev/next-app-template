@@ -31,9 +31,7 @@ export function Header() {
             <Link href="/product" className={classes.link}>
               Ürün Listesi
             </Link>
-            <Link className={classes.link} href="/product?isim=değeriniz">
-              product
-            </Link>
+
             <Link href="/info" className={classes.link}>
               Hakkımızda
             </Link>
@@ -42,7 +40,6 @@ export function Header() {
           <Burger opened={drawerOpened} onClick={toggleDrawer} hiddenFrom="sm" />
 
           <Group justify="flex-end" h="100%">
-          
             <ColorSchemeToggle />
             <AdminLogin />
           </Group>
@@ -54,24 +51,22 @@ export function Header() {
         onClose={closeDrawer}
         size="100%"
         padding="md"
-        title="Navigation"
+        title="Saat Endüstrisi"
         hiddenFrom="sm"
         zIndex={1000000}
       >
         <ScrollArea mx="-md">
           <Divider my="sm" />
+          <Link href="/" className={classes.link}>
+            Anasayfa
+          </Link>
+          <Link href="/product" className={classes.link}>
+            Ürün Listesi
+          </Link>
 
-          <a href="#" className={classes.link}>
-            Home
-          </a>
-
-          <Collapse in={linksOpened}></Collapse>
-          <a href="#" className={classes.link}>
-            Learn
-          </a>
-          <a href="#" className={classes.link}>
-            Academy
-          </a>
+          <Link href="/info" className={classes.link}>
+            Hakkımızda
+          </Link>
         </ScrollArea>
       </Drawer>
     </Box>
