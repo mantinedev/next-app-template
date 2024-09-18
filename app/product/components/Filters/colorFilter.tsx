@@ -9,7 +9,7 @@ const ColorFilter = () => {
 
   return (
     <Box mt={20} mb={20} p={5}>
-      <Title order={3} size="h3">
+      <Title order={3} size="h4">
         Renk Filtresi
       </Title>
       <Group>

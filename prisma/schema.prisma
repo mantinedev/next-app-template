@@ -32,6 +32,7 @@ model Product {
 model Category {
   id       String    @id @default(cuid())
   name     String
+  status  Boolean  @default(true)
 }
 
 

@@ -6,18 +6,15 @@ const secretKey = process.env.SECRET_KEY;
 const jwt = require('jsonwebtoken');
 
 export async function GET() {
-  let res = await prisma.category.findMany();
+  let res = await prisma.category.findMany({ where: { status: true } });
   return new Response(JSON.stringify(res));
 }
-
-
 
 export async function POST(req: any) {
   try {
     const category = await req.json();
-
     try {
-      const token = getTokenFromHeader(req); // Token'ı header'dan al
+      const token = getTokenFromHeader(req);
       const decoded = jwt.verify(token, secretKey);
 
       if (decoded) {
@@ -72,8 +69,11 @@ export async function DELETE(req: any) {
     const decoded = jwt.verify(token, secretKey);
 
     if (decoded) {
-      const deletecategory = await prisma.category.delete({
+      const deletecategory = await prisma.category.update({
         where: { id: id },
+        data: {
+          status: false,
+        },
       });
       return new Response(JSON.stringify({ message: 'Başarı İle Silindi', deletecategory }), {
         headers: {

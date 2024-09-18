@@ -14,12 +14,13 @@ const Page: React.FC = () => {
   return (
     <Container mt={30} size="xl">
       <Drawer
+      title='Saat Endüstrisi'
         opened={opened}
         onClose={close}
         overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
         size="sm"
       >
-        <Title>Filtreler</Title>
+      
         <CategoryFilter />
         <ColorFilter />
         <GenderFilter />

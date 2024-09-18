@@ -44,7 +44,12 @@ interface FeatureProps {
 export function Feature({ icon: Icon, title, description }: FeatureProps) {
   return (
     <div>
-      <ThemeIcon variant="light" size={40} radius={40}>
+      <ThemeIcon
+        variant="gradient"
+        gradient={{ from: 'yellow', to: 'orange', deg: 78 }}
+        size={35}
+        radius={35}
+      >
         <Icon style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
       </ThemeIcon>
       <Text mt="sm" mb={7}>

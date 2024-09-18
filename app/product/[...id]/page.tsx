@@ -1,14 +1,14 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
 import React from 'react';
-import { Box, Container, Grid,Group,Skeleton, Text, Title, rem } from '@mantine/core';
+import { Box, Button, Container, Grid,Group,Skeleton, Text, Title, rem } from '@mantine/core';
 import { ProductCard } from '@/app/Maincomponents/Productions/ProductCard';
+import { IconBrandWhatsapp } from '@tabler/icons-react';
 
 const Page: React.FC = () => {
-  const searchParams = useSearchParams();
   const PRIMARY_COL_HEIGHT = rem(550);
-  const SECONDARY_COL_HEIGHT = `calc(${PRIMARY_COL_HEIGHT} / 2 - var(--mantine-spacing-md) / 2)`;
-
+  const phoneNumber = '905467148137'; // Numara buraya
+  const message = 'Merhaba, bu linki inceleyin: https://www.orneklink.com';
   return (
     <>
       <Container mt="md" size="xl">
@@ -45,6 +45,19 @@ const Page: React.FC = () => {
                     Delectus quo nisi, voluptatibus quod similique sapiente eos soluta quaerat 
                     quis sed ullam eum unde earum vel? Veniam omnis fugit ea fugiat, 
                     accusantium enim.</Text>
+                  </Box>
+                  <Box>
+
+                  <Button mt={15} h={40} w={'100%'}
+                  radius={140}
+        component="a"
+        href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`}
+        target="_blank"
+        variant="gradient"
+          gradient={{ from: '#01FA50', to: '#05D447', deg:145 }}
+      >
+       <IconBrandWhatsapp/> WhatsApp ile İletişim
+      </Button>
                   </Box>
               </Grid.Col>
             </Grid>

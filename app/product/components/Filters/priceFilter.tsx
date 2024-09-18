@@ -8,7 +8,7 @@ const PriceFilter = () => {
   return (
    <>
    <Box  mt={20} mb={40} p={5}>
-      <Title order={3} size="h3">Fiyat Aralığı</Title>
+      <Title order={3} size="h4">Fiyat Aralığı</Title>
       <Box style={{gap:15}}  display={'flex'}>
       <Input
         placeholder="En Düşük"

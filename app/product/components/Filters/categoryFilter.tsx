@@ -32,7 +32,7 @@ const CategoryFilter = () => {
 
   return (
     <Box mt={10} mb={10}>
-      <Title  mb={10} order={3} size="h3"> Kategori Filtresi</Title>
+      <Title  mb={10} order={3} size="h4"> Kategori Filtresi</Title>
    <Stack>
       {categories.map((category) => (
         <Checkbox

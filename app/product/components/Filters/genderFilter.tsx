@@ -7,7 +7,7 @@ const GenderFilter = () => {
   return (
     <>
       <Box>
-              <Title order={3} size="h3" mb={10}>Cinsiyet Filtresi</Title>
+              <Title order={3} size="h4" mb={10}>Cinsiyet Filtresi</Title>
       <MultiSelect
      
       placeholder="Cinsiyet Seçiniz"

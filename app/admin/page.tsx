@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductList } from './components/productlist';
 import AddProduct from './components/addproduct/addproduct';
 import classes from './adminpage.module.css';
+import AddCategory from './category/addcategory/addcategory';
 const page = () => {
   return (
     <Container mt='lg' size="xl" >
@@ -13,6 +14,7 @@ const page = () => {
             H3 heading with h1 font-size
           </Title>
           <AddProduct />
+          <AddCategory/>
         </Box>
         <ProductList />
     </Container>
