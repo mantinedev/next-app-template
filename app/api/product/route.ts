@@ -3,7 +3,13 @@ import { getTokenFromHeader } from '../getTokenHeader/getTokenHeader';
 const prisma = new PrismaClient();
 const jwt = require('jsonwebtoken');
 const secretKey = process.env.SECRET_KEY;
+import { v2 as cloudinary } from 'cloudinary';
 
+cloudinary.config({
+  cloud_name: 'dj9sknitc',
+  api_key: '339673989917425',
+  api_secret: 'XVgNicWrFmgezIVj0N08uUO1xkc', // Hata düzeltildi: 'API_KEY' yerine 'API_SECRET'
+});
 export async function GET() {
   let res = await prisma.product.findMany();
   return new Response(JSON.stringify(res));
@@ -21,18 +27,19 @@ export async function POST(req: any) {
             name: post.name,
             price: post.price,
             descrip: post.descrip,
-            image1: post.image,
-            image2: post.image2,
-            image3: post.image3,
-            categoryId: post.categoryId,
+            stock:post.stock,
+            image1: '',
+            categoryId: '1',
           },
         });
+        // Yüklenen dosyaların URL'lerini dön
         return new Response(JSON.stringify({ message: 'Başarı İle Kayıt Edildi', NewProduct }), {
           headers: {
             'Content-Type': 'application/json',
           },
           status: 201,
         });
+      
       } else {
         return new Response(
           JSON.stringify({ error: 'Kayıt Hatası', details: 'Yetkiniz bulunmuyor' }),
@@ -45,6 +52,7 @@ export async function POST(req: any) {
         );
       }
     } catch (error: any) {
+      console.log(error.message)
       return new Response(JSON.stringify({ error: 'Kayıt Hatası', details: error.message }), {
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +89,9 @@ export async function DELETE(req: any) {
         status: 201,
       });
     } else {
+     
       return new Response(
+        
         JSON.stringify({ error: 'Kayıt Hatası', details: 'Yetkiniz bulunmuyor' }),
         {
           headers: {
@@ -117,8 +127,7 @@ export async function PUT(req: any) {
           price: post.price,
           descrip: post.descrip,
           image1: post.image,
-          image2: post.image2,
-          image3: post.image3,
+         
           categoryId: post.categoryId,
         },
       });

@@ -1,7 +1,7 @@
 'use client';
 import {Box, Container,Title } from '@mantine/core';
 import React from 'react';
-import { ProductList } from './components/productlist';
+import { ProductList } from './product/productlist';
 import AddProduct from './components/addproduct/addproduct';
 import classes from './adminpage.module.css';
 import AddCategory from './category/addcategory/addcategory';

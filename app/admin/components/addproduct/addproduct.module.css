@@ -1,0 +1,19 @@
+.arrowbtnl {
+  position: absolute;
+  top: 50%;
+  background-color: transparent;
+  color: gray;
+  left:10px;
+}
+.arrowbtnr {
+  position: absolute;
+  top: 50%;
+  background-color: transparent;
+  color: gray;
+  right: 10px;
+}
+.arrowbtnl:hover,
+.arrowbtnr:hover {
+  background-color: rgba(255, 255, 255, 0.39);
+  color: black;
+}

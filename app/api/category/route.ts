@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-import { cookies } from 'next/headers';
 import { getTokenFromHeader } from '../getTokenHeader/getTokenHeader';
 const secretKey = process.env.SECRET_KEY;
 const jwt = require('jsonwebtoken');
@@ -16,7 +15,7 @@ export async function POST(req: any) {
     try {
       const token = getTokenFromHeader(req);
       const decoded = jwt.verify(token, secretKey);
-
+      
       if (decoded) {
         const NewCategory = await prisma.category.create({
           data: {

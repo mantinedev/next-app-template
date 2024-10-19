@@ -1,5 +1,6 @@
 export function getTokenFromHeader(req: any) {
   const authHeader = req.headers.get('Authorization');
+
   if (!authHeader) {
     throw new Error('Authorization başlığı eksik.');
   }

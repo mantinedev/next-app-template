@@ -7,8 +7,10 @@ import ColorFilter from './components/Filters/colorFilter';
 import GenderFilter from './components/Filters/genderFilter';
 import PriceFilter from './components/Filters/priceFilter';
 import CategoryFilter from './components/Filters/categoryFilter';
+import { Products } from '../types/product/ListProduct';
+import { useEffect, useState } from 'react';
 
-const Page: React.FC = () => {
+const Page: React.FC<{data: Products[]}> = ({data}) => {
   const [opened, { open, close }] = useDisclosure(true);
 
   return (
@@ -46,7 +48,6 @@ const Page: React.FC = () => {
         </Button>
       </Box>
 
-      <ProductCard />
       <ProductCard />
     </Container>
   );

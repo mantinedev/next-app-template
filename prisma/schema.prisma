@@ -20,13 +20,11 @@ datasource db {
 model Product {
   id         String   @id @default(cuid())
   categoryId String
-
   name       String
-  price      Float
+  price      String
   descrip    String?
+  stock      String
   image1     String?
-  image2     String?
-  image3     String?
 }
 
 model Category {

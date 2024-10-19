@@ -27,6 +27,6 @@ export async function addcategory(prevState: any, formData: any) {
       };
     }
   } catch (error) {
-    return {};
+    console.log(error)
   }
 }
