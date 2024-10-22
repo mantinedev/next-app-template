@@ -1,50 +1,36 @@
+import { Category } from '@/app/types/category/ListCategory';
 import { Table } from '@mantine/core';
+import { useEffect, useState } from 'react';
 
-const elements = [
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
-];
 
 export function CategoryList() {
-  const rows = elements.map((element) => (
-    <Table.Tr key={element.name}>
-      <Table.Td>{element.position}</Table.Td>
-      <Table.Td>{element.name}</Table.Td>
-      <Table.Td>{element.symbol}</Table.Td>
-      <Table.Td>{element.mass}</Table.Td>
+
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const dataFetch = async () => {
+    let data = await fetch('http://localhost:3000/api/category');
+    let cat = await data.json();
+    setCategories(cat);
+  };
+  useEffect(() => {
+    dataFetch();
+  }, []);
+  const rows = categories.map((category) => (
+    <Table.Tr  style={{ cursor: 'pointer',textAlign:'center'}}>
+      <Table.Td>{category.name}</Table.Td>
+
     </Table.Tr>
   ));
 
   return (
-              <Table stickyHeader stickyHeaderOffset={60}>
+    <Table horizontalSpacing={'xl'} withTableBorder  highlightOnHover  stickyHeader stickyHeaderOffset={60}>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>Element position</Table.Th>
-                  <Table.Th>Element name</Table.Th>
-                  <Table.Th>Symbol</Table.Th>
-                  <Table.Th>Atomic mass</Table.Th>
+                  <Table.Th style={{textAlign:'center'}}>Kategori Adı</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>{rows}</Table.Tbody>
-              <Table.Caption>Scroll page to see sticky thead</Table.Caption>
+              <Table.Caption>Kategori Listeniz</Table.Caption>
             </Table>
   );
 }

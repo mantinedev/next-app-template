@@ -10,7 +10,7 @@ const Page: React.FC = () => {
   const params = useParams();
   const [data, setData] = useState<Products>();
   const dataFetch = async () => {
-    let data = await fetch(`http://localhost:3000/api/product/${params.id}`);
+    let data = await fetch(`http://localhost:3000/api/product/detail?idr=${params.id}`);
     let elements = await data.json();
 
     // Dönen bilgiyi console'a yazdır
@@ -21,7 +21,6 @@ const Page: React.FC = () => {
     dataFetch();
   }, []);
 
-  console.log(data?.descrip);
   const PRIMARY_COL_HEIGHT = rem(550);
   const phoneNumber = '905467148137'; // Numara buraya
   const message = 'Merhaba, bu linki inceleyin: https://www.orneklink.com';
@@ -113,7 +112,7 @@ const Page: React.FC = () => {
         </Grid>
         <Box m={20} mb="md">
           <Title mb={10}>Benzer Ürünler</Title>
-          <ProductCard />
+              <ProductCard/>
         </Box>
       </Container>
     </>

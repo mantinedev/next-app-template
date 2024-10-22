@@ -1,40 +1,54 @@
 import {
+  Alert,
   Box,
-  Button,
   Container,
   Grid,
   Group,
-  Image,
   rem,
   Skeleton,
   Text,
   Title,
 } from '@mantine/core';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import React, { useState } from 'react';
-import classes from '../components/addproduct/addproduct.module.css';
+import React, { useEffect, useState } from 'react';
+import { Products } from '@/app/types/product/ListProduct';
 
-const ProductPreview = ({ product, images }: { product: any; images: any }) => {
+const ProductPreview = ({id}:any) => {
+  const [product,setProduct]=useState<Products>();
   const PRIMARY_COL_HEIGHT = rem(450);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const handlePrevImage = () => {
+  
+  useEffect(()=>{
+    dataFetch()
+  },[id])
+
+  const dataFetch =  async ()=>{
+    try{
+      const response = await fetch(`http://localhost:3000/api/product/detail?idr=${id}`)
+      let elements = await response.json();
+      setProduct(elements)
+    }catch(error:any){
+      <Alert mt={15} variant="filled" color="green" title="">
+        {error}
+    </Alert>
+    }
+  }
+  /* const handlePrevImage = () => {
     setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
   };
 
   const handleNextImage = () => {
     setCurrentImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
-  };
+  }; */
 
   return (
     <>
       <Container mt="md" size="xl">
-        <Grid>
+        <Grid w={'100%'}>
           <Grid.Col span={{ base: 12, md: 6, lg: 6 }}>
             <Box style={{ position: 'relative' }}>
-              {images[currentImageIndex] ? (
+              {product?.image1 ? (
                 <img
-                  src={URL.createObjectURL(images[currentImageIndex])}
-                  alt={`Preview ${currentImageIndex + 1}`}
+                  src={`${product.image1}`}
+                  
                   style={{
                     width: '100%',
                     height: PRIMARY_COL_HEIGHT,
@@ -45,19 +59,23 @@ const ProductPreview = ({ product, images }: { product: any; images: any }) => {
               ) : (
                 <Skeleton height={PRIMARY_COL_HEIGHT} radius="md" animate={true} />
               )}
+              {/*
               <Button className={classes.arrowbtnl} onClick={handlePrevImage}>
                 <IconChevronLeft size={32} />
               </Button>
               <Button className={classes.arrowbtnr} onClick={handleNextImage}>
                 <IconChevronRight size={32} />
               </Button>
+              */}
+              
+              
             </Box>
           </Grid.Col>
           <Grid.Col span={{ base: 12, md: 6, lg: 6 }}>
             <Grid mt="md" gutter="md">
               <Grid.Col>
                 <Box>
-                  <Title order={4}>{product.name}</Title>
+                  <Title order={4}>{product?.name}</Title>
                 </Box>
               </Grid.Col>
               <Grid.Col mt="xl" span={6}>
@@ -65,7 +83,7 @@ const ProductPreview = ({ product, images }: { product: any; images: any }) => {
                   <Text fw={500} size="lg">
                     Ürün Fiyatı:
                   </Text>
-                  <Text>{product.price}₺</Text>
+                  <Text>{product?.price}₺</Text>
                 </Group>
               </Grid.Col>
               <Grid.Col mt="xl" span={6}>
@@ -73,23 +91,16 @@ const ProductPreview = ({ product, images }: { product: any; images: any }) => {
                   <Text fw={500} size="lg">
                     Ürün Stok Durumu:
                   </Text>
-                  <Text>{product.stock}</Text>
+                  <Text>{product?.stock}</Text>
                 </Group>
               </Grid.Col>
               <Grid.Col>
                 <Box>
                   <Title order={2}>Ürün Açıklaması</Title>
-                  <Text size="md">{product.descrip}</Text>
+                  <Text size="md">{product?.descrip}</Text>
                 </Box>
                 <Box>
-                  <Button
-                    type="submit"
-                    mt="md"
-                    variant="gradient"
-                    gradient={{ from: 'yellow', to: 'orange', deg: 78 }}
-                  >
-                    Ürünü Ekle
-                  </Button>
+                 
                 </Box>
               </Grid.Col>
             </Grid>

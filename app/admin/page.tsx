@@ -1,22 +1,29 @@
 'use client';
-import {Box, Container,Title } from '@mantine/core';
-import React from 'react';
+import { Box, Container, Modal, Title } from '@mantine/core';
+import React, { useState } from 'react';
 import { ProductList } from './product/productlist';
 import AddProduct from './components/addproduct/addproduct';
 import classes from './adminpage.module.css';
-import AddCategory from './category/addcategory/addcategory';
+
+import ProductPreview from './product/detail/productpreview';
+import { useDisclosure } from '@mantine/hooks';
 const page = () => {
+  const [opened, { open, close }] = useDisclosure(false);
+  const [id, setId] = useState('');
+
   return (
-    <Container mt='lg' size="xl" >
-    
-      <Box mb='md' className={classes.titleplace}>
-          <Title order={3} size="h1">
-            H3 heading with h1 font-size
-          </Title>
-          <AddProduct />
-          <AddCategory/>
-        </Box>
-        <ProductList />
+    <Container mt="lg" size="xl">
+      <Box mb="md" className={classes.titleplace}>
+        <Title order={3} size="h1">
+          Ürün Listesi
+        </Title>
+        <AddProduct />
+      </Box>
+      <ProductList setId={setId} open={open} />
+
+      <Modal opened={opened} size="xl" title="Ürün Önizleme" centered onClose={close}>
+        <ProductPreview id={id} />
+      </Modal>
     </Container>
   );
 };

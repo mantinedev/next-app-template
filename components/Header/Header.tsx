@@ -5,9 +5,7 @@ import {
   Box,
   Burger,
   Drawer,
-  Collapse,
   ScrollArea,
-  useMantineTheme,
 } from '@mantine/core';
 
 import classes from './Header.module.css';
@@ -18,7 +16,6 @@ import AdminLogin from '../AdminLogin/AdminLogin';
 
 export function Header() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
-  const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
 
   return (
     <Box>

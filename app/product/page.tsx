@@ -3,16 +3,22 @@ import { Container, Drawer, Button, Box, Title } from '@mantine/core';
 import { ProductCard } from '../Maincomponents/Productions/ProductCard';
 import { useDisclosure } from '@mantine/hooks';
 import classes from './productpage.module.css';
-import ColorFilter from './components/Filters/colorFilter';
 import GenderFilter from './components/Filters/genderFilter';
 import PriceFilter from './components/Filters/priceFilter';
 import CategoryFilter from './components/Filters/categoryFilter';
 import { Products } from '../types/product/ListProduct';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import Link from 'next/link';
 
 const Page: React.FC<{data: Products[]}> = ({data}) => {
   const [opened, { open, close }] = useDisclosure(true);
+ const [category,setCategory]=useState<any>(null)
+ const [down,setDown]=useState<any>(null);
+ const [up,setUp]=useState<any>(null);
 
+ const handle = ()=>{
+  console.log(down)
+ }
   return (
     <Container mt={30} size="xl">
       <Drawer
@@ -23,32 +29,37 @@ const Page: React.FC<{data: Products[]}> = ({data}) => {
         size="sm"
       >
       
-        <CategoryFilter />
-        <ColorFilter />
+        <CategoryFilter setCat={setCategory} />
         <GenderFilter />
-        <PriceFilter />
-        <Button
+        <PriceFilter  setDown ={setDown} setUp={setUp}/>
+        <Link   style={{ flex: 1 }} href={`/product?cr=${category}&dpr=${down}&upr=${up}`}>
+        <Button 
+        onClick={handle}
           style={{ width: '100%' }}
           variant="gradient"
           gradient={{ from: 'yellow', to: 'orange', deg: 78 }}
         >
           Filtrele
         </Button>
+        </Link>
+        
       </Drawer>
       <Box m={20} display={'flex'} mb="md" className={classes.titleplace}>
         <Title order={3} size="h1">
           Ürün Listesi
         </Title>
+       
         <Button
           variant="gradient"
           gradient={{ from: 'yellow', to: 'orange', deg: 78 }}
-          onClick={open}
+          
         >
           Filtrele
         </Button>
+        
       </Box>
 
-      <ProductCard />
+      <ProductCard/>
     </Container>
   );
 };

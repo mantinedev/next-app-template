@@ -4,18 +4,28 @@ import classes from './ProductCard.module.css';
 import Link from 'next/link';
 import { Products } from '@/app/types/product/ListProduct';
 import { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 
 
 export function ProductCard() {
+  const params = useSearchParams()
+  const dpr = params.get('dpr');
+  const upr = params.get('upr');
+  const cr =params.get('cr');
+  console.log(upr)
   const [products, setProduct] = useState<Products[]>([]);
   const dataFetch = async () => {
-    let data = await fetch('http://localhost:3000/api/product');
+    
+
+    // Eğer dpr veya upr null ise isteği gönderme
+    let data = await fetch(`http://localhost:3000/api/product?cr=${cr}&dpr=${dpr}&upr=${upr}`);
     let elements = await data.json();
     setProduct(elements);
   };
   useEffect(() => {
     dataFetch();
-  }, []);
+  }, [dpr,upr,cr]);
+
   const card = products.map((card) => (
     <Card withBorder radius="md" className={classes.card}>
       <Card.Section className={classes.imageSection}>

@@ -2,7 +2,7 @@ import { Products } from '@/app/types/product/ListProduct';
 import { Table } from '@mantine/core';
 import { useEffect, useState } from 'react';
 
-export function ProductList() {
+export function ProductList({open,setId}:any) {
   const [products, setProduct] = useState<Products[]>([]);
 
   const dataFetch = async () => {
@@ -14,12 +14,14 @@ export function ProductList() {
     dataFetch();
   }, []);
 
-
+  const handleClick = (id: number | string): void => {
+   open()
+   setId(id)
+}
 
 
   const rows = products.map((product) => (
-    <Table.Tr  onClick={() => console.log(product.id)}   style={{ cursor: 'pointer' }} key={product.name}>
-            <Table.Td>{product.id}</Table.Td>
+    <Table.Tr  onClick={()=>handleClick(product.id)}   style={{ cursor: 'pointer' }} key={product.id}>
       <Table.Td>{product.name}</Table.Td>
       <Table.Td>{product.price}</Table.Td>
       <Table.Td>{product.stock}</Table.Td>
@@ -31,7 +33,6 @@ export function ProductList() {
     <Table horizontalSpacing={'xl'} withTableBorder  highlightOnHover  stickyHeader stickyHeaderOffset={60}>
       <Table.Thead>
         <Table.Tr>
-          <Table.Th>Ürün Id</Table.Th>
           <Table.Th>Ürün Adı</Table.Th>
           <Table.Th>Ürün Fiyatı</Table.Th>
           <Table.Th>Ürün Stock Durumu</Table.Th>

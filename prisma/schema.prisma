@@ -21,9 +21,9 @@ model Product {
   id         String   @id @default(cuid())
   categoryId String
   name       String
-  price      String
+  price      Float
   descrip    String?
-  stock      String
+  stock      Float
   image1     String?
 }
 

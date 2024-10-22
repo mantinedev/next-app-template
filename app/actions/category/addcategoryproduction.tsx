@@ -11,10 +11,9 @@ export async function addcategory(prevState: any, formData: any) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ name}),
+      body: JSON.stringify({ name }),
     });
     const endResponse = JSON.parse(await response.text());
     if (response.ok) {
@@ -27,6 +26,9 @@ export async function addcategory(prevState: any, formData: any) {
       };
     }
   } catch (error) {
-    console.log(error)
+    console.log(error);
+    return {
+      message: error,
+    };
   }
 }

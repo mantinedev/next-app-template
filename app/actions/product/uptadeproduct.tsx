@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 
 export async function addproduct(prevState: any, formData: any) {
+  const id = formData.get('id');
   const name = formData.get('name');
   const price = parseInt(formData.get('price'));
   const image = formData.get('image1');
@@ -12,17 +13,16 @@ export async function addproduct(prevState: any, formData: any) {
   const token = cookie.get('Authorization')?.value;
   try {
     const response = await fetch('http://localhost:3000/api/product', {
-      method: 'POST',
+      method: 'UPDATE',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ name, price, descrip, stock }),
+      body: JSON.stringify({ id, name, price, descrip, stock }),
     });
     const endResponse = JSON.parse(await response.text());
 
     if (response.ok) {
-      const id = endResponse.NewProduct.id;
       try {
         const formData = new FormData();
         formData.append('image', image);
@@ -36,7 +36,7 @@ export async function addproduct(prevState: any, formData: any) {
           body: formData,
         });
 
-        const endResponseFile = await response2.json(); // Fetch response should be from response2
+        const endResponseFile = await response2.json();
         if (!response2.ok) {
           throw new Error('Fotoğraf Yüklenemedi');
         }

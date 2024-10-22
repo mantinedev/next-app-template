@@ -7,7 +7,7 @@ import { ProductCard } from './Maincomponents/Productions/ProductCard';
 export default function HomePage() {
   return (
     <>
-    <Container size="xl" >
+    <Container size={'xl'} >
     <MainHero/>
     <Description/>
     <Proportions/>

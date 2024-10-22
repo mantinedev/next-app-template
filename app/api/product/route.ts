@@ -10,10 +10,34 @@ cloudinary.config({
   api_key: '339673989917425',
   api_secret: 'XVgNicWrFmgezIVj0N08uUO1xkc', // Hata düzeltildi: 'API_KEY' yerine 'API_SECRET'
 });
-export async function GET() {
-  let res = await prisma.product.findMany();
+export async function GET(req: any) {
+  const url = new URL(req.url);
+  const categoriesParam = url.searchParams.get('cr');
+  
+  const categories = categoriesParam ? categoriesParam.split(',') : ['all'];
+    const downprice = url.searchParams.get('dpr')!=='null' ? parseFloat(url.searchParams.get('dpr') || '0'): 0; // upr null ise 999999999
+  const upprice = url.searchParams.get('upr')!=='null' ? parseFloat(url.searchParams.get('upr') || '999999999') : 9999999; // upr null ise 999999999
+
+  
+  let res = await prisma.product.findMany({
+    where: {
+      price: {
+        gte: downprice,
+        lte: upprice,
+      },
+      // Eğer categories dizisi "all" değilse, belirtilen kategorilerle eşleşenleri al
+      ...(categoriesParam !== 'null'&& categoriesParam !== 'NaN' && categories[0] !== 'all' && {
+        categoryId: {
+          in: categories,
+        },
+      }),
+    },
+  });
+
   return new Response(JSON.stringify(res));
 }
+
+
 
 export async function POST(req: any) {
   try {

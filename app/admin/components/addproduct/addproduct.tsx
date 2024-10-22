@@ -4,7 +4,7 @@ import { useDisclosure } from '@mantine/hooks';
 import AddproductInputs from './components/AddproductInputs';
 import { useState } from 'react';
 import AddProductImages from './components/AddProductImages';
-import { ProductInputs } from '@/app/types/product/AddProduct';
+import { ProductInputs } from '@/app/types/product/addproduct';
 import { useFormState } from 'react-dom';
 import { addproduct } from '@/app/actions/product/addproduct';
 
@@ -47,7 +47,7 @@ const AddProduct = () => {
         variant="gradient"
         gradient={{ from: 'yellow', to: 'orange', deg: 78 }}
       >
-        Gradient button
+       Ürün Ekleme
       </Button>
       <Modal opened={opened} onClose={handleClose} size="xl" title="Ürün Ekleme" centered>
         {state?.message}

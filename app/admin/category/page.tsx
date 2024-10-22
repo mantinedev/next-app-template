@@ -1,20 +1,21 @@
-"use client"
-import { Box, Container, Title } from '@mantine/core'
-import React from 'react'
-import { CategoryList } from './categorylist'
-
+'use client';
+import { Box, Container, Title } from '@mantine/core';
+import React from 'react';
+import { CategoryList } from './categorylist';
+import classes from '../adminpage.module.css';
+import AddCategory from './addcategory/addcategory';
 const page = () => {
   return (
-   <Container mt='lg' size="xl" >
-    
-      <Box mb='md'>
-          <Title order={3} size="h1">
-            H3 heading with h1 font-size
-          </Title>
-        </Box>
-        <CategoryList />
+    <Container mt="lg" size="xl">
+      <Box mb="md" className={classes.titleplace}>
+        <Title order={3} size="h1">
+          Kategori Listesi
+        </Title>
+        <AddCategory />
+      </Box>
+      <CategoryList />
     </Container>
-  )
-}
+  );
+};
 
-export default page
+export default page;
