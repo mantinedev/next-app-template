@@ -18,6 +18,11 @@ const config = {
     '^@mantine-tests/(.*)$',
     '^@docs/(.*)$',
     '^@/.*$',
+    // scss as second to bottom
+    '^../(?!.*.scss$).*$',
+    '^./(?!.*.scss$).*$',
+    '\\.scss$',
+    // css at last
     '^../(?!.*.css$).*$',
     '^./(?!.*.css$).*$',
     '\\.css$',
