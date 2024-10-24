@@ -3,7 +3,7 @@ import { Table } from '@mantine/core';
 import { useEffect, useState } from 'react';
 
 
-export function CategoryList() {
+export function CategoryList({open,setData}:any) {
 
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -15,8 +15,14 @@ export function CategoryList() {
   useEffect(() => {
     dataFetch();
   }, []);
+
+
+  const handleData= (category:Category)=>{
+    setData(category)
+    open();
+  }
   const rows = categories.map((category) => (
-    <Table.Tr  style={{ cursor: 'pointer',textAlign:'center'}}>
+    <Table.Tr onClick={()=>handleData(category)}  style={{ cursor: 'pointer',textAlign:'center'}}>
       <Table.Td>{category.name}</Table.Td>
 
     </Table.Tr>

@@ -92,7 +92,7 @@
     &,
     &:hover {
       border-left-color: var(--mantine-color-blue-filled);
-      background-color: var(--mantine-color-blue-filled);
+      background-color: var(--mantine-color-orange-filled);
       color: var(--mantine-color-white);
     }
   }

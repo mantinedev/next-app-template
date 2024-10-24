@@ -20,38 +20,7 @@ function passwordValid(password: string) {
     return 'Parola en az bir büyük harf içermeli.';
   }
   //NOKTALAMA İŞARETLERİ
-  const punctuation = [
-    '!',
-    '@',
-    '#',
-    '$',
-    '%',
-    '^',
-    '&',
-    '*',
-    '(',
-    ')',
-    '-',
-    '_',
-    '=',
-    '+',
-    '{',
-    '}',
-    '[',
-    ']',
-    '|',
-    '\\',
-    ';',
-    ':',
-    "'",
-    '"',
-    '<',
-    '>',
-    ',',
-    '.',
-    '/',
-    '?',
-  ];
+  const punctuation = ['!','@','#','$','%','^','&','*','(',')','-','_','=','+','{','}','[',']','|','\\',';',':',"'",'"','<','>',',','.','/','?',];
   let hasPunctuation = false;
   for (let char of password) {
     if (punctuation.includes(char)) {

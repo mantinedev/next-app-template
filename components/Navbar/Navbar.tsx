@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { UnstyledButton, Tooltip, Title, rem } from '@mantine/core';
+import { Title } from '@mantine/core';
 import {
   IconHome2,
   IconCategory,
 } from '@tabler/icons-react';
-import { MantineLogo } from '@mantinex/mantine-logo';
 import classes from './DoubleNavbar.module.css';
 import Link from 'next/link';
 
