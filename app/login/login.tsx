@@ -3,13 +3,22 @@ import { TextInput, PasswordInput, Paper, Title, Container, Button } from '@mant
 import classes from './login.module.css';
 import { useFormState } from 'react-dom';
 import { loginUser } from '../actions/login/loginuser';
+import { useRouter } from 'next/navigation';
 
 const initialState = {
   message: '',
+  login:false
 };
 
 export function LoginOperation() {
-  const [state, formAction] = useFormState(loginUser, initialState);
+  const router = useRouter();
+  const [state, formAction] = useFormState(async (prevState: any, formData: FormData) => {
+    const result = await loginUser(prevState, formData);
+    if (result.login) {
+      router.push('/admin');
+    }
+    return result;
+  }, initialState);
   return (
     <Container size={420} my={40}>
       <Title ta="center" className={classes.title}>

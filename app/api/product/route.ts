@@ -3,13 +3,8 @@ import { getTokenFromHeader } from '../getTokenHeader/getTokenHeader';
 const prisma = new PrismaClient();
 const jwt = require('jsonwebtoken');
 const secretKey = process.env.SECRET_KEY;
-import { v2 as cloudinary } from 'cloudinary';
 
-cloudinary.config({
-  cloud_name: 'dj9sknitc',
-  api_key: '339673989917425',
-  api_secret: 'XVgNicWrFmgezIVj0N08uUO1xkc', // Hata düzeltildi: 'API_KEY' yerine 'API_SECRET'
-});
+
 export async function GET(req: any) {
   const url = new URL(req.url);
   const categoriesParam = url.searchParams.get('cr');

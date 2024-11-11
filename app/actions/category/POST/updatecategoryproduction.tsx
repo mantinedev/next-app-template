@@ -6,7 +6,6 @@ export async function updatecategory(prevSstate:any,formData: any) {
   const id = formData.get('id');
   const name = formData.get('name');
   const cookie = cookies();
-  console.log(id)
   const token = cookie.get('Authorization')?.value;
   try {
     const response = await fetch('http://localhost:3000/api/category', {

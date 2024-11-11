@@ -3,7 +3,7 @@ import React from 'react';
 import { MantineProvider, ColorSchemeScript } from '@mantine/core';
 import { theme } from '../theme';
 import CustomHeader from '@/components/CustomHeader/CustomHeader';
-import { CounterStoreProvider } from './providers/counter-store-provider';
+import { Notifications } from '@mantine/notifications';
 
 export const metadata = {
   title: 'Mantine Next.js template',
@@ -23,12 +23,11 @@ export default function RootLayout({ children }: { children: any }) {
       </head>
       <body>
       <MantineProvider theme={theme}>
-        <CounterStoreProvider>
+     
+
         <CustomHeader>
         {children}
         </CustomHeader>
-        </CounterStoreProvider>
-       
         </MantineProvider>
       </body>
     </html>

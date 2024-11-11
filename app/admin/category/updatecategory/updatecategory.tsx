@@ -1,8 +1,6 @@
 'use client';
-import { addcategory } from '@/app/actions/category/addcategoryproduction';
-import { updatecategory } from '@/app/actions/category/updatecategoryproduction';
-import { Alert, Button, Modal, Notification, TextInput } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { updatecategory } from '@/app/actions/category/POST/updatecategoryproduction';
+import { Button, TextInput } from '@mantine/core';
 import { useFormState } from 'react-dom';
 
 const initialState = {

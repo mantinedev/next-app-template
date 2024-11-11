@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Products } from '@/app/types/product/ListProduct';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+import { SearchProductFetch } from '@/app/actions/product/GET/getproductsearchlist';
 
 
 export function ProductCard() {
@@ -12,19 +13,14 @@ export function ProductCard() {
   const dpr = params.get('dpr');
   const upr = params.get('upr');
   const cr =params.get('cr');
-  console.log(upr)
   const [products, setProduct] = useState<Products[]>([]);
-  const dataFetch = async () => {
-    
-
-    // Eğer dpr veya upr null ise isteği gönderme
-    let data = await fetch(`http://localhost:3000/api/product?cr=${cr}&dpr=${dpr}&upr=${upr}`);
-    let elements = await data.json();
-    setProduct(elements);
-  };
   useEffect(() => {
-    dataFetch();
-  }, [dpr,upr,cr]);
+    const fetchData = async () => {
+        const data = await SearchProductFetch({dpr,cr,upr});
+        setProduct(data);
+    };
+    fetchData();
+  }, [upr,dpr,cr]);
 
   const card = products.map((card) => (
     <Card withBorder radius="md" className={classes.card}>

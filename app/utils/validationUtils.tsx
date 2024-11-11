@@ -1,9 +1,9 @@
-function emailIsValid(email: string) {
+export function emailIsValid(email: string) {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return re.test(email);
 }
 
-function passwordValid(password: string) {
+export function passwordValid(password: string) {
   //UZUNLUK
   if (password.length < 4) {
     return 'Parola en az 4 karakter olmalı.';
@@ -34,11 +34,6 @@ function passwordValid(password: string) {
   return '';
 }
 
-function passwordMatchValid(password: string, repassword: string) {
+export function passwordMatchValid(password: string, repassword: string) {
   return password === repassword;
 }
-module.exports = {
-  emailIsValid,
-  passwordMatchValid,
-  passwordValid,
-};

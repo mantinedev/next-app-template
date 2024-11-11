@@ -1,3 +1,4 @@
+import { GetCategoryList } from '@/app/actions/category/GET/getCategoryList';
 import { Category } from '@/app/types/category/ListCategory';
 import { Table } from '@mantine/core';
 import { useEffect, useState } from 'react';
@@ -8,9 +9,8 @@ export function CategoryList({open,setData}:any) {
   const [categories, setCategories] = useState<Category[]>([]);
 
   const dataFetch = async () => {
-    let data = await fetch('http://localhost:3000/api/category');
-    let cat = await data.json();
-    setCategories(cat);
+    let data = await GetCategoryList();
+    setCategories(data);
   };
   useEffect(() => {
     dataFetch();

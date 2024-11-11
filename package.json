@@ -21,6 +21,7 @@
   "dependencies": {
     "@mantine/core": "^7.11.2",
     "@mantine/hooks": "^7.11.2",
+    "@mantine/notifications": "^7.13.5",
     "@mantinex/mantine-logo": "^1.0.1",
     "@next/bundle-analyzer": "^14.2.4",
     "@prisma/client": "^5.17.0",

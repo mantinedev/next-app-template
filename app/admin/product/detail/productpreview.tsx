@@ -11,6 +11,7 @@ import {
 } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
 import { Products } from '@/app/types/product/ListProduct';
+import { getProductID } from '@/app/actions/product/GET/getproductbyID';
 
 const ProductPreview = ({id}:any) => {
   const [product,setProduct]=useState<Products>();
@@ -22,9 +23,8 @@ const ProductPreview = ({id}:any) => {
 
   const dataFetch =  async ()=>{
     try{
-      const response = await fetch(`http://localhost:3000/api/product/detail?idr=${id}`)
-      let elements = await response.json();
-      setProduct(elements)
+      const data = await getProductID({id})
+      setProduct(data)
     }catch(error:any){
       <Alert mt={15} variant="filled" color="green" title="">
         {error}

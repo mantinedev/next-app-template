@@ -3,8 +3,8 @@ import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 const PriceFilter = ({setDown,setUp}:any) => {
-  const [starting, setStarting] = useState('');
-  const [ending, setEnding] = useState('');
+  const [starting, setStarting] = useState('0');
+  const [ending, setEnding] = useState('9999999');
   const params = useSearchParams();
   const dpr = params.get('dpr');
   const upr = params.get('upr')

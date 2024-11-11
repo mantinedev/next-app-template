@@ -20,9 +20,7 @@ const CustomHeader: FC<PropsWithChildren> = ({ children }) => {
       <AppShell.Header>
         <Header />
       </AppShell.Header>
-      <AppShell.Navbar>
-        <DoubleNavbar/>
-      </AppShell.Navbar>
+   
       <AppShell.Main w={'100%'}>
         
 

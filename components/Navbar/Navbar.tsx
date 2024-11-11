@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Title } from '@mantine/core';
 import {
   IconHome2,
@@ -6,12 +6,22 @@ import {
 } from '@tabler/icons-react';
 import classes from './DoubleNavbar.module.css';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation'; // Yeni import
 
 export function DoubleNavbar() {
   const [active, setActive] = useState('Saat Endüstrisi');
   const [activeLink, setActiveLink] = useState('Ürünler');
 
+  const pathname = usePathname(); // URL'i almak için
 
+  useEffect(() => {
+    // URL'e göre aktif linki ayarla
+    if (pathname?.includes('/admin/category')) {
+      setActiveLink('Kategoriler');
+    } else if (pathname?.includes('/admin')) {
+      setActiveLink('Ürünler');
+    }
+  }, [pathname]);
 
   return (
     <nav className={classes.navbar}>

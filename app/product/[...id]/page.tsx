@@ -5,20 +5,19 @@ import { Box, Button, Container, Grid, Group, Skeleton, Text, Title, rem } from 
 import { ProductCard } from '@/app/Maincomponents/Productions/ProductCard';
 import { IconBrandWhatsapp } from '@tabler/icons-react';
 import { Products } from '@/app/types/product/ListProduct';
+import { getProductID } from '@/app/actions/product/GET/getproductbyID';
 
 const Page: React.FC = () => {
   const params = useParams();
+  const id =params.id
   const [data, setData] = useState<Products>();
-  const dataFetch = async () => {
-    let data = await fetch(`http://localhost:3000/api/product/detail?idr=${params.id}`);
-    let elements = await data.json();
-
-    // Dönen bilgiyi console'a yazdır
-
-    setData(elements);
-  };
   useEffect(() => {
-    dataFetch();
+    const fetchData = async () => {
+        const data = await getProductID({id});
+        console.log(data)
+        setData(data);
+    };
+    fetchData();
   }, []);
 
   const PRIMARY_COL_HEIGHT = rem(550);

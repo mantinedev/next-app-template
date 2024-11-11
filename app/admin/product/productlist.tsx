@@ -1,3 +1,6 @@
+'use client';
+
+import { getProducts } from '@/app/actions/product/GET/getproductList';
 import { Products } from '@/app/types/product/ListProduct';
 import { Table } from '@mantine/core';
 import { useEffect, useState } from 'react';
@@ -5,13 +8,12 @@ import { useEffect, useState } from 'react';
 export function ProductList({open,setId}:any) {
   const [products, setProduct] = useState<Products[]>([]);
 
-  const dataFetch = async () => {
-    let data = await fetch('http://localhost:3000/api/product');
-    let elements = await data.json();
-    setProduct(elements);
-  };
   useEffect(() => {
-    dataFetch();
+    const fetchData = async () => {
+      const data = await getProducts();
+      setProduct(data);
+    };
+    fetchData();
   }, []);
 
   const handleClick = (id: number | string): void => {

@@ -38,9 +38,11 @@ export async function loginUser(prevState:any, formData:any) {
       const cookie=cookies()
       cookie.set('Authorization',endResponse.token, { secure: true })
       return {
+        login:true,
         message: "Giriş Başarılı",
         
       };
+
     } else {
       return {
         message: "Giriş Başarısız: " + endResponse.message,
