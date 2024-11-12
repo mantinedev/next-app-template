@@ -3,7 +3,6 @@ import { FC, PropsWithChildren } from 'react';
 import Header from '../Header/Header';
 import { AppShell } from '@mantine/core';
 import { Footer } from '../Footer/Footer';
-import { DoubleNavbar } from '../Navbar/Navbar';
 
 const CustomHeader: FC<PropsWithChildren> = ({ children }) => {
 
