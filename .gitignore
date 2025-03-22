@@ -1,3 +1,4 @@
+
 # Logs
 logs
 *.log
@@ -130,3 +131,5 @@ dist
 .pnp.*
 
 .DS_Store
+
+.idea
