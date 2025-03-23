@@ -35,6 +35,7 @@
     "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@storybook/nextjs": "^8.6.8",
     "@storybook/react": "^8.6.8",
+    "@storybook/preview-api": "^8.6.8",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",

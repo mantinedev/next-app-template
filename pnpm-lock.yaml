@@ -43,6 +43,9 @@ devDependencies:
   '@storybook/nextjs':
     specifier: ^8.6.8
     version: 8.6.8(esbuild@0.25.1)(next@15.2.3)(react-dom@19.0.0)(react@19.0.0)(storybook@8.6.8)(typescript@5.8.2)(webpack@5.98.0)
+  '@storybook/preview-api':
+    specifier: ^8.6.8
+    version: 8.6.8(storybook@8.6.8)
   '@storybook/react':
     specifier: ^8.6.8
     version: 8.6.8(@storybook/test@8.6.8)(react-dom@19.0.0)(react@19.0.0)(storybook@8.6.8)(typescript@5.8.2)
