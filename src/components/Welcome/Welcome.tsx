@@ -1,7 +1,9 @@
+import { useTranslations } from 'next-intl';
 import { Anchor, Text, Title } from '@mantine/core';
 import classes from './Welcome.module.css';
 
 export function Welcome() {
+  const t = useTranslations('HomePage');
   return (
     <>
       <Title className={classes.title} ta="center" mt={100}>
@@ -17,6 +19,7 @@ export function Welcome() {
           this guide
         </Anchor>
         . To get started edit page.tsx file.
+        {t('title')}
       </Text>
     </>
   );
