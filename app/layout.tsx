@@ -5,8 +5,8 @@ import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from '@mantine/c
 import { theme } from '../theme';
 
 export const metadata = {
-  title: 'Mantine Next.js template',
-  description: 'I am using Mantine with Next.js!',
+  title: '청심한의원 - 마음과 몸을 치유하는 전통 한의학',
+  description: '청심한의원은 전통 한의학을 바탕으로 개인별 맞춤 치료를 통해 건강한 삶을 지원합니다.',
 };
 
 export default function RootLayout({ children }: { children: any }) {
