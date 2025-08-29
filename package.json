@@ -20,10 +20,12 @@
     "storybook:build": "storybook build"
   },
   "dependencies": {
-    "@mantine/core": "8.2.5",
-    "@mantine/hooks": "8.2.5",
+    "@mantine/core": "^8.2.7",
+    "@mantine/dates": "^8.2.7",
+    "@mantine/hooks": "^8.2.7",
     "@next/bundle-analyzer": "^15.3.3",
     "@tabler/icons-react": "^3.34.0",
+    "dayjs": "^1.11.15",
     "next": "15.3.3",
     "react": "19.1.0",
     "react-dom": "19.1.0"

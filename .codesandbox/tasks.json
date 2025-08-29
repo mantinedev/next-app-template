@@ -1,0 +1,88 @@
+{
+  // These tasks will run in order when initializing your CodeSandbox project.
+  "setupTasks": [
+    {
+      "command": "yarn install",
+      "name": "Installing Dependencies"
+    }
+  ],
+
+  // These tasks can be run from CodeSandbox. Running one will open a log in the app.
+  "tasks": {
+    "dev": {
+      "name": "dev",
+      "command": "yarn dev",
+      "runAtStart": true
+    },
+    "build": {
+      "name": "build",
+      "command": "yarn build",
+      "runAtStart": false
+    },
+    "analyze": {
+      "name": "analyze",
+      "command": "yarn analyze",
+      "runAtStart": false
+    },
+    "start": {
+      "name": "start",
+      "command": "yarn start",
+      "runAtStart": false
+    },
+    "typecheck": {
+      "name": "typecheck",
+      "command": "yarn typecheck",
+      "runAtStart": false
+    },
+    "lint": {
+      "name": "lint",
+      "command": "yarn lint",
+      "runAtStart": false
+    },
+    "eslint": {
+      "name": "eslint",
+      "command": "yarn eslint",
+      "runAtStart": false
+    },
+    "stylelint": {
+      "name": "stylelint",
+      "command": "yarn stylelint",
+      "runAtStart": false
+    },
+    "jest": {
+      "name": "jest",
+      "command": "yarn jest",
+      "runAtStart": false
+    },
+    "jest:watch": {
+      "name": "jest:watch",
+      "command": "yarn jest:watch",
+      "runAtStart": false
+    },
+    "prettier:check": {
+      "name": "prettier:check",
+      "command": "yarn prettier:check",
+      "runAtStart": false
+    },
+    "prettier:write": {
+      "name": "prettier:write",
+      "command": "yarn prettier:write",
+      "runAtStart": false
+    },
+    "test": {
+      "name": "test",
+      "command": "yarn test",
+      "runAtStart": false
+    },
+    "storybook": {
+      "name": "storybook",
+      "command": "yarn storybook",
+      "runAtStart": false
+    },
+    "storybook:build": {
+      "name": "storybook:build",
+      "command": "yarn storybook:build",
+      "runAtStart": false
+    }
+  }
+}
