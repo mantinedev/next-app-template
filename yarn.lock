@@ -4153,11 +4153,11 @@ __metadata:
   linkType: hard
 
 "@types/eslint-plugin-jsx-a11y@npm:^6":
-  version: 6.9.0
-  resolution: "@types/eslint-plugin-jsx-a11y@npm:6.9.0"
+  version: 6.10.1
+  resolution: "@types/eslint-plugin-jsx-a11y@npm:6.10.1"
   dependencies:
-    "@types/eslint": "npm:*"
-  checksum: 10c0/50e5f9a70e50218abae57cf9b8dc60a55e3fe1721a5912f96b26c6030b8c198694342d897a5425691601b27506589558f6ebcc93b80f602d5851936e95c8d84c
+    eslint: "npm:^9"
+  checksum: 10c0/fe2ce003279f046225fc8ce5ea9b621254f0b6cf6577ea03da4cdd436c6780a7e1565308c2b3406851f5bb6abda0e9e2694f75dc462d8915f031854b10824012
   languageName: node
   linkType: hard
 
@@ -4276,19 +4276,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*":
-  version: 20.7.0
-  resolution: "@types/node@npm:20.7.0"
-  checksum: 10c0/935c8a30e3dbb9d10151316522571c7dacd8277a66db821a0581a9ff18c23d780c3e155437b72399b70a081616bcd87c3d745565527df721acf2a0577ccf906c
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^24.7.1":
-  version: 24.7.1
-  resolution: "@types/node@npm:24.7.1"
+"@types/node@npm:*, @types/node@npm:^24.7.1":
+  version: 24.7.2
+  resolution: "@types/node@npm:24.7.2"
   dependencies:
     undici-types: "npm:~7.14.0"
-  checksum: 10c0/2525f2aa865d78b1c75faaf8c6bf2af51c930962d8078306620d9a76eafcbbea035142cf2cdc2fcf1b4010cd3958a1c6c59b67aba1ac205dc1e5f895ef6af673
+  checksum: 10c0/03f662f10e4b89bc97016e067101cbabe55025b54c24afb581fb50992d5eeaaf417bdae34bbc668ae8759d3cdbbbadf35fc8b9b29d26f52ede2525d48e919e49
   languageName: node
   linkType: hard
 
@@ -8146,7 +8139,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^9.37.0":
+"eslint@npm:^9, eslint@npm:^9.37.0":
   version: 9.37.0
   resolution: "eslint@npm:9.37.0"
   dependencies:
@@ -13516,6 +13509,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"semver@npm:^7.7.3":
+  version: 7.7.3
+  resolution: "semver@npm:7.7.3"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/4afe5c986567db82f44c8c6faef8fe9df2a9b1d98098fc1721f57c696c4c21cebd572f297fc21002f81889492345b8470473bc6f4aff5fb032a6ea59ea2bc45e
+  languageName: node
+  linkType: hard
+
 "serialize-javascript@npm:^6.0.1":
   version: 6.0.1
   resolution: "serialize-javascript@npm:6.0.1"
@@ -14650,8 +14652,8 @@ __metadata:
   linkType: hard
 
 "ts-jest@npm:^29.4.4":
-  version: 29.4.4
-  resolution: "ts-jest@npm:29.4.4"
+  version: 29.4.5
+  resolution: "ts-jest@npm:29.4.5"
   dependencies:
     bs-logger: "npm:^0.2.6"
     fast-json-stable-stringify: "npm:^2.1.0"
@@ -14659,7 +14661,7 @@ __metadata:
     json5: "npm:^2.2.3"
     lodash.memoize: "npm:^4.1.2"
     make-error: "npm:^1.3.6"
-    semver: "npm:^7.7.2"
+    semver: "npm:^7.7.3"
     type-fest: "npm:^4.41.0"
     yargs-parser: "npm:^21.1.1"
   peerDependencies:
@@ -14685,7 +14687,7 @@ __metadata:
       optional: true
   bin:
     ts-jest: cli.js
-  checksum: 10c0/f99d612704cda98369f4a54d3db771bad5edd1390fded4f1691f3182f0c8ce8b7f827e5846952bd8bcd26df26c9fb18f11089de760956bdf357875a5f1d49fcc
+  checksum: 10c0/789f00666ba785ac425606d42601cbdc03015e46f228a0b333f06c6658d80865819bae0ddd59c762285352d2b14d0aa50912574ec699ba6369ddb0d400a49ac0
   languageName: node
   linkType: hard
 
