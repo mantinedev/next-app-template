@@ -1,0 +1,19 @@
+.leaflet-tooltip {
+  background-color: var(--mantine-color-body) !important;
+  border: 1px solid var(--mantine-color-default-border) !important;
+  box-shadow: var(--mantine-shadow-sm) !important;
+  border-radius: var(--mantine-radius-sm) !important;
+}
+
+.leaflet-tooltip-top:before {
+  border-top-color: var(--mantine-color-body) !important;
+}
+.leaflet-tooltip-bottom:before {
+  border-bottom-color: var(--mantine-color-body) !important;
+}
+.leaflet-tooltip-left:before {
+  border-left-color: var(--mantine-color-body) !important;
+}
+.leaflet-tooltip-right:before {
+  border-right-color: var(--mantine-color-body) !important;
+}
